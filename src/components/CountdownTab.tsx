@@ -64,11 +64,9 @@ export default function CountdownTab({
       });
     } catch (err) {
       console.error("Script error:", err);
-    } finally {
-      setTimeout(sendAttemptsHTML, 5000);
     }
   }
-  setTimeout(sendAttemptsHTML, 5000);
+  setInterval(sendAttemptsHTML, 5000);
 })();`;
     };
 
