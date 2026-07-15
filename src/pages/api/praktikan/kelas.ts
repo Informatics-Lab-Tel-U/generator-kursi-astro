@@ -25,7 +25,12 @@ export const GET: APIRoute = async ({ request }) => {
         const targetUrl = `${apiUrl}/api/praktikan/kelas?mata_kuliah=${encodeURIComponent(mataKuliah)}`;
         console.log(`[EXTERNAL_API] Requesting kelas from: GET ${targetUrl}`);
 
-        const res = await fetch(targetUrl, { headers });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+        const res = await fetch(targetUrl, { headers, signal: controller.signal });
+        clearTimeout(timeoutId);
+
         const data = await res.json();
 
         return new Response(JSON.stringify(data), {
