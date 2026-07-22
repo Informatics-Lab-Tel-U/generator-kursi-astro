@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { fetchBackendApi } from "@/lib/apiHelper";
+import { fetchBackendApi } from "../../../lib/apiHelper";
 
 export const prerender = false;
 
