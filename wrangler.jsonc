@@ -12,14 +12,5 @@
   "observability": {
     "enabled": true
   },
-  "keep_vars": true,
-  "vars": {
-    "PRAKTIKAN_API_URL": "https://manajemenasprak.abiyyurahid20.workers.dev"
-  },
-  "services": [
-    {
-      "binding": "MANAJEMEN_ASPRAK",
-      "service": "manajemenasprak"
-    }
-  ]
+  "keep_vars": true
 }

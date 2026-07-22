@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { parse } from "node-html-parser";
-import { env } from "cloudflare:workers";
+
 
 export const prerender = false;
 
@@ -95,13 +95,14 @@ export const POST: APIRoute = async ({ request, url }) => {
             }
         }
 
-        // Simpan ke Cloudflare KV jika binding tersedia
-        const kvStore = (env as any).LEADERBOARD_KV;
-        if (kvStore) {
-            await kvStore.put(`leaderboard:${room}`, JSON.stringify(data), {
-                expirationTtl: 60 * 60 * 24, // 1 hari
-            });
-        }
+        // Note: Untuk Vercel/Node environment, Anda bisa memakai Redis atau @vercel/kv.
+        // Di sini kita hapus cloudflare:workers.
+        // const kvStore = (env as any).LEADERBOARD_KV;
+        // if (kvStore) {
+        //     await kvStore.put(`leaderboard:${room}`, JSON.stringify(data), {
+        //         expirationTtl: 60 * 60 * 24, // 1 hari
+        //     });
+        // }
         // Jika KV belum dikonfigurasi, tetap return sukses (data tidak disimpan tapi tidak crash)
 
         return new Response(JSON.stringify({ success: true, count: data.length }), {
