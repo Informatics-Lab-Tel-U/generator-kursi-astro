@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "generator-kursi",
+  "name": "generator-kursi-v2",
   "main": "@astrojs/cloudflare/entrypoints/server",
   "compatibility_date": "2025-01-01",
   "compatibility_flags": [
