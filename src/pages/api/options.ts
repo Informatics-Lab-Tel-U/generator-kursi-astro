@@ -17,10 +17,12 @@ export const GET: APIRoute = async ({ request }) => {
         const targetUrl = `${apiUrl}/api/praktikan?action=options`;
         console.log(`[EXTERNAL_API] Requesting options from: GET ${targetUrl}`);
         
-        const fetcher = typeof env.MANAJEMEN_ASPRAK !== "undefined" ? env.MANAJEMEN_ASPRAK : globalThis;
-        const res = await fetcher.fetch(targetUrl, {
-            headers
-        });
+        let fetcher = typeof env.MANAJEMEN_ASPRAK !== "undefined" ? env.MANAJEMEN_ASPRAK : globalThis;
+        let res = await fetcher.fetch(targetUrl, { headers });
+        if (res.status === 503 && fetcher !== globalThis) {
+            console.log(`[EXTERNAL_API] Service binding returned 503, falling back to globalThis.fetch`);
+            res = await globalThis.fetch(targetUrl, { headers });
+        }
         
         const proxyHeaders = new Headers(res.headers);
         proxyHeaders.delete("content-encoding");

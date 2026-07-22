@@ -19,8 +19,12 @@ export const GET: APIRoute = async ({ request }) => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-        const fetcher = typeof env.MANAJEMEN_ASPRAK !== "undefined" ? env.MANAJEMEN_ASPRAK : globalThis;
-        const res = await fetcher.fetch(targetUrl, { headers, signal: controller.signal });
+        let fetcher = typeof env.MANAJEMEN_ASPRAK !== "undefined" ? env.MANAJEMEN_ASPRAK : globalThis;
+        let res = await fetcher.fetch(targetUrl, { headers, signal: controller.signal });
+        if (res.status === 503 && fetcher !== globalThis) {
+            console.log(`[EXTERNAL_API] Service binding returned 503, falling back to globalThis.fetch`);
+            res = await globalThis.fetch(targetUrl, { headers, signal: controller.signal });
+        }
         clearTimeout(timeoutId);
 
         const proxyHeaders = new Headers(res.headers);

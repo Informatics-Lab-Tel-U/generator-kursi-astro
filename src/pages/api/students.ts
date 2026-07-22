@@ -29,10 +29,12 @@ export const GET: APIRoute = async ({ request }) => {
         
         console.log(`[EXTERNAL_API] Requesting students from: GET ${backendUrl}`);
         
-        const fetcher = typeof env.MANAJEMEN_ASPRAK !== "undefined" ? env.MANAJEMEN_ASPRAK : globalThis;
-        const res = await fetcher.fetch(backendUrl, {
-            headers
-        });
+        let fetcher = typeof env.MANAJEMEN_ASPRAK !== "undefined" ? env.MANAJEMEN_ASPRAK : globalThis;
+        let res = await fetcher.fetch(backendUrl, { headers });
+        if (res.status === 503 && fetcher !== globalThis) {
+            console.log(`[EXTERNAL_API] Service binding returned 503, falling back to globalThis.fetch`);
+            res = await globalThis.fetch(backendUrl, { headers });
+        }
         
         const proxyHeaders = new Headers(res.headers);
         proxyHeaders.delete("content-encoding");
