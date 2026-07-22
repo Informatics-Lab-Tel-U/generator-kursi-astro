@@ -33,12 +33,11 @@ export const GET: APIRoute = async ({ request }) => {
             headers
         });
         
-        const data = await res.json();
-        
-        return new Response(JSON.stringify(data), {
+        return new Response(res.body, {
             status: res.status,
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                ...Object.fromEntries(res.headers.entries())
             }
         });
     } catch (e) {

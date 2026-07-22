@@ -22,11 +22,12 @@ export const GET: APIRoute = async ({ request }) => {
         const res = await fetch(targetUrl, { headers, signal: controller.signal });
         clearTimeout(timeoutId);
 
-        const data = await res.json();
-
-        return new Response(JSON.stringify(data), {
+        return new Response(res.body, {
             status: res.status,
-            headers: { "Content-Type": "application/json" }
+            headers: {
+                "Content-Type": "application/json",
+                ...Object.fromEntries(res.headers.entries())
+            }
         });
     } catch (e) {
         return new Response(JSON.stringify({ ok: false, error: "Server Error", details: String(e) }), {
