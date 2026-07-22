@@ -34,11 +34,15 @@ export const GET: APIRoute = async ({ request }) => {
             headers
         });
         
+        const proxyHeaders = new Headers(res.headers);
+        proxyHeaders.delete("content-encoding");
+        proxyHeaders.delete("content-length");
+        
         return new Response(res.body, {
             status: res.status,
             headers: {
                 "Content-Type": "application/json",
-                ...Object.fromEntries(res.headers.entries())
+                ...Object.fromEntries(proxyHeaders.entries())
             }
         });
     } catch (e) {
