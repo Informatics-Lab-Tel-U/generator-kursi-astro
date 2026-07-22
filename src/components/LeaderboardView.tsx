@@ -41,7 +41,14 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
         setLastUpdated(null);
         setIsConnected(false);
 
+        let consecutiveErrors = 0;
+        const MAX_ERRORS = 3; // Berhenti polling setelah 3x gagal berturut-turut
+        let intervalId: ReturnType<typeof setInterval> | null = null;
+
         const fetchData = async () => {
+            // Jangan fetch saat tab tidak aktif — hemat resource & cegah request menumpuk
+            if (document.visibilityState === "hidden") return;
+
             try {
                 const response = await fetch(`/api/leaderboard?room=${encodeURIComponent(room)}`);
                 if (response.ok) {
@@ -53,21 +60,36 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
                         setLastUpdateDate(now);
                         setIsDataStale(false);
                         setIsConnected(true);
+                        consecutiveErrors = 0; // Reset error counter saat berhasil
                     }
                 } else {
+                    consecutiveErrors++;
                     setIsConnected(false);
+                    // Setelah MAX_ERRORS kali gagal, hentikan polling & tampilkan status
+                    if (consecutiveErrors >= MAX_ERRORS && intervalId) {
+                        clearInterval(intervalId);
+                        intervalId = null;
+                    }
                 }
             } catch (error) {
                 console.error("Failed fetching leaderboard data:", error);
+                consecutiveErrors++;
                 setIsConnected(false);
+                if (consecutiveErrors >= MAX_ERRORS && intervalId) {
+                    clearInterval(intervalId);
+                    intervalId = null;
+                }
             }
         };
 
         fetchData();
-        const interval = setInterval(fetchData, 3000);
+        intervalId = setInterval(fetchData, 3000);
 
-        return () => clearInterval(interval);
+        return () => {
+            if (intervalId) clearInterval(intervalId);
+        };
     }, [room]);
+
 
     useEffect(() => {
         const interval = setInterval(() => {

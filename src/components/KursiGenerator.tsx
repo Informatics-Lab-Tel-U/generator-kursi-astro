@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { Student } from "./types";
 import "./KursiGenerator.css";
 
@@ -87,6 +87,14 @@ function KursiGeneratorInner() {
 
     const [showSidebar, setShowSidebar] = useState(true);
     const [versions, setVersions] = useState<SeatVersion[]>([]);
+
+    // Ref untuk membaca seats terkini tanpa memasukkannya ke dependency array useEffect
+    // (mencegah circular re-render loop pada disabled seat logic)
+    const seatsRef = useRef<SeatData[]>(seats);
+    useEffect(() => { seatsRef.current = seats; }, [seats]);
+
+    // BroadcastChannel persisten — dibuat sekali, tidak di-recreate setiap render
+    const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
 
     useEffect(() => {
         try {
@@ -200,25 +208,16 @@ function KursiGeneratorInner() {
 
 
 
-    // Broadcast to Projector
+    // Broadcast to Projector — channel dibuat sekali, tidak ditutup/dibuka ulang setiap render
     useEffect(() => {
         const channel = new BroadcastChannel("kursi-gen-sync");
-        channel.postMessage({
-            seats,
-            disabledSeats: Array.from(disabledSeats),
-            timer,
-            notes,
-            racers,
-            projectorConfig,
-            kelas,
-            eligibleStudents,
-        });
+        broadcastChannelRef.current = channel;
 
-        // Also respond to REQUEST_SYNC from newly opened projectors
+        // Respond to REQUEST_SYNC dari projector yang baru dibuka
         channel.onmessage = (event) => {
             if (event.data?.type === "REQUEST_SYNC") {
                 channel.postMessage({
-                    seats,
+                    seats: seatsRef.current,
                     disabledSeats: Array.from(disabledSeats),
                     timer,
                     notes,
@@ -230,7 +229,27 @@ function KursiGeneratorInner() {
             }
         };
 
-        return () => channel.close();
+        return () => {
+            channel.close();
+            broadcastChannelRef.current = null;
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // dibuat sekali saat mount
+
+    // Kirim update ke projector setiap kali state relevan berubah
+    useEffect(() => {
+        const channel = broadcastChannelRef.current;
+        if (!channel) return;
+        channel.postMessage({
+            seats,
+            disabledSeats: Array.from(disabledSeats),
+            timer,
+            notes,
+            racers,
+            projectorConfig,
+            kelas,
+            eligibleStudents,
+        });
     }, [seats, disabledSeats, timer, notes, racers, projectorConfig, kelas, eligibleStudents]);
 
     // Generate
@@ -285,15 +304,19 @@ function KursiGeneratorInner() {
         });
     }, []);
 
-    // Regenerate seats if a disabled seat is currently occupied
+    // Regenerate seats jika ada disabled seat yang terisi.
+    // Gunakan seatsRef (bukan seats langsung) agar tidak masuk dependency array
+    // dan memicu re-render loop saat handleGenerate mengubah seats.
     useEffect(() => {
-        const needsRegeneration = seats.some(
+        const needsRegeneration = seatsRef.current.some(
             (seat) => disabledSeats.has(seat.seatNo) && seat.student !== null
         );
         if (needsRegeneration && eligibleStudents.length > 0 && !isLoading) {
             handleGenerate();
         }
-    }, [disabledSeats, seats, eligibleStudents.length, isLoading, handleGenerate]);
+    // seats sengaja dihapus dari deps — dibaca via seatsRef untuk cegah loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [disabledSeats, eligibleStudents.length, isLoading, handleGenerate]);
 
     // Drag-and-drop
     const handleDragStart = useCallback(

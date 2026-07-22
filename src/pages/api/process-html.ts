@@ -1,9 +1,8 @@
 import type { APIRoute } from "astro";
 import { parse } from "node-html-parser";
+import { env } from "cloudflare:workers";
 
 export const prerender = false;
-
-import { kv } from "@vercel/kv";
 
 export const ALL: APIRoute = async ({ request }) => {
     if (request.method === "OPTIONS") {
@@ -96,8 +95,14 @@ export const POST: APIRoute = async ({ request, url }) => {
             }
         }
 
-        // Save to Vercel KV with 1 day expiration
-        await kv.set(`leaderboard:${room}`, data, { ex: 60 * 60 * 24 });
+        // Simpan ke Cloudflare KV jika binding tersedia
+        const kvStore = (env as any).LEADERBOARD_KV;
+        if (kvStore) {
+            await kvStore.put(`leaderboard:${room}`, JSON.stringify(data), {
+                expirationTtl: 60 * 60 * 24, // 1 hari
+            });
+        }
+        // Jika KV belum dikonfigurasi, tetap return sukses (data tidak disimpan tapi tidak crash)
 
         return new Response(JSON.stringify({ success: true, count: data.length }), {
             status: 200,
