@@ -17,7 +17,8 @@ export const GET: APIRoute = async ({ request }) => {
         const targetUrl = `${apiUrl}/api/praktikan?action=options`;
         console.log(`[EXTERNAL_API] Requesting options from: GET ${targetUrl}`);
         
-        const res = await fetch(targetUrl, {
+        const fetcher = typeof env.MANAJEMEN_ASPRAK !== "undefined" ? env.MANAJEMEN_ASPRAK : globalThis;
+        const res = await fetcher.fetch(targetUrl, {
             headers
         });
         

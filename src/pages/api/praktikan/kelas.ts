@@ -29,7 +29,8 @@ export const GET: APIRoute = async ({ request }) => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-        const res = await fetch(targetUrl, { headers, signal: controller.signal });
+        const fetcher = typeof env.MANAJEMEN_ASPRAK !== "undefined" ? env.MANAJEMEN_ASPRAK : globalThis;
+        const res = await fetcher.fetch(targetUrl, { headers, signal: controller.signal });
         clearTimeout(timeoutId);
 
         return new Response(res.body, {

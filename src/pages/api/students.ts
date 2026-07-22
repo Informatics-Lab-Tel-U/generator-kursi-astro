@@ -29,7 +29,8 @@ export const GET: APIRoute = async ({ request }) => {
         
         console.log(`[EXTERNAL_API] Requesting students from: GET ${backendUrl}`);
         
-        const res = await fetch(backendUrl, {
+        const fetcher = typeof env.MANAJEMEN_ASPRAK !== "undefined" ? env.MANAJEMEN_ASPRAK : globalThis;
+        const res = await fetcher.fetch(backendUrl, {
             headers
         });
         
