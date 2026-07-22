@@ -1,8 +1,9 @@
 import type { APIRoute } from "astro";
+import { env } from "cloudflare:workers";
 
 export const prerender = false;
 
-export const GET: APIRoute = async ({ request, locals }) => {
+export const GET: APIRoute = async ({ request }) => {
     try {
         const url = new URL(request.url);
         const mataKuliah = url.searchParams.get("mata_kuliah") || url.searchParams.get("matakuliah");
@@ -14,9 +15,8 @@ export const GET: APIRoute = async ({ request, locals }) => {
             });
         }
 
-        const env = (locals as any)?.runtime?.env || {};
-        const apiKey = env.PRAKTIKAN_GET_API_KEY || process.env["PRAKTIKAN_GET_API_KEY"] || import.meta.env.PRAKTIKAN_GET_API_KEY || "";
-        const apiUrl = env.PRAKTIKAN_API_URL || process.env["PRAKTIKAN_API_URL"] || import.meta.env.PRAKTIKAN_API_URL || "http://localhost:3001";
+        const apiKey = env.PRAKTIKAN_GET_API_KEY || process.env["PRAKTIKAN_GET_API_KEY"] || "";
+        const apiUrl = env.PRAKTIKAN_API_URL || process.env["PRAKTIKAN_API_URL"] || "http://localhost:3001";
 
         const headers = new Headers();
         headers.set("x-praktikan-api-key", apiKey);
@@ -32,11 +32,12 @@ export const GET: APIRoute = async ({ request, locals }) => {
         const res = await fetch(targetUrl, { headers, signal: controller.signal });
         clearTimeout(timeoutId);
 
-        const data = await res.json();
-
-        return new Response(JSON.stringify(data), {
+        return new Response(res.body, {
             status: res.status,
-            headers: { "Content-Type": "application/json" }
+            headers: {
+                "Content-Type": "application/json",
+                ...Object.fromEntries(res.headers.entries())
+            }
         });
     } catch (e) {
         return new Response(JSON.stringify({ ok: false, error: "Server Error", details: String(e) }), {
