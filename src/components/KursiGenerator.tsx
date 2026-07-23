@@ -149,8 +149,8 @@ function KursiGeneratorInner() {
         // Kirim heartbeat pertama kali saat kelas dipilih
         sendHeartbeat();
 
-        // Kirim heartbeat setiap 60 detik
-        const intervalId = setInterval(sendHeartbeat, 60000);
+        // Kirim heartbeat setiap 20 detik
+        const intervalId = setInterval(sendHeartbeat, 20000);
         return () => clearInterval(intervalId);
     }, [labId, kelas]);
 
