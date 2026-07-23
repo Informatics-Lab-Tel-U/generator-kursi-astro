@@ -10,12 +10,6 @@
   "assets": {
     "directory": "./dist/client"
   },
-  "kv_namespaces": [
-    {
-      "binding": "LEADERBOARD_KV",
-      "id": "23451be5429b4f5eaa060d53f33c47d6"
-    }
-  ],
   "observability": {
     "enabled": true
   },

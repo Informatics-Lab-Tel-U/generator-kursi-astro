@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { env } from "cloudflare:workers";
+import { leaderboardStore } from "../../lib/store";
 
 
 export const prerender = false;
@@ -8,21 +8,9 @@ export const GET: APIRoute = async ({ url }) => {
     try {
         const room = url.searchParams.get("room") || "default";
 
-        const kvStore = (env as any).LEADERBOARD_KV;
-        if (!kvStore) {
-            return new Response(JSON.stringify([]), {
-                status: 200,
-                headers: {
-                    "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": "*",
-                    "X-KV-Status": "not-configured",
-                },
-            });
-        }
-
-        const data = await kvStore.get(`leaderboard:${room}`);
+        const data = leaderboardStore.get(room) || [];
         
-        return new Response(data || "[]", {
+        return new Response(JSON.stringify(data), {
             status: 200,
             headers: {
                 "Content-Type": "application/json",
