@@ -63,7 +63,8 @@ export async function detectCurrentLabRoom(): Promise<string | null> {
     const isMatch = (await checkFontPrimary(fontName)) || checkFontFallback(fontName);
 
     if (isMatch) {
-      return roomCode;
+      // Format TULT0604 menjadi TULT 0604 agar konsisten dengan overview
+      return roomCode.replace(/([a-zA-Z]+)(\d+)/, '$1 $2');
     }
   }
   return null;
