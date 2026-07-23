@@ -22,11 +22,7 @@ export function buildFontName(roomCode: string): string {
   return `IFLab-${roomCode}-Secret`;
 }
 
-// Metode utama: Font Loading API (didukung semua browser modern, termasuk Incognito)
-async function checkFontPrimary(fontName: string): Promise<boolean> {
-  await document.fonts.ready;
-  return document.fonts.check(`12px "${fontName}"`);
-}
+// Metode pengecekan: DOM Measurement (mendukung semua browser modern dan kebal anti-fingerprinting)
 
 // Metode fallback: bandingkan lebar teks render (untuk browser lama / edge case)
 function checkFontFallback(fontName: string): boolean {
