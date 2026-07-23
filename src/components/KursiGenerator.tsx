@@ -147,14 +147,13 @@ function KursiGeneratorInner() {
     useEffect(() => {
         if (!labId || !kelas || !workerRef.current) return;
 
-        const MA_URL = import.meta.env.PUBLIC_MANAJEMENASPRAK_URL || "https://manajemenasprak.iflabdev.workers.dev";
-        const API_KEY = import.meta.env.PRAKTIKAN_GET_API_KEY || "";
+        // Gunakan proxy lokal Astro agar API KEY aman di server
+        const apiUrl = "/api/heartbeat";
         
         const payload = {
             labId,
             kelas,
-            apiUrl: MA_URL,
-            apiKey: API_KEY
+            apiUrl
         };
 
         workerRef.current.postMessage({

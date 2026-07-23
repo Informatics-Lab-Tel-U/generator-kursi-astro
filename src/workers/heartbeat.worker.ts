@@ -9,16 +9,15 @@ self.onmessage = (e: MessageEvent) => {
             intervalId = null;
         }
         
-        const { labId, kelas, apiUrl, apiKey } = payload;
+        const { labId, kelas, apiUrl } = payload;
         if (!labId || !kelas) return;
         
         const sendHeartbeat = async () => {
             try {
-                await fetch(`${apiUrl}/api/monitoring/heartbeat`, {
+                await fetch(apiUrl, {
                     method: "POST",
                     headers: { 
-                        "Content-Type": "application/json",
-                        "x-praktikan-api-key": apiKey
+                        "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
                         lab_id: labId,
@@ -38,16 +37,15 @@ self.onmessage = (e: MessageEvent) => {
         intervalId = setInterval(sendHeartbeat, 20000);
         
     } else if (action === 'immediate') {
-        const { labId, kelas, apiUrl, apiKey } = payload;
+        const { labId, kelas, apiUrl } = payload;
         if (!labId || !kelas) return;
         
         const sendHeartbeat = async () => {
             try {
-                await fetch(`${apiUrl}/api/monitoring/heartbeat`, {
+                await fetch(apiUrl, {
                     method: "POST",
                     headers: { 
-                        "Content-Type": "application/json",
-                        "x-praktikan-api-key": apiKey
+                        "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
                         lab_id: labId,
