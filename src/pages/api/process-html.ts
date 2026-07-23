@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { parse } from "node-html-parser";
+import { env } from "cloudflare:workers";
 
 
 export const prerender = false;
@@ -18,7 +19,7 @@ export const ALL: APIRoute = async ({ request }) => {
     return new Response(null, { status: 405 });
 };
 
-export const POST: APIRoute = async ({ request, url, locals }) => {
+export const POST: APIRoute = async ({ request, url }) => {
     try {
         const room = url.searchParams.get("room") || "default";
         const body = await request.json();
@@ -95,9 +96,8 @@ export const POST: APIRoute = async ({ request, url, locals }) => {
             }
         }
 
-        // Simpan ke Cloudflare KV (menggunakan Astro locals API untuk CF)
-        const env = (locals as any).runtime?.env;
-        const kvStore = env?.LEADERBOARD_KV;
+        // Simpan ke Cloudflare KV
+        const kvStore = (env as any).LEADERBOARD_KV;
         if (kvStore) {
             await kvStore.put(`leaderboard:${room}`, JSON.stringify(data), {
                 expirationTtl: 60 * 60 * 24, // 1 hari
