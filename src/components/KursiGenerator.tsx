@@ -88,7 +88,7 @@ function KursiGeneratorInner() {
 
     const [showSidebar, setShowSidebar] = useState(true);
     const [versions, setVersions] = useState<SeatVersion[]>([]);
-    
+
     // Monitoring State
     const [labId, setLabId] = useState<string | null>(null);
 
@@ -113,7 +113,7 @@ function KursiGeneratorInner() {
                 }
             }
         } catch (e) { }
-        
+
         // Deteksi apakah PC ini adalah PC Lab menggunakan Font Fingerprinting
         detectCurrentLabRoom().then((room) => {
             if (room) {
@@ -147,13 +147,14 @@ function KursiGeneratorInner() {
     useEffect(() => {
         if (!labId || !kelas || !workerRef.current) return;
 
-        // Gunakan proxy lokal Astro agar API KEY aman di server
-        const apiUrl = "/api/heartbeat";
-        
+        const MA_URL = import.meta.env.PUBLIC_MANAJEMENASPRAK_URL || "https://manajemenasprak.iflabdev.workers.dev";
+        const API_KEY = import.meta.env.PUBLIC_PRAKTIKAN_GET_API_KEY || import.meta.env.PRAKTIKAN_GET_API_KEY || "";
+
         const payload = {
             labId,
             kelas,
-            apiUrl
+            apiUrl: MA_URL,
+            apiKey: API_KEY
         };
 
         workerRef.current.postMessage({
@@ -299,7 +300,7 @@ function KursiGeneratorInner() {
             channel.close();
             broadcastChannelRef.current = null;
         };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // dibuat sekali saat mount
 
     // Kirim update ke projector setiap kali state relevan berubah
@@ -380,8 +381,8 @@ function KursiGeneratorInner() {
         if (needsRegeneration && eligibleStudents.length > 0 && !isLoading) {
             handleGenerate();
         }
-    // seats sengaja dihapus dari deps — dibaca via seatsRef untuk cegah loop
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // seats sengaja dihapus dari deps — dibaca via seatsRef untuk cegah loop
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [disabledSeats, eligibleStudents.length, isLoading, handleGenerate]);
 
     // Drag-and-drop
