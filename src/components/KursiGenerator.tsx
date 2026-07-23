@@ -149,9 +149,24 @@ function KursiGeneratorInner() {
         // Kirim heartbeat pertama kali saat kelas dipilih
         sendHeartbeat();
 
-        // Kirim heartbeat setiap 60 detik
-        const intervalId = setInterval(sendHeartbeat, 60000);
-        return () => clearInterval(intervalId);
+        // Kirim heartbeat setiap 20 detik.
+        // Browser Chrome/Edge/Firefox meng-throttle setInterval ke min. 1 menit saat
+        // tab di-background, sehingga kita tambahkan Page Visibility API:
+        // setiap kali tab kembali ke foreground, langsung kirim heartbeat agar
+        // status tidak flip ke Offline di Dasbor hanya karena asisten pindah tab.
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                console.log('[Monitoring] Tab aktif kembali, mengirim heartbeat segera.');
+                sendHeartbeat();
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        const intervalId = setInterval(sendHeartbeat, 20000);
+        return () => {
+            clearInterval(intervalId);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
     }, [labId, kelas]);
 
     // React Query State
