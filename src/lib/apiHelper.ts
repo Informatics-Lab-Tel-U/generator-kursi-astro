@@ -2,7 +2,7 @@ const FETCH_TIMEOUT_MS = 10_000; // 10 detik
 
 export async function fetchBackendApi(pathAndQuery: string, reqHeaders?: Headers) {
     // Menggunakan import.meta.env (Astro) atau process.env sebagai fallback
-    const apiKey = import.meta.env.PRAKTIKAN_GET_API_KEY || process.env.PRAKTIKAN_GET_API_KEY || "";
+    const apiKey = import.meta.env.PUBLIC_PRAKTIKAN_GET_API_KEY || import.meta.env.PRAKTIKAN_GET_API_KEY || process.env.PUBLIC_PRAKTIKAN_GET_API_KEY || process.env.PRAKTIKAN_GET_API_KEY || "";
     const apiUrl = import.meta.env.PRAKTIKAN_API_URL || process.env.PRAKTIKAN_API_URL || "https://manajemenasprak.iflabdev.workers.dev";
 
     const targetUrl = `${apiUrl}${pathAndQuery}`;
