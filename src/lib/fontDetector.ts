@@ -48,6 +48,12 @@ function checkFontFallback(fontName: string): boolean {
   span.style.top = "-9999px";
   span.style.fontSize = testSize;
   span.style.lineHeight = "normal"; // Pastikan line-height standar agar offsetHeight akurat
+  span.style.whiteSpace = "nowrap"; // Mencegah text-wrapping yang bisa mengacaukan ukuran lebar
+  // --- FIX UTAMA: matikan font-boosting mobile ---
+  ;(span.style as any).webkitTextSizeAdjust = "none";
+  ;(span.style as any).textSizeAdjust = "none";
+  // --- matikan transition kalau ada global CSS reset yang nempel ---
+  span.style.transition = "none";
   span.innerHTML = testString;
   document.body.appendChild(span);
 
@@ -58,11 +64,15 @@ function checkFontFallback(fontName: string): boolean {
     // 1. CONTROL GROUP: Cek ukuran saat menggunakan font fiktif (mengkapitalisasi fallback murni).
     // Ini menyelesaikan masalah quirk fallback di Safari/Android.
     span.style.fontFamily = `"ThisFontDoesNotExist123", ${baseFont}`;
+    // paksa baca offsetWidth (force reflow) agar layout benar-benar settle sebelum pengukuran asli
+    void span.offsetWidth;
     const fallbackWidth = span.offsetWidth;
     const fallbackHeight = span.offsetHeight;
 
     // 2. TARGET: Cek ukuran pakai font rahasia kita.
     span.style.fontFamily = `"${fontName}", ${baseFont}`;
+    // force reflow sekali lagi untuk target
+    void span.offsetWidth;
     const targetWidth = span.offsetWidth;
     const targetHeight = span.offsetHeight;
 
