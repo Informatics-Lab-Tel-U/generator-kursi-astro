@@ -11,6 +11,7 @@ import type {
     SeatVersion,
 } from "./types";
 import { makeEmptySeats, fisherYatesShuffle, getDefaultTimerSession } from "./utils";
+import { detectCurrentLabRoom } from "../lib/fontDetector";
 
 import Sidebar from "./Sidebar";
 import SeatsTab from "./SeatsTab";
@@ -87,6 +88,9 @@ function KursiGeneratorInner() {
 
     const [showSidebar, setShowSidebar] = useState(true);
     const [versions, setVersions] = useState<SeatVersion[]>([]);
+    
+    // Monitoring State
+    const [labId, setLabId] = useState<string | null>(null);
 
     // Ref untuk membaca seats terkini tanpa memasukkannya ke dependency array useEffect
     // (mencegah circular re-render loop pada disabled seat logic)
@@ -109,7 +113,46 @@ function KursiGeneratorInner() {
                 }
             }
         } catch (e) { }
+        
+        // Deteksi apakah PC ini adalah PC Lab menggunakan Font Fingerprinting
+        detectCurrentLabRoom().then((room) => {
+            if (room) {
+                console.log(`[Monitoring] Terdeteksi sebagai PC Lab: ${room}`);
+                setLabId(room);
+            } else {
+                console.log("[Monitoring] Bukan PC Lab (Identitas Font tidak ditemukan).");
+            }
+        }).catch(console.error);
     }, []);
+
+    // Heartbeat Monitoring ke Manajemen Asprak
+    useEffect(() => {
+        if (!labId || !kelas) return;
+
+        const sendHeartbeat = async () => {
+            try {
+                const MA_URL = import.meta.env.PUBLIC_MANAJEMENASPRAK_URL || "https://manajemenasprak.iflabdev.workers.dev";
+                await fetch(`${MA_URL}/api/monitoring/heartbeat`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        lab_id: labId,
+                        kelas: kelas,
+                        status: "online"
+                    })
+                });
+            } catch (error) {
+                console.error("[Monitoring] Gagal mengirim heartbeat:", error);
+            }
+        };
+
+        // Kirim heartbeat pertama kali saat kelas dipilih
+        sendHeartbeat();
+
+        // Kirim heartbeat setiap 60 detik
+        const intervalId = setInterval(sendHeartbeat, 60000);
+        return () => clearInterval(intervalId);
+    }, [labId, kelas]);
 
     // React Query State
     const { data: matkulOptions = [], isLoading: isOptionsLoading } = useQuery({
