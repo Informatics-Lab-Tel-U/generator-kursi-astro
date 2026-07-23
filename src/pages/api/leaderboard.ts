@@ -1,14 +1,14 @@
 import type { APIRoute } from "astro";
+import { env } from "cloudflare:workers";
 
 
 export const prerender = false;
 
-export const GET: APIRoute = async ({ url, locals }) => {
+export const GET: APIRoute = async ({ url }) => {
     try {
         const room = url.searchParams.get("room") || "default";
 
-        const env = (locals as any).runtime?.env;
-        const kvStore = env?.LEADERBOARD_KV;
+        const kvStore = (env as any).LEADERBOARD_KV;
         if (!kvStore) {
             return new Response(JSON.stringify([]), {
                 status: 200,
