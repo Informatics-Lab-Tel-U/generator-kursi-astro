@@ -18,7 +18,7 @@ export const ALL: APIRoute = async ({ request }) => {
     return new Response(null, { status: 405 });
 };
 
-export const POST: APIRoute = async ({ request, url }) => {
+export const POST: APIRoute = async ({ request, url, locals }) => {
     try {
         const room = url.searchParams.get("room") || "default";
         const body = await request.json();
@@ -95,17 +95,16 @@ export const POST: APIRoute = async ({ request, url }) => {
             }
         }
 
-        // Note: Untuk Vercel/Node environment, Anda bisa memakai Redis atau @vercel/kv.
-        // Di sini kita hapus cloudflare:workers.
-        // const kvStore = (env as any).LEADERBOARD_KV;
-        // if (kvStore) {
-        //     await kvStore.put(`leaderboard:${room}`, JSON.stringify(data), {
-        //         expirationTtl: 60 * 60 * 24, // 1 hari
-        //     });
-        // }
-        // Jika KV belum dikonfigurasi, tetap return sukses (data tidak disimpan tapi tidak crash)
+        // Simpan ke Cloudflare KV (menggunakan Astro locals API untuk CF)
+        const env = (locals as any).runtime?.env;
+        const kvStore = env?.LEADERBOARD_KV;
+        if (kvStore) {
+            await kvStore.put(`leaderboard:${room}`, JSON.stringify(data), {
+                expirationTtl: 60 * 60 * 24, // 1 hari
+            });
+        }
 
-        return new Response(JSON.stringify({ success: true, count: data.length }), {
+        return new Response(JSON.stringify({ success: true, count: data.length, kvSaved: !!kvStore }), {
             status: 200,
             headers: {
                 "Content-Type": "application/json",
