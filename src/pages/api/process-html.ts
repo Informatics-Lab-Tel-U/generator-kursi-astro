@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { parse } from "node-html-parser";
-import { leaderboardStore } from "../../../lib/store";
+import { leaderboardStore } from "../../lib/store";
 
 
 export const prerender = false;

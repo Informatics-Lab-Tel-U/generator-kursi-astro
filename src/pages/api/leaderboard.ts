@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { leaderboardStore } from "../../../lib/store";
+import { leaderboardStore } from "../../lib/store";
 
 
 export const prerender = false;
