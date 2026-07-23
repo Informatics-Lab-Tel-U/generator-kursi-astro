@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { parse } from "node-html-parser";
-import { env } from "cloudflare:workers";
+import { leaderboardStore } from "../../../lib/store";
 
 
 export const prerender = false;
@@ -96,15 +96,10 @@ export const POST: APIRoute = async ({ request, url }) => {
             }
         }
 
-        // Simpan ke Cloudflare KV
-        const kvStore = (env as any).LEADERBOARD_KV;
-        if (kvStore) {
-            await kvStore.put(`leaderboard:${room}`, JSON.stringify(data), {
-                expirationTtl: 60 * 60 * 24, // 1 hari
-            });
-        }
+        // Simpan ke in-memory store (murni temporary)
+        leaderboardStore.set(room, data);
 
-        return new Response(JSON.stringify({ success: true, count: data.length, kvSaved: !!kvStore }), {
+        return new Response(JSON.stringify({ success: true, count: data.length, kvSaved: false }), {
             status: 200,
             headers: {
                 "Content-Type": "application/json",
