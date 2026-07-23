@@ -125,46 +125,55 @@ function KursiGeneratorInner() {
         }).catch(console.error);
     }, []);
 
-    // Heartbeat Monitoring ke Manajemen Asprak
-    useEffect(() => {
-        if (!labId || !kelas) return;
+    const workerRef = useRef<Worker | null>(null);
 
-        const sendHeartbeat = async () => {
-            try {
-                const MA_URL = import.meta.env.PUBLIC_MANAJEMENASPRAK_URL || "https://manajemenasprak.iflabdev.workers.dev";
-                await fetch(`${MA_URL}/api/monitoring/heartbeat`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        lab_id: labId,
-                        kelas: kelas,
-                        status: "online"
-                    })
-                });
-            } catch (error) {
-                console.error("[Monitoring] Gagal mengirim heartbeat:", error);
+    // Inisialisasi Web Worker sekali
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            workerRef.current = new Worker(
+                new URL('../workers/heartbeat.worker.ts', import.meta.url),
+                { type: 'module' }
+            );
+        }
+        return () => {
+            if (workerRef.current) {
+                workerRef.current.terminate();
+                workerRef.current = null;
             }
         };
+    }, []);
 
-        // Kirim heartbeat pertama kali saat kelas dipilih
-        sendHeartbeat();
+    // Heartbeat Monitoring ke Manajemen Asprak (via Web Worker)
+    useEffect(() => {
+        if (!labId || !kelas || !workerRef.current) return;
 
-        // Kirim heartbeat setiap 20 detik.
-        // Browser Chrome/Edge/Firefox meng-throttle setInterval ke min. 1 menit saat
-        // tab di-background, sehingga kita tambahkan Page Visibility API:
-        // setiap kali tab kembali ke foreground, langsung kirim heartbeat agar
-        // status tidak flip ke Offline di Dasbor hanya karena asisten pindah tab.
+        const MA_URL = import.meta.env.PUBLIC_MANAJEMENASPRAK_URL || "https://manajemenasprak.iflabdev.workers.dev";
+        const API_KEY = import.meta.env.PRAKTIKAN_GET_API_KEY || "";
+        
+        const payload = {
+            labId,
+            kelas,
+            apiUrl: MA_URL,
+            apiKey: API_KEY
+        };
+
+        workerRef.current.postMessage({
+            action: 'start',
+            payload
+        });
+
         const handleVisibilityChange = () => {
-            if (document.visibilityState === 'visible') {
-                console.log('[Monitoring] Tab aktif kembali, mengirim heartbeat segera.');
-                sendHeartbeat();
+            if (document.visibilityState === 'visible' && workerRef.current) {
+                console.log('[Monitoring] Tab aktif kembali, mengirim heartbeat segera via Worker.');
+                workerRef.current.postMessage({ action: 'immediate', payload });
             }
         };
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
-        const intervalId = setInterval(sendHeartbeat, 20000);
         return () => {
-            clearInterval(intervalId);
+            if (workerRef.current) {
+                workerRef.current.postMessage({ action: 'stop' });
+            }
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
     }, [labId, kelas]);
