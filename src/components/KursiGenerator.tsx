@@ -144,24 +144,25 @@ function KursiGeneratorInner() {
     }, []);
 
     // Heartbeat Monitoring ke Manajemen Asprak (via Web Worker)
+    // Dimulai segera saat labId terdeteksi — kelas "-" jika belum dipilih.
+    // Sehingga lab langsung muncul di dashboard monitoring meski user belum input kelas.
     useEffect(() => {
-        if (!labId || !kelas || !workerRef.current) return;
+        if (!labId || !workerRef.current) return;
 
         const MA_URL = import.meta.env.PUBLIC_MANAJEMENASPRAK_URL || "https://manajemenasprak.iflabdev.workers.dev";
         const API_KEY = import.meta.env.PUBLIC_PRAKTIKAN_GET_API_KEY || import.meta.env.PRAKTIKAN_GET_API_KEY || "";
 
         const payload = {
             labId,
-            kelas,
+            kelas: kelas || "-",  // Kirim "-" saat kelas belum dipilih, bukan diam sama sekali
             apiUrl: MA_URL,
-            apiKey: API_KEY
+            apiKey: API_KEY,
         };
 
-        workerRef.current.postMessage({
-            action: 'start',
-            payload
-        });
+        // Start/update worker (worker otomatis clear interval lama saat action='start')
+        workerRef.current.postMessage({ action: 'start', payload });
 
+        // Saat tab kembali aktif dari background → kirim heartbeat segera
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'visible' && workerRef.current) {
                 console.log('[Monitoring] Tab aktif kembali, mengirim heartbeat segera via Worker.');
@@ -170,11 +171,22 @@ function KursiGeneratorInner() {
         };
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
+        // Saat tab/browser ditutup → kirim sinyal "offline" via keepalive fetch
+        // keepalive: true memastikan request selesai meski halaman sedang di-unload
+        const handleBeforeUnload = () => {
+            if (!workerRef.current) return;
+            workerRef.current.postMessage({
+                action: 'immediate',
+                payload: { ...payload, status: 'offline', keepalive: true },
+            });
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
         return () => {
-            if (workerRef.current) {
-                workerRef.current.postMessage({ action: 'stop' });
-            }
             document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+            // Saat kelas berubah, effect ini re-run → worker akan di-start ulang dengan kelas baru
+            // Worker dihentikan total hanya saat component unmount (lihat workerRef cleanup di atas)
         };
     }, [labId, kelas]);
 
