@@ -1,23 +1,38 @@
 let intervalId: number | NodeJS.Timeout | null = null;
 let lastResponseTimeMs: number | null = null;
 
-const postHeartbeat = async (apiUrl: string, apiKey: string, labId: string, kelas: string, silentError = false) => {
+const postHeartbeat = async (
+    apiUrl: string,
+    apiKey: string,
+    labId: string,
+    kelas: string,
+    status: string = 'online',
+    keepalive: boolean = false,
+    silentError = false,
+) => {
     const startTime = performance.now();
     try {
         await fetch(`${apiUrl}/api/monitoring/heartbeat`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "x-praktikan-api-key": apiKey
+                "x-praktikan-api-key": apiKey,
             },
             body: JSON.stringify({
                 lab_id: labId,
                 kelas: kelas,
-                status: "online",
-                response_time_ms: lastResponseTimeMs
-            })
+                status: status,
+                // Saat offline, laporkan null — tidak ada data latensi yang valid
+                response_time_ms: status === 'online' ? lastResponseTimeMs : null,
+            }),
+            // keepalive: true memastikan fetch selesai meski halaman sedang ditutup (beforeunload)
+            keepalive: keepalive,
         });
-        lastResponseTimeMs = Math.round(performance.now() - startTime);
+
+        // Catat latensi HANYA untuk siklus online reguler
+        if (status === 'online') {
+            lastResponseTimeMs = Math.round(performance.now() - startTime);
+        }
     } catch (error) {
         lastResponseTimeMs = null;
         if (!silentError) {
@@ -30,27 +45,29 @@ self.onmessage = (e: MessageEvent) => {
     const { action, payload } = e.data;
 
     if (action === 'start' || action === 'update') {
+        // Bersihkan interval lama agar tidak ada dobel-tick
         if (intervalId) {
             clearInterval(intervalId as number);
             intervalId = null;
         }
 
         const { labId, kelas, apiUrl, apiKey } = payload;
-        if (!labId || !kelas) return;
+        if (!labId) return; // kelas boleh kosong/"-", labId wajib
 
         const sendHeartbeat = () => postHeartbeat(apiUrl, apiKey, labId, kelas);
 
         // Kirim segera saat start/update
         sendHeartbeat();
 
-        // Set interval 20 detik
-        intervalId = setInterval(sendHeartbeat, 20000);
+        // Kirim setiap 20 detik
+        intervalId = setInterval(sendHeartbeat, 20_000);
 
     } else if (action === 'immediate') {
-        const { labId, kelas, apiUrl, apiKey } = payload;
-        if (!labId || !kelas) return;
+        const { labId, kelas, apiUrl, apiKey, status = 'online', keepalive = false } = payload;
+        if (!labId) return;
 
-        postHeartbeat(apiUrl, apiKey, labId, kelas, true);
+        // Kirim sekali seketika (misal: tab baru aktif atau sinyal offline saat ditutup)
+        postHeartbeat(apiUrl, apiKey, labId, kelas, status, keepalive, true);
 
     } else if (action === 'stop') {
         if (intervalId) {
