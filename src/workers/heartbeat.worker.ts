@@ -1,4 +1,30 @@
 let intervalId: number | NodeJS.Timeout | null = null;
+let lastResponseTimeMs: number | null = null;
+
+const postHeartbeat = async (apiUrl: string, apiKey: string, labId: string, kelas: string, silentError = false) => {
+    const startTime = performance.now();
+    try {
+        await fetch(`${apiUrl}/api/monitoring/heartbeat`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "x-praktikan-api-key": apiKey
+            },
+            body: JSON.stringify({
+                lab_id: labId,
+                kelas: kelas,
+                status: "online",
+                response_time_ms: lastResponseTimeMs
+            })
+        });
+        lastResponseTimeMs = Math.round(performance.now() - startTime);
+    } catch (error) {
+        lastResponseTimeMs = null;
+        if (!silentError) {
+            console.error("[Worker Monitoring] Gagal mengirim heartbeat:", error);
+        }
+    }
+};
 
 self.onmessage = (e: MessageEvent) => {
     const { action, payload } = e.data;
@@ -12,24 +38,7 @@ self.onmessage = (e: MessageEvent) => {
         const { labId, kelas, apiUrl, apiKey } = payload;
         if (!labId || !kelas) return;
 
-        const sendHeartbeat = async () => {
-            try {
-                await fetch(`${apiUrl}/api/monitoring/heartbeat`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "x-praktikan-api-key": apiKey
-                    },
-                    body: JSON.stringify({
-                        lab_id: labId,
-                        kelas: kelas,
-                        status: "online"
-                    })
-                });
-            } catch (error) {
-                console.error("[Worker Monitoring] Gagal mengirim heartbeat:", error);
-            }
-        };
+        const sendHeartbeat = () => postHeartbeat(apiUrl, apiKey, labId, kelas);
 
         // Kirim segera saat start/update
         sendHeartbeat();
@@ -41,32 +50,14 @@ self.onmessage = (e: MessageEvent) => {
         const { labId, kelas, apiUrl, apiKey } = payload;
         if (!labId || !kelas) return;
 
-        const sendHeartbeat = async () => {
-            try {
-                await fetch(`${apiUrl}/api/monitoring/heartbeat`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "x-praktikan-api-key": apiKey
-                    },
-                    body: JSON.stringify({
-                        lab_id: labId,
-                        kelas: kelas,
-                        status: "online"
-                    })
-                });
-            } catch (error) {
-                // Ignore jika sekadar heartbeat visibilitychange gagal
-            }
-        };
-
-        sendHeartbeat();
+        postHeartbeat(apiUrl, apiKey, labId, kelas, true);
 
     } else if (action === 'stop') {
         if (intervalId) {
             clearInterval(intervalId as number);
             intervalId = null;
         }
+        lastResponseTimeMs = null;
     }
 };
 
