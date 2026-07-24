@@ -7,7 +7,7 @@ import NotesTab from './NotesTab';
 import CountdownTab from './CountdownTab';
 import { LuLayoutGrid, LuFileText, LuTimer, LuMonitor } from 'react-icons/lu';
 
-import './KursiGenerator.css'; 
+import './KursiGenerator.css';
 
 type PanelId = 'seats' | 'notes' | 'countdown';
 
@@ -85,22 +85,22 @@ export default function ProjectorView() {
   }, [projectorConfig.showSeats, showInfoTab, activeTab]);
 
   const renderGenerator = () => (
-    <div className="projector-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg-card)', padding: '20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', padding: '0 4px' }}>
         <LuLayoutGrid /> Posisi Duduk
       </div>
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-        <SeatsTab 
+        <SeatsTab
           columns={columns}
           disabledSeats={disabledSeats}
           dragSourceSeat={null}
           dragOverSeat={null}
           isLoading={false}
-          handleDragStart={() => {}}
-          handleDragOver={() => {}}
-          handleDragLeave={() => {}}
-          handleDrop={() => {}}
-          handleDragEnd={() => {}}
+          handleDragStart={() => { }}
+          handleDragOver={() => { }}
+          handleDragLeave={() => { }}
+          handleDrop={() => { }}
+          handleDragEnd={() => { }}
         />
       </div>
     </div>
@@ -109,12 +109,12 @@ export default function ProjectorView() {
   const renderInfo = () => (
     <div style={{ display: 'flex', gap: '16px', flex: 1, overflow: 'hidden' }}>
       {projectorConfig.showNotes && (
-        <div className="projector-panel" style={{ 
+        <div style={{
           width: projectorConfig.showCountdown ? `${notesWidth}px` : '100%',
           flex: projectorConfig.showCountdown ? '0 0 auto' : '1',
-          display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg-card)', padding: '20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' 
+          display: 'flex', flexDirection: 'column', overflow: 'hidden'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', padding: '0 4px' }}>
             <LuFileText /> Catatan Praktikum
           </div>
           <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
@@ -124,11 +124,11 @@ export default function ProjectorView() {
       )}
 
       {projectorConfig.showNotes && projectorConfig.showCountdown && (
-        <div 
+        <div
           onMouseDown={startDrag}
-          style={{ 
-            width: '12px', 
-            cursor: 'col-resize', 
+          style={{
+            width: '12px',
+            cursor: 'col-resize',
             background: 'transparent',
             display: 'flex',
             alignItems: 'center',
@@ -141,21 +141,21 @@ export default function ProjectorView() {
           <div style={{ width: '4px', height: '32px', background: 'var(--border)', borderRadius: '2px' }}></div>
         </div>
       )}
-      
+
       {projectorConfig.showCountdown && (
-        <div className="projector-panel" style={{ 
-          flex: '1 1 0', 
+        <div style={{
+          flex: '1 1 0',
           minWidth: 0,
-          display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg-card)', padding: '20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' 
+          display: 'flex', flexDirection: 'column', overflow: 'hidden'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', padding: '0 4px' }}>
             <LuTimer /> Hitung Mundur
           </div>
           <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-            <CountdownTab 
-              timer={timer} 
-              racers={racers} 
-              readOnly={true} 
+            <CountdownTab
+              timer={timer}
+              racers={racers}
+              readOnly={true}
               kelas={kelas}
               eligibleStudents={eligibleStudents}
             />
@@ -178,17 +178,17 @@ export default function ProjectorView() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '16px', boxSizing: 'border-box', background: 'var(--bg-page)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '16px 16px', boxSizing: 'border-box', background: 'var(--bg-page)' }}>
       {projectorConfig.showSeats && showInfoTab && (
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', flexShrink: 0 }}>
           <div className="tab-bar">
-            <button 
+            <button
               className={`tab ${activeTab === 'generator' ? 'active' : ''}`}
               onClick={() => setActiveTab('generator')}
             >
               Posisi Duduk
             </button>
-            <button 
+            <button
               className={`tab ${activeTab === 'info' ? 'active' : ''}`}
               onClick={() => setActiveTab('info')}
             >
@@ -197,7 +197,7 @@ export default function ProjectorView() {
           </div>
         </div>
       )}
-      
+
       <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
         {projectorConfig.showSeats && (!showInfoTab || activeTab === 'generator') && renderGenerator()}
         {showInfoTab && (!projectorConfig.showSeats || activeTab === 'info') && renderInfo()}

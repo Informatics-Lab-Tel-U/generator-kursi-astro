@@ -1,6 +1,6 @@
-/* ═══════════════════════════════════════════════
-   KursiGenerator — Clean Minimal (Stitch)
-   ═══════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   KursiGenerator â€” Clean Minimal (Stitch)
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 /* ===== App Layout ===== */
 .app-container {
@@ -95,7 +95,7 @@
     gap: 8px;
 }
 
-.sidebar-section + .sidebar-section {
+.sidebar-section+.sidebar-section {
     border-top: 1px solid var(--border-light);
 }
 
@@ -301,6 +301,98 @@
 
 .btn-secondary {
     background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-active);
+}
+
+.theme-toggle:active {
+    transform: scale(0.95);
+}
+
+/* ===== Projector Config Bar ===== */
+.projector-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--accent-surface);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    padding: 0 16px;
+    height: 42px;
+    box-sizing: border-box;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--accent-light);
+}
+
+.projector-bar-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.projector-bar label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text-primary);
+}
+
+.projector-bar input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--accent);
+    border-radius: 4px;
+    background-color: var(--bg-input);
+    cursor: pointer;
+    position: relative;
+    transition: all var(--transition-fast);
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.projector-bar input[type="checkbox"]:checked {
+    background-color: var(--accent);
+    border-color: var(--accent);
+}
+
+.projector-bar input[type="checkbox"]:checked::after {
+    content: "";
+    position: absolute;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    top: 2px;
+    left: 5px;
+}
+
+.projector-bar input[type="checkbox"]:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: var(--text-on-accent);
+}
+
+.btn-primary:hover {
+    background: var(--accent-hover);
+}
+
+.btn-secondary {
+    background: var(--bg-hover);
     color: var(--text-secondary);
     border: 1px solid var(--border);
 }
@@ -436,10 +528,16 @@
     padding: 4px;
     border-radius: var(--radius);
     border: 1px solid var(--border-light);
+    height: 42px;
+    box-sizing: border-box;
 }
 
 .tab {
-    padding: 7px 18px;
+    padding: 0 18px;
+    height: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     border: none;
     border-radius: var(--radius-sm);
     background: transparent;
@@ -494,7 +592,7 @@
     letter-spacing: 0.06em;
 }
 
-.seat-column-header > span {
+.seat-column-header>span {
     padding: 8px;
 }
 
@@ -513,7 +611,7 @@
     border-bottom: 1px solid var(--border-light);
     font-size: 14px;
     transition: background var(--transition-fast);
-    height: 56px;
+    min-height: 56px;
     box-sizing: border-box;
     align-items: center;
     cursor: default;
@@ -553,13 +651,11 @@
 }
 
 .seat-row.disabled {
-    background: repeating-linear-gradient(
-        -45deg,
-        var(--bg-page),
-        var(--bg-page) 3px,
-        var(--bg-row-even) 3px,
-        var(--bg-row-even) 6px
-    ) !important;
+    background: repeating-linear-gradient(-45deg,
+            var(--bg-page),
+            var(--bg-page) 3px,
+            var(--bg-row-even) 3px,
+            var(--bg-row-even) 6px) !important;
     opacity: 0.4;
 }
 
@@ -579,10 +675,6 @@
     padding: 8px;
     font-weight: 500;
     color: var(--text-primary);
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
     white-space: normal;
     font-size: 13px;
     line-height: 1.3;
@@ -626,12 +718,10 @@
     height: 14px;
     width: 80%;
     border-radius: 6px;
-    background: linear-gradient(
-        90deg,
-        var(--border-light) 25%,
-        var(--bg-hover) 50%,
-        var(--border-light) 75%
-    );
+    background: linear-gradient(90deg,
+            var(--border-light) 25%,
+            var(--bg-hover) 50%,
+            var(--border-light) 75%);
     background-size: 200% 100%;
     animation: skeleton-pulse 1.5s infinite ease-in-out;
 }
@@ -644,6 +734,7 @@
     0% {
         background-position: 200% 0;
     }
+
     100% {
         background-position: -200% 0;
     }
@@ -653,6 +744,7 @@
 .name-small {
     display: none;
 }
+
 .name-default {
     display: inline;
 }
@@ -863,13 +955,11 @@
     right: 16px;
     width: 24px;
     height: 100%;
-    background: repeating-linear-gradient(
-        45deg,
-        var(--danger) 0,
-        var(--danger) 12px,
-        var(--bg-elevated) 12px,
-        var(--bg-elevated) 24px
-    );
+    background: repeating-linear-gradient(45deg,
+            var(--danger) 0,
+            var(--danger) 12px,
+            var(--bg-elevated) 12px,
+            var(--bg-elevated) 24px);
     z-index: 1;
     opacity: 0.8;
     border-left: 3px solid var(--bg-elevated);
@@ -879,6 +969,7 @@
     from {
         opacity: 1;
     }
+
     to {
         opacity: 0.4;
     }
@@ -905,82 +996,13 @@
     transform: scale(1.05);
 }
 
-.theme-toggle:active {
-    transform: scale(0.95);
-}
-
-/* ===== Projector Config Bar ===== */
-.projector-bar {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    background: var(--glass-bg);
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    padding: 6px 16px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--glass-border);
-}
-
-.projector-bar-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-secondary);
-}
-
-.projector-bar label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    cursor: pointer;
-    color: var(--text-secondary);
-}
-
-.projector-bar input[type="checkbox"] {
-    appearance: none;
-    -webkit-appearance: none;
-    width: 16px;
-    height: 16px;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    background-color: var(--bg-input);
-    cursor: pointer;
-    position: relative;
-    transition: all var(--transition-fast);
-    margin: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.projector-bar input[type="checkbox"]:checked {
-    background-color: var(--accent);
-    border-color: var(--accent);
-}
-
-.projector-bar input[type="checkbox"]:checked::after {
-    content: "";
-    position: absolute;
-    width: 4px;
-    height: 8px;
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-    top: 2px;
-    left: 5px;
-}
-
-.projector-bar input[type="checkbox"]:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--accent-light);
-}
 
 /* ===== Responsive ===== */
 @media (max-width: 1100px) {
     .name-default {
         display: none;
     }
+
     .name-small {
         display: inline;
     }
@@ -1017,3 +1039,126 @@
         font-size: 12px;
     }
 }
+
+/* ===== Time Warning State ===== */
+[data-theme='light'] body.time-warning,
+body.time-warning {
+    --shadow-xs: none !important;
+    --shadow-sm: none !important;
+    --shadow-md: none !important;
+    --shadow-lg: none !important;
+}
+body.time-warning {
+    --bg-page: #ffaa00 !important; /* Kuning terang menyala */
+    --bg-card: #f59e0b !important;
+    --bg-header: #d97706 !important;
+    --bg-row-even: rgba(255, 255, 255, 0.1) !important;
+    --text-primary: #ffffff !important;
+    --text-secondary: rgba(255, 255, 255, 0.8) !important;
+    --text-muted: rgba(255, 255, 255, 0.6) !important;
+}
+
+[data-theme='light'] body.time-warning {
+    --bg-page: #ffcc00 !important; /* Kuning sangat terang untuk light mode */
+    --bg-card: #ffb300 !important;
+    --bg-header: #ff9800 !important;
+    --bg-row-even: rgba(0, 0, 0, 0.05) !important;
+    --text-primary: #ffffff !important;
+    --text-secondary: rgba(255, 255, 255, 0.9) !important;
+    --text-muted: rgba(255, 255, 255, 0.7) !important;
+    --glass-bg: rgba(0, 0, 0, 0.15) !important; /* Menghapus efek putih susu pada kontainer */
+}
+
+.countdown-time {
+    transition: font-size 0.3s ease, color 0.3s ease;
+}
+
+.countdown-time.warning {
+    font-size: 84px !important;
+    color: #ffffff !important;
+}
+
+
+/* Prevent leaderboard from changing colors during warnings/danger/finished */
+body.time-warning .leaderboard-natural,
+body.time-danger .leaderboard-natural,
+body.time-finished .leaderboard-natural {
+    --bg-header: rgba(255, 255, 255, 0.07) !important;
+    --bg-card: rgba(255, 255, 255, 0.04) !important;
+    --bg-row-even: rgba(255, 255, 255, 0.03) !important;
+    --glass-bg: #1e1e22 !important;
+}
+[data-theme='light'] body.time-warning .leaderboard-natural,
+[data-theme='light'] body.time-danger .leaderboard-natural,
+[data-theme='light'] body.time-finished .leaderboard-natural {
+    --bg-header: #1f1f1f !important;
+    --bg-card: #ffffff !important;
+    --bg-row-even: #f1f3f4 !important;
+    --text-header: #ffffff !important;
+    --glass-bg: #ffffff !important;
+    --text-primary: #1f1f1f !important;
+    --text-secondary: #5f6368 !important;
+    --text-muted: #9aa0a6 !important;
+}
+
+
+/* ===== Time Danger State (Last 1 minute) ===== */
+[data-theme='light'] body.time-danger,
+body.time-danger {
+    --shadow-xs: none !important;
+    --shadow-sm: none !important;
+    --shadow-md: none !important;
+    --shadow-lg: none !important;
+}
+body.time-danger {
+    --bg-page: #ef4444 !important; /* Merah menyala */
+    --bg-card: #dc2626 !important; 
+    --bg-header: #b91c1c !important; 
+    --bg-row-even: rgba(255, 255, 255, 0.1) !important;
+}
+[data-theme='light'] body.time-danger {
+    --bg-page: #ff1a1a !important; /* Merah sangat silau untuk light mode */
+    --bg-card: #ff4d4d !important; 
+    --bg-header: #ff6666 !important; 
+    --bg-row-even: rgba(0, 0, 0, 0.05) !important;
+    --text-primary: #ffffff !important;
+    --text-secondary: rgba(255, 255, 255, 0.9) !important;
+    --text-muted: rgba(255, 255, 255, 0.7) !important;
+    --glass-bg: rgba(0, 0, 0, 0.15) !important;
+}
+
+.countdown-time.danger {
+    font-size: 110px !important; 
+    color: #ffffff !important;
+}
+
+/* ===== Time Finished State (00:00) ===== */
+[data-theme='light'] body.time-finished,
+body.time-finished {
+    --shadow-xs: none !important;
+    --shadow-sm: none !important;
+    --shadow-md: none !important;
+    --shadow-lg: none !important;
+}
+body.time-finished {
+    --bg-page: #00cc44 !important; /* Hijau terang menyala */
+    --bg-card: #00b33c !important; 
+    --bg-header: #009933 !important; 
+    --bg-row-even: rgba(255, 255, 255, 0.1) !important;
+}
+[data-theme='light'] body.time-finished {
+    --bg-page: #00e64d !important; /* Hijau sangat terang (neon) */
+    --bg-card: #33ff77 !important; 
+    --bg-header: #66ff99 !important; 
+    --bg-row-even: rgba(0, 0, 0, 0.05) !important;
+    --text-primary: #ffffff !important;
+    --text-secondary: rgba(255, 255, 255, 0.9) !important;
+    --text-muted: rgba(255, 255, 255, 0.7) !important;
+    --glass-bg: rgba(0, 0, 0, 0.15) !important;
+}
+
+.countdown-time.finished {
+    font-size: 110px !important; 
+    color: #ffffff !important;
+}
+

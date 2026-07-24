@@ -126,7 +126,7 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
     const notCompletedStudentsCount = totalStudents - completedStudentsCount;
 
     return (
-        <div style={{
+        <div className="leaderboard-natural" style={{
             backgroundColor: 'var(--glass-bg)', 
             backdropFilter: 'blur(var(--glass-blur))',
             WebkitBackdropFilter: 'blur(var(--glass-blur))',

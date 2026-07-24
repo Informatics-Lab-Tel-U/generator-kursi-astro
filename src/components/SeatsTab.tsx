@@ -17,14 +17,14 @@ interface SeatsTabProps {
 // Color palette for asprak badges
 const ASPRAK_COLORS: Record<string, { bg: string; color: string }> = {};
 const COLOR_POOL = [
-  { bg: 'rgba(138,180,248,0.15)', color: '#8ab4f8' },
-  { bg: 'rgba(129,201,149,0.15)', color: '#81c995' },
-  { bg: 'rgba(253,214,99,0.15)', color: '#fdd663' },
-  { bg: 'rgba(242,139,130,0.15)', color: '#f28b82' },
-  { bg: 'rgba(197,138,249,0.15)', color: '#c58af9' },
-  { bg: 'rgba(252,167,112,0.15)', color: '#fca770' },
-  { bg: 'rgba(120,215,252,0.15)', color: '#78d7fc' },
-  { bg: 'rgba(255,138,186,0.15)', color: '#ff8aba' },
+  { bg: 'rgba(138,180,248,0.04)', color: '#8ab4f8' },
+  { bg: 'rgba(129,201,149,0.04)', color: '#81c995' },
+  { bg: 'rgba(253,214,99,0.04)', color: '#fdd663' },
+  { bg: 'rgba(242,139,130,0.04)', color: '#f28b82' },
+  { bg: 'rgba(197,138,249,0.04)', color: '#c58af9' },
+  { bg: 'rgba(252,167,112,0.04)', color: '#fca770' },
+  { bg: 'rgba(120,215,252,0.04)', color: '#78d7fc' },
+  { bg: 'rgba(255,138,186,0.04)', color: '#ff8aba' },
 ];
 let colorIdx = 0;
 
@@ -38,22 +38,7 @@ function getAsprakColor(asprak: string) {
 
 function formatName(name: string): { defaultName: string, smallName: string } {
   if (!name) return { defaultName: "", smallName: "" };
-  const parts = name.split(' ').filter(Boolean);
-  if (parts.length === 1) return { defaultName: parts[0], smallName: parts[0] };
-
-  const defaultName = [
-    parts[0],
-    parts[1],
-    ...parts.slice(2).map(p => p[0] + '.')
-  ].join(' ');
-
-  const smallName = [
-    parts[0][0] + '.',
-    parts[1],
-    ...parts.slice(2).map(p => p[0] + '.')
-  ].join(' ');
-
-  return { defaultName, smallName };
+  return { defaultName: name, smallName: name };
 }
 
 export default function SeatsTab({
