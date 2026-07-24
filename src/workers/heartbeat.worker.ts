@@ -24,6 +24,7 @@ const postHeartbeat = async (
                 status: status,
                 // Saat offline, laporkan null — tidak ada data latensi yang valid
                 response_time_ms: status === 'online' ? lastResponseTimeMs : null,
+                client_timestamp: Date.now(),
             }),
             // keepalive: true memastikan fetch selesai meski halaman sedang ditutup (beforeunload)
             keepalive: keepalive,
