@@ -174,11 +174,27 @@ function KursiGeneratorInner() {
         // Saat tab/browser ditutup → kirim sinyal "offline" via keepalive fetch
         // keepalive: true memastikan request selesai meski halaman sedang di-unload
         const handleBeforeUnload = () => {
-            if (!workerRef.current) return;
-            workerRef.current.postMessage({
-                action: 'immediate',
-                payload: { ...payload, status: 'offline', keepalive: true },
+            // PENTING: Gunakan fetch langsung di main thread dengan keepalive: true
+            // daripada postMessage ke worker, karena browser bisa membunuh worker
+            // secara preemptive sebelum message sempat diproses saat teardown halaman.
+            const url = `${MA_URL}/api/monitoring/heartbeat`;
+            const body = JSON.stringify({
+                lab_id: labId,
+                kelas: kelas || "-",
+                status: 'offline',
+                response_time_ms: null,
+                client_timestamp: Date.now(),
             });
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-praktikan-api-key': API_KEY,
+                },
+                body,
+                keepalive: true,
+            }).catch(() => {});
         };
         window.addEventListener('beforeunload', handleBeforeUnload);
 
