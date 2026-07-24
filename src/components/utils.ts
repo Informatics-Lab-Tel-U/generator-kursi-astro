@@ -1,6 +1,6 @@
 import type { SeatData } from './types';
 
-export function formatTimeWithMs(remainMs: number): string {
+export function formatTimeWithMs(remainMs: number): { main: string; centi: string } {
   if (remainMs < 0) remainMs = 0;
   const totalSeconds = Math.floor(remainMs / 1000);
   const centi = Math.floor((remainMs % 1000) / 10);
@@ -12,9 +12,12 @@ export function formatTimeWithMs(remainMs: number): string {
   const centiStr = String(centi).padStart(2, '0');
 
   if (h > 0) {
-    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${centiStr}`;
+    return { main: `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`, centi: centiStr };
   }
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${centiStr}`;
+  if (m === 0) {
+    return { main: `${String(s).padStart(2, '0')}`, centi: centiStr };
+  }
+  return { main: `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`, centi: centiStr };
 }
 
 export function fisherYatesShuffle<T>(arr: T[]): T[] {

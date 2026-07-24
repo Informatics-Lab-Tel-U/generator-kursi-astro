@@ -185,6 +185,108 @@ export default function CountdownTab({
 
     const timerRatio = Math.max(0, Math.min(1, remainMs / (totalSecs * 1000)));
 
+    const isWarning = timer.isRunning && remainMs > 0 && remainMs <= 603000;
+    const isDanger = timer.isRunning && remainMs > 0 && remainMs <= 63000; // 1:03
+    const isFinished = timer.isRunning && remainMs === 0;
+
+    const prevIsWarningRef = useRef(isWarning);
+    const [forceWarningNatural, setForceWarningNatural] = useState(false);
+
+    const prevIsDangerRef = useRef(isDanger);
+    const [forceDangerWarning, setForceDangerWarning] = useState(false);
+
+    // Warning blink logic (10:03)
+    useEffect(() => {
+        let intervalId: ReturnType<typeof setInterval> | undefined;
+        if (!prevIsWarningRef.current && isWarning) {
+            let count = 0;
+            intervalId = setInterval(() => {
+                count++;
+                if (count === 1) setForceWarningNatural(true);
+                else if (count === 2) setForceWarningNatural(false);
+                else if (count === 3) setForceWarningNatural(true);
+                else if (count === 4) setForceWarningNatural(false);
+                else if (count === 5) setForceWarningNatural(true);
+                else if (count >= 6) {
+                    if (intervalId) clearInterval(intervalId);
+                    setForceWarningNatural(false);
+                }
+            }, 500);
+        }
+        prevIsWarningRef.current = isWarning;
+        return () => {
+            if (intervalId) clearInterval(intervalId);
+        };
+    }, [isWarning]);
+
+    // Danger blink logic (1:03)
+    useEffect(() => {
+        let intervalId: ReturnType<typeof setInterval> | undefined;
+        if (!prevIsDangerRef.current && isDanger) {
+            let count = 0;
+            intervalId = setInterval(() => {
+                count++;
+                if (count === 1) setForceDangerWarning(true);
+                else if (count === 2) setForceDangerWarning(false);
+                else if (count === 3) setForceDangerWarning(true);
+                else if (count === 4) setForceDangerWarning(false);
+                else if (count === 5) setForceDangerWarning(true);
+                else if (count >= 6) {
+                    if (intervalId) clearInterval(intervalId);
+                    setForceDangerWarning(false);
+                }
+            }, 500);
+        }
+        prevIsDangerRef.current = isDanger;
+        return () => {
+            if (intervalId) clearInterval(intervalId);
+        };
+    }, [isDanger]);
+
+    const prevIsFinishedRef = useRef(isFinished);
+    const [showGreenFinish, setShowGreenFinish] = useState(false);
+
+    useEffect(() => {
+        if (!prevIsFinishedRef.current && isFinished) {
+            setShowGreenFinish(true);
+            const timeoutId = setTimeout(() => {
+                setShowGreenFinish(false);
+            }, 3000);
+            return () => clearTimeout(timeoutId);
+        }
+        prevIsFinishedRef.current = isFinished;
+    }, [isFinished]);
+
+    const actuallyDanger = isDanger && !forceDangerWarning;
+    const actuallyWarning = isWarning && !forceWarningNatural && !actuallyDanger;
+    const actuallyFinished = showGreenFinish;
+
+    useEffect(() => {
+        if (actuallyFinished && readOnly) {
+            document.body.classList.add("time-finished");
+            document.body.classList.remove("time-danger");
+            document.body.classList.remove("time-warning");
+        } else if (actuallyDanger && readOnly) {
+            document.body.classList.add("time-danger");
+            document.body.classList.remove("time-finished");
+            document.body.classList.remove("time-warning");
+        } else if (actuallyWarning && readOnly) {
+            document.body.classList.add("time-warning");
+            document.body.classList.remove("time-finished");
+            document.body.classList.remove("time-danger");
+        } else {
+            document.body.classList.remove("time-finished");
+            document.body.classList.remove("time-warning");
+            document.body.classList.remove("time-danger");
+        }
+        
+        return () => {
+            document.body.classList.remove("time-finished");
+            document.body.classList.remove("time-warning");
+            document.body.classList.remove("time-danger");
+        }
+    }, [actuallyFinished, actuallyDanger, actuallyWarning, readOnly]);
+
     return (
         <div className="countdown-tab" style={{ width: "100%" }}>
             {!readOnly && (
@@ -512,8 +614,18 @@ export default function CountdownTab({
                     >
                         Waktu Tersisa
                     </div>
-                    <div className="countdown-time">
-                        {formatTimeWithMs(remainMs)}
+                    <div className={`countdown-time ${readOnly ? (actuallyFinished ? "finished" : actuallyDanger ? "danger" : actuallyWarning ? "warning" : "") : ""}`}>
+                        {(() => {
+                            if (remainMs === 0 && timer.isRunning && readOnly) {
+                                return <span>HANDS UP !</span>;
+                            }
+                            const { main, centi } = formatTimeWithMs(remainMs);
+                            return (
+                                <>
+                                    {main}<span style={{ fontSize: '0.65em', opacity: 0.5 }}>.{centi}</span>
+                                </>
+                            );
+                        })()}
                     </div>
                     {timer.isRunning && timer.startedAt && (
                         <div

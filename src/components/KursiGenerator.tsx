@@ -216,8 +216,8 @@ function KursiGeneratorInner() {
             const data = await res.json();
             const payload = data.data || data;
             if (Array.isArray(payload)) {
-                return payload.map((s: any) => ({
-                    id: s.id ? String(s.id) : `stu-${Math.random()}`,
+                return payload.map((s: any, idx: number) => ({
+                    id: s.id ? String(s.id) : `stu-${kelas}-${s.nama || "unk"}-${idx}`,
                     name: s.nama || "Unknown",
                     kelas: s.kelas || kelas,
                     asprak: s.kode_asprak || "N/A",
@@ -275,6 +275,31 @@ function KursiGeneratorInner() {
 
 
 
+    // Gunakan ref tunggal untuk meng-capture state terbaru agar bisa diakses oleh listener yang dibuat sekali (closure)
+    const syncStateRef = useRef({
+        seats: seatsRef.current,
+        disabledSeats: Array.from(disabledSeats),
+        timer,
+        notes,
+        racers,
+        projectorConfig,
+        kelas,
+        eligibleStudents,
+    });
+    
+    useEffect(() => {
+        syncStateRef.current = {
+            seats: seatsRef.current,
+            disabledSeats: Array.from(disabledSeats),
+            timer,
+            notes,
+            racers,
+            projectorConfig,
+            kelas,
+            eligibleStudents,
+        };
+    }, [seats, disabledSeats, timer, notes, racers, projectorConfig, kelas, eligibleStudents]);
+
     // Broadcast to Projector — channel dibuat sekali, tidak ditutup/dibuka ulang setiap render
     useEffect(() => {
         const channel = new BroadcastChannel("kursi-gen-sync");
@@ -283,16 +308,7 @@ function KursiGeneratorInner() {
         // Respond to REQUEST_SYNC dari projector yang baru dibuka
         channel.onmessage = (event) => {
             if (event.data?.type === "REQUEST_SYNC") {
-                channel.postMessage({
-                    seats: seatsRef.current,
-                    disabledSeats: Array.from(disabledSeats),
-                    timer,
-                    notes,
-                    racers,
-                    projectorConfig,
-                    kelas,
-                    eligibleStudents,
-                });
+                channel.postMessage(syncStateRef.current);
             }
         };
 
@@ -589,10 +605,12 @@ function KursiGeneratorInner() {
                             </div>
 
                             <button
-                                className="btn btn-secondary"
+                                className="btn btn-primary"
                                 style={{
-                                    padding: "6px 12px",
-                                    fontSize: "12px",
+                                    padding: "0 16px",
+                                    height: "42px",
+                                    boxSizing: "border-box",
+                                    fontSize: "13px",
                                     display: "flex",
                                     alignItems: "center",
                                     gap: "6px",
@@ -606,7 +624,7 @@ function KursiGeneratorInner() {
                                 }
                             >
                                 <LuMonitor />
-                                Buka
+                                Tampilkan Window Proyektor
                             </button>
                         </div>
                     </div>
