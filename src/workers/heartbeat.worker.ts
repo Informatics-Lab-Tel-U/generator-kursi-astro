@@ -12,23 +12,46 @@ const postHeartbeat = async (
 ) => {
     const startTime = performance.now();
     try {
-        await fetch(`${apiUrl}/api/monitoring/heartbeat`, {
+    const payloadBody = JSON.stringify({
+        lab_id: labId,
+        kelas: kelas,
+        status: status,
+        // Saat offline, laporkan null — tidak ada data latensi yang valid
+        response_time_ms: status === 'online' ? lastResponseTimeMs : null,
+        client_timestamp: Date.now(),
+    });
+
+    const headers = {
+        "Content-Type": "application/json",
+        "x-praktikan-api-key": apiKey,
+    };
+
+    try {
+        // Coba endpoint standar lebih dulu
+        let targetUrl = `${apiUrl}/api/monitoring/heartbeat`;
+        if (apiUrl.includes('manajemenasprak-backend.workers.dev')) {
+            targetUrl = `${apiUrl}/monitoring/heartbeat`;
+        }
+
+        let res = await fetch(targetUrl, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "x-praktikan-api-key": apiKey,
-            },
-            body: JSON.stringify({
-                lab_id: labId,
-                kelas: kelas,
-                status: status,
-                // Saat offline, laporkan null — tidak ada data latensi yang valid
-                response_time_ms: status === 'online' ? lastResponseTimeMs : null,
-                client_timestamp: Date.now(),
-            }),
-            // keepalive: true memastikan fetch selesai meski halaman sedang ditutup (beforeunload)
-            keepalive: keepalive,
+            headers,
+            body: payloadBody,
+            keepalive,
         });
+
+        // Fallback jika path pertama 404 (misal backend Hono langsung vs proxy Next.js)
+        if (res.status === 404) {
+            const altUrl = targetUrl.includes('/api/monitoring/heartbeat')
+                ? `${apiUrl}/monitoring/heartbeat`
+                : `${apiUrl}/api/monitoring/heartbeat`;
+            res = await fetch(altUrl, {
+                method: "POST",
+                headers,
+                body: payloadBody,
+                keepalive,
+            });
+        }
 
         // Catat latensi HANYA untuk siklus online reguler
         if (status === 'online') {

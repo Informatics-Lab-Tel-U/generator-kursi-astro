@@ -114,15 +114,28 @@ function KursiGeneratorInner() {
             }
         } catch (e) { }
 
-        // Deteksi apakah PC ini adalah PC Lab menggunakan Font Fingerprinting
-        detectCurrentLabRoom().then((room) => {
-            if (room) {
-                console.log(`[Monitoring] Terdeteksi sebagai PC Lab: ${room}`);
-                setLabId(room);
-            } else {
-                console.log("[Monitoring] Bukan PC Lab (Identitas Font tidak ditemukan).");
-            }
-        }).catch(console.error);
+        // Check URL search params or localStorage for labId override first
+        const searchParams = new URLSearchParams(window.location.search);
+        const urlLabId = searchParams.get('labId') || searchParams.get('lab');
+        const localLabId = localStorage.getItem('manual_lab_id');
+
+        if (urlLabId) {
+            console.log(`[Monitoring] Lab ID via URL param: ${urlLabId}`);
+            setLabId(urlLabId);
+        } else if (localLabId) {
+            console.log(`[Monitoring] Lab ID via localStorage: ${localLabId}`);
+            setLabId(localLabId);
+        } else {
+            // Deteksi apakah PC ini adalah PC Lab menggunakan Font Fingerprinting
+            detectCurrentLabRoom().then((room) => {
+                if (room) {
+                    console.log(`[Monitoring] Terdeteksi sebagai PC Lab: ${room}`);
+                    setLabId(room);
+                } else {
+                    console.log("[Monitoring] Bukan PC Lab (Identitas Font tidak ditemukan).");
+                }
+            }).catch(console.error);
+        }
     }, []);
 
     const workerRef = useRef<Worker | null>(null);
@@ -174,10 +187,11 @@ function KursiGeneratorInner() {
         // Saat tab/browser ditutup → kirim sinyal "offline" via keepalive fetch
         // keepalive: true memastikan request selesai meski halaman sedang di-unload
         const handleBeforeUnload = () => {
-            // PENTING: Gunakan fetch langsung di main thread dengan keepalive: true
-            // daripada postMessage ke worker, karena browser bisa membunuh worker
-            // secara preemptive sebelum message sempat diproses saat teardown halaman.
-            const url = `${MA_URL}/api/monitoring/heartbeat`;
+            let url = `${MA_URL}/api/monitoring/heartbeat`;
+            if (MA_URL.includes('manajemenasprak-backend.workers.dev')) {
+                url = `${MA_URL}/monitoring/heartbeat`;
+            }
+
             const body = JSON.stringify({
                 lab_id: labId,
                 kelas: kelas || "-",
