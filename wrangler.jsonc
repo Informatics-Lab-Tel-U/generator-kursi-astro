@@ -8,7 +8,7 @@
     "global_fetch_strictly_public"
   ],
   "vars": {
-    "PUBLIC_PRAKTIKAN_API_URL": "https://manajemenasprak-backend.workers.dev",
+    "PUBLIC_PRAKTIKAN_API_URL": "https://manajemenasprak-backend.iflabdev.workers.dev",
     "PUBLIC_PRAKTIKAN_GET_API_KEY": "gayman-123-RS7ee4TUPDxaafrarTBSBNppHVSKy5jqN1SMr4aH010"
   },
   "assets": {

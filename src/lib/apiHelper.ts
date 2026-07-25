@@ -13,7 +13,7 @@ export async function fetchBackendApi(pathAndQuery: string, reqHeaders?: Headers
         || "";
     const apiUrl = import.meta.env.PUBLIC_PRAKTIKAN_API_URL
         || import.meta.env.PRAKTIKAN_API_URL
-        || "https://manajemenasprak-backend.workers.dev";
+        || "https://manajemenasprak-backend.iflabdev.workers.dev";
 
     if (!apiKey) {
         console.warn("[apiHelper] WARNING: API key kosong — pastikan PUBLIC_PRAKTIKAN_GET_API_KEY ada di .env (dev) atau wrangler.jsonc vars (prod)");
