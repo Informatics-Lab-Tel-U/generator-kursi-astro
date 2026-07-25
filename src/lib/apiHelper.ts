@@ -1,10 +1,3 @@
-// Environment Variables Strategy:
-// - LOCAL DEV (astro dev): import.meta.env.PUBLIC_* dibaca dari file .env
-// - PRODUCTION (Cloudflare Workers): import.meta.env.PUBLIC_* di-replace saat build
-//   oleh Vite menggunakan nilai dari wrangler.jsonc vars section
-// - import { env } from 'cloudflare:workers' TIDAK digunakan karena hanya tersedia
-//   di CF runtime, tidak di astro dev → menyebabkan 500 di local dev
-
 const FETCH_TIMEOUT_MS = 10_000; // 10 detik
 
 export async function fetchBackendApi(pathAndQuery: string, reqHeaders?: Headers) {
@@ -15,12 +8,7 @@ export async function fetchBackendApi(pathAndQuery: string, reqHeaders?: Headers
         || import.meta.env.PRAKTIKAN_API_URL
         || "https://manajemenasprak-backend.iflabdev.workers.dev";
 
-    if (!apiKey) {
-        console.warn("[apiHelper] WARNING: API key kosong — pastikan PUBLIC_PRAKTIKAN_GET_API_KEY ada di .env (dev) atau wrangler.jsonc vars (prod)");
-    }
-
     const targetUrl = `${apiUrl}${pathAndQuery}`;
-    console.info("[apiHelper] Fetching:", targetUrl);
 
     const headers = new Headers(reqHeaders);
     headers.delete("host");
@@ -36,8 +24,6 @@ export async function fetchBackendApi(pathAndQuery: string, reqHeaders?: Headers
             headers,
             signal: controller.signal,
         });
-
-        console.info("[apiHelper] Response status:", res.status, "for", targetUrl);
 
         const proxyHeaders = new Headers(res.headers);
         proxyHeaders.delete("content-encoding");
@@ -64,7 +50,7 @@ export async function fetchBackendApi(pathAndQuery: string, reqHeaders?: Headers
                 }
             );
         }
-        console.error("[apiHelper] unhandled error:", e?.name, e?.message, e?.stack);
+        console.error("[apiHelper] error:", e?.name, e?.message);
         throw e;
     } finally {
         clearTimeout(timeoutId);
