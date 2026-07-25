@@ -4,9 +4,12 @@
   "main": "@astrojs/cloudflare/entrypoints/server",
   "compatibility_date": "2025-01-01",
   "compatibility_flags": [
-    "nodejs_compat",
-    "global_fetch_strictly_public"
+    "nodejs_compat"
   ],
+  "vars": {
+    "PUBLIC_PRAKTIKAN_API_URL": "https://manajemenasprak-backend.workers.dev",
+    "PUBLIC_PRAKTIKAN_GET_API_KEY": "YOUR_PRAKTIKAN_GET_API_KEY"
+  },
   "assets": {
     "directory": "./dist/client"
   },
