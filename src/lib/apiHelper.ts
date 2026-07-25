@@ -1,31 +1,22 @@
-// Cloudflare Workers: runtime env harus dibaca via 'cloudflare:workers', BUKAN import.meta.env
-// import.meta.env di server-side CF Workers = build-time substitution only
-// Ref: https://docs.astro.build/en/guides/integrations-guide/cloudflare/
-import { env as cfEnv } from 'cloudflare:workers';
+// Environment Variables Strategy:
+// - LOCAL DEV (astro dev): import.meta.env.PUBLIC_* dibaca dari file .env
+// - PRODUCTION (Cloudflare Workers): import.meta.env.PUBLIC_* di-replace saat build
+//   oleh Vite menggunakan nilai dari wrangler.jsonc vars section
+// - import { env } from 'cloudflare:workers' TIDAK digunakan karena hanya tersedia
+//   di CF runtime, tidak di astro dev → menyebabkan 500 di local dev
 
 const FETCH_TIMEOUT_MS = 10_000; // 10 detik
 
 export async function fetchBackendApi(pathAndQuery: string, reqHeaders?: Headers) {
-    // Runtime env dari Cloudflare Workers bindings/vars (wrangler.jsonc vars section)
-    const runtimeApiKey: string = (cfEnv as any).PUBLIC_PRAKTIKAN_GET_API_KEY
-        || (cfEnv as any).PRAKTIKAN_GET_API_KEY
-        || '';
-    const runtimeApiUrl: string = (cfEnv as any).PUBLIC_PRAKTIKAN_API_URL
-        || (cfEnv as any).PRAKTIKAN_API_URL
-        || '';
-
-    // Fallback ke build-time import.meta.env (untuk local dev / astro dev)
-    const apiKey = runtimeApiKey
-        || import.meta.env.PUBLIC_PRAKTIKAN_GET_API_KEY
+    const apiKey = import.meta.env.PUBLIC_PRAKTIKAN_GET_API_KEY
         || import.meta.env.PRAKTIKAN_GET_API_KEY
         || "";
-    const apiUrl = runtimeApiUrl
-        || import.meta.env.PUBLIC_PRAKTIKAN_API_URL
+    const apiUrl = import.meta.env.PUBLIC_PRAKTIKAN_API_URL
         || import.meta.env.PRAKTIKAN_API_URL
         || "https://manajemenasprak-backend.workers.dev";
 
     if (!apiKey) {
-        console.warn("[apiHelper] WARNING: API key tidak tersedia (PUBLIC_PRAKTIKAN_GET_API_KEY kosong)");
+        console.warn("[apiHelper] WARNING: API key kosong — pastikan PUBLIC_PRAKTIKAN_GET_API_KEY ada di .env (dev) atau wrangler.jsonc vars (prod)");
     }
 
     const targetUrl = `${apiUrl}${pathAndQuery}`;
