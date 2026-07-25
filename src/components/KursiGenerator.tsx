@@ -149,7 +149,7 @@ function KursiGeneratorInner() {
     useEffect(() => {
         if (!labId || !workerRef.current) return;
 
-        const MA_URL = import.meta.env.PUBLIC_MANAJEMENASPRAK_URL || "https://manajemenasprak-backend.workers.dev";
+        const MA_URL = import.meta.env.PUBLIC_PRAKTIKAN_API_URL || import.meta.env.PUBLIC_MANAJEMENASPRAK_URL || "https://manajemenasprak-backend.workers.dev";
         const API_KEY = import.meta.env.PUBLIC_PRAKTIKAN_GET_API_KEY || import.meta.env.PRAKTIKAN_GET_API_KEY || "";
 
         const payload = {
