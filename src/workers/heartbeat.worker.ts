@@ -26,11 +26,9 @@ const postHeartbeat = async (
             "x-praktikan-api-key": apiKey,
         };
 
-        // Coba endpoint standar lebih dulu
-        let targetUrl = `${apiUrl}/api/monitoring/heartbeat`;
-        if (apiUrl.includes('manajemenasprak-backend.workers.dev')) {
-            targetUrl = `${apiUrl}/monitoring/heartbeat`;
-        }
+        // Backend Hono selalu di-mount di /api/monitoring/heartbeat
+        // (lihat src/index.ts: .route('/api/monitoring', monitoringRoute))
+        const targetUrl = `${apiUrl}/api/monitoring/heartbeat`;
 
         let res = await fetch(targetUrl, {
             method: "POST",
@@ -38,19 +36,6 @@ const postHeartbeat = async (
             body: payloadBody,
             keepalive,
         });
-
-        // Fallback jika path pertama 404 (misal backend Hono langsung vs proxy Next.js)
-        if (res.status === 404) {
-            const altUrl = targetUrl.includes('/api/monitoring/heartbeat')
-                ? `${apiUrl}/monitoring/heartbeat`
-                : `${apiUrl}/api/monitoring/heartbeat`;
-            res = await fetch(altUrl, {
-                method: "POST",
-                headers,
-                body: payloadBody,
-                keepalive,
-            });
-        }
 
         // Catat latensi HANYA untuk siklus online reguler
         if (status === 'online') {
