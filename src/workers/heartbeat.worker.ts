@@ -12,21 +12,20 @@ const postHeartbeat = async (
 ) => {
     const startTime = performance.now();
     try {
-    const payloadBody = JSON.stringify({
-        lab_id: labId,
-        kelas: kelas,
-        status: status,
-        // Saat offline, laporkan null — tidak ada data latensi yang valid
-        response_time_ms: status === 'online' ? lastResponseTimeMs : null,
-        client_timestamp: Date.now(),
-    });
+        const payloadBody = JSON.stringify({
+            lab_id: labId,
+            kelas: kelas,
+            status: status,
+            // Saat offline, laporkan null — tidak ada data latensi yang valid
+            response_time_ms: status === 'online' ? lastResponseTimeMs : null,
+            client_timestamp: Date.now(),
+        });
 
-    const headers = {
-        "Content-Type": "application/json",
-        "x-praktikan-api-key": apiKey,
-    };
+        const headers = {
+            "Content-Type": "application/json",
+            "x-praktikan-api-key": apiKey,
+        };
 
-    try {
         // Coba endpoint standar lebih dulu
         let targetUrl = `${apiUrl}/api/monitoring/heartbeat`;
         if (apiUrl.includes('manajemenasprak-backend.workers.dev')) {
