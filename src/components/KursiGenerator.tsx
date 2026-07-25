@@ -162,7 +162,7 @@ function KursiGeneratorInner() {
     useEffect(() => {
         if (!labId || !workerRef.current) return;
 
-        const MA_URL = import.meta.env.PUBLIC_PRAKTIKAN_API_URL || import.meta.env.PUBLIC_MANAJEMENASPRAK_URL || "https://manajemenasprak-backend.workers.dev";
+        const MA_URL = import.meta.env.PUBLIC_PRAKTIKAN_API_URL || import.meta.env.PUBLIC_MANAJEMENASPRAK_URL || "https://manajemenasprak-backend.iflabdev.workers.dev";
         const API_KEY = import.meta.env.PUBLIC_PRAKTIKAN_GET_API_KEY || import.meta.env.PRAKTIKAN_GET_API_KEY || "";
 
         const payload = {
@@ -187,10 +187,7 @@ function KursiGeneratorInner() {
         // Saat tab/browser ditutup → kirim sinyal "offline" via keepalive fetch
         // keepalive: true memastikan request selesai meski halaman sedang di-unload
         const handleBeforeUnload = () => {
-            let url = `${MA_URL}/api/monitoring/heartbeat`;
-            if (MA_URL.includes('manajemenasprak-backend.workers.dev')) {
-                url = `${MA_URL}/monitoring/heartbeat`;
-            }
+            const url = `${MA_URL}/api/monitoring/heartbeat`;
 
             const body = JSON.stringify({
                 lab_id: labId,
