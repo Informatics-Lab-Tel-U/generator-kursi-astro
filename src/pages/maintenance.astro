@@ -3,50 +3,85 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout>
-  <div class="maintenance-container">
-    <div class="glow-effect-1"></div>
-    <div class="glow-effect-2"></div>
+  <div class="maintenance-page">
+    <!-- Theme Toggle Button -->
+    <button
+      id="theme-toggle"
+      class="theme-toggle"
+      aria-label="Ganti tema"
+      title="Ganti Tema"
+    >
+      <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 2v2"></path>
+        <path d="M12 20v2"></path>
+        <path d="m4.93 4.93 1.41 1.41"></path>
+        <path d="m17.66 17.66 1.41 1.41"></path>
+        <path d="M2 12h2"></path>
+        <path d="M20 12h2"></path>
+        <path d="m6.34 17.66-1.41-1.41"></path>
+        <path d="m19.07 4.93-1.41 1.41"></path>
+      </svg>
+      <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+      </svg>
+    </button>
 
-    <div class="maintenance-card">
-      <div class="icon-wrapper">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="wrench-icon">
-          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+    <!-- Main Stitch Clean Card -->
+    <div class="stitch-card">
+      <div class="icon-clean">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="18" height="14" x="3" y="3" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+          <line x1="7" y1="8" x2="17" y2="8"></line>
+          <line x1="7" y1="12" x2="13" y2="12"></line>
         </svg>
       </div>
 
-      <div class="badge">
-        <span class="pulse-dot"></span>
-        <span>Pemeliharaan Sistem Aktif</span>
+      <div class="status-badge">
+        <span>Status: Dalam Pemeliharaan</span>
       </div>
 
-      <h1>Generator Kursi Sedang Pemeliharaan</h1>
+      <h1 class="main-title">Generator Kursi Praktikum</h1>
+
       <p class="description">
-        Sistem <strong>Generator Kursi Praktikum</strong> sedang diperbarui atau dikalibrasi oleh Tim Laboratorium Informatika. Mohon bersabar, kami akan segera beroperasi kembali!
+        Sistem pengacak tempat duduk laboratorium sedang menjalani pemeliharaan rutin. Kami akan kembali beroperasi dalam beberapa saat.
       </p>
 
-      <div class="info-box">
-        <div class="info-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
-        </div>
-        <div class="info-text">
-          <strong>Perhatian untuk Sesi Praktikum:</strong>
-          <span>Jika jam praktikum sudah dimulai, silakan ikuti instruksi pengaturan tempat duduk secara manual dari Asisten Praktikum di laboratorium.</span>
+      <div class="instruction-box">
+        <svg class="instruction-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+        <div class="instruction-text">
+          <strong>Instruksi Sesi Praktikum:</strong>
+          Jika jam praktikum telah dimulai, silakan ikuti arahan pengaturan nomor kursi secara manual dari Asisten Praktikum di laboratorium.
         </div>
       </div>
 
       <div class="footer-copy">
-        INFORMATICS LAB TELKOM UNIVERSITY &copy; {new Date().getFullYear()}
+        Informatics Lab Telkom University &copy; {new Date().getFullYear()}
       </div>
     </div>
   </div>
+
+  <script is:inline>
+    const toggleBtn = document.getElementById('theme-toggle');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme') || 'dark';
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('kursi-theme', next);
+      });
+    }
+  </script>
 </Layout>
 
 <style>
-  .maintenance-container {
+  .maintenance-page {
     position: relative;
     display: flex;
     align-items: center;
@@ -55,153 +90,159 @@ import Layout from '../layouts/Layout.astro';
     padding: 24px;
     background: var(--bg-page);
     color: var(--text-primary);
-    overflow: hidden;
+    font-family: 'Google Sans', 'Poppins', sans-serif;
+    transition: background var(--transition-normal), color var(--transition-normal);
   }
 
-  .glow-effect-1 {
+  /* Theme Toggle Button matching landing page specifications */
+  .theme-toggle {
     position: absolute;
-    top: 15%;
-    left: 20%;
-    width: 350px;
-    height: 350px;
-    background: radial-gradient(circle, var(--accent-light) 0%, transparent 70%);
-    filter: blur(50px);
-    pointer-events: none;
-  }
-
-  .glow-effect-2 {
-    position: absolute;
-    bottom: 10%;
-    right: 15%;
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle, rgba(234, 179, 8, 0.08) 0%, transparent 70%);
-    filter: blur(60px);
-    pointer-events: none;
-  }
-
-  .maintenance-card {
-    position: relative;
-    z-index: 10;
-    max-width: 540px;
-    width: 100%;
-    background: var(--bg-card);
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-xl);
-    padding: 48px 40px;
-    box-shadow: var(--shadow-lg);
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .icon-wrapper {
-    width: 80px;
-    height: 80px;
-    border-radius: 20px;
-    background: var(--accent-surface);
-    border: 1px solid rgba(138, 180, 248, 0.2);
+    top: 24px;
+    right: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-hover);
+    border: 1px solid var(--border);
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 24px;
-    color: var(--accent);
-    box-shadow: inset 0 2px 10px rgba(138, 180, 248, 0.15);
+    color: var(--text-primary);
+    transition: all var(--transition-fast);
+    z-index: 20;
   }
 
-  .wrench-icon {
-    animation: bounce-slow 3s ease-in-out infinite;
+  .theme-toggle:hover {
+    background: var(--bg-active);
+    transform: scale(1.05);
   }
 
-  @keyframes bounce-slow {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    50% { transform: translateY(-6px) rotate(8deg); }
+  .theme-toggle:active {
+    transform: scale(0.95);
   }
 
-  .badge {
+  /* Theme icon display logic */
+  .icon-sun {
+    display: none;
+  }
+  .icon-moon {
+    display: none;
+  }
+  :global([data-theme="dark"]) .icon-sun {
+    display: inline-block;
+  }
+  :global([data-theme="light"]) .icon-moon,
+  :global(:root:not([data-theme="dark"])) .icon-moon {
+    display: inline-block;
+  }
+
+  /* Clean minimal card aligned with KursiGenerator.css tokens */
+  .stitch-card {
+    max-width: 480px;
+    width: 100%;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: 32px 28px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+    transition: all var(--transition-normal);
+  }
+
+  .icon-clean {
+    color: var(--text-muted);
+    opacity: 0.55;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .status-badge {
+    background: var(--bg-hover);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 4px 14px;
+    border-radius: 20px;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 14px;
-    border-radius: 100px;
-    background: var(--warning-surface);
-    color: var(--warning);
-    border: 1px solid rgba(253, 214, 99, 0.25);
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 16px;
   }
 
-  .pulse-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: var(--warning);
-    box-shadow: 0 0 8px var(--warning);
-    animation: pulse 1.5s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.85); }
-  }
-
-  h1 {
-    font-size: 28px;
+  /* Title strictly matching .main-title (22px bold) */
+  .main-title {
+    font-family: "Google Sans", "Poppins", sans-serif;
+    font-size: 22px;
     font-weight: 700;
-    line-height: 1.25;
-    margin: 0 0 14px 0;
     color: var(--text-primary);
-    letter-spacing: -0.5px;
+    margin: 0;
+    line-height: 1.3;
   }
 
   .description {
-    font-size: 15px;
+    font-size: 14px;
     color: var(--text-secondary);
     line-height: 1.6;
-    margin: 0 0 32px 0;
+    margin: 0;
+    max-width: 400px;
   }
 
-  .info-box {
+  /* Instruction box matching .racer-list-item border & spacing */
+  .instruction-box {
     width: 100%;
     display: flex;
     align-items: flex-start;
-    gap: 14px;
-    padding: 16px 20px;
-    border-radius: var(--radius);
-    background: var(--bg-row-even);
-    border: 1px solid var(--border);
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
     text-align: left;
-    margin-bottom: 32px;
+    margin-top: 4px;
+    box-sizing: border-box;
   }
 
-  .info-icon {
-    color: var(--warning);
+  .instruction-icon {
+    color: var(--text-muted);
     flex-shrink: 0;
     margin-top: 2px;
   }
 
-  .info-text {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+  .instruction-text {
     font-size: 13px;
-    color: var(--text-muted);
+    color: var(--text-secondary);
+    line-height: 1.5;
   }
 
-  .info-text strong {
+  .instruction-text strong {
     color: var(--text-primary);
+    font-weight: 600;
+    display: inline-block;
+    margin-right: 4px;
   }
 
   .footer-copy {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 1.2px;
+    font-size: 12px;
+    font-weight: 500;
     color: var(--text-muted);
-    opacity: 0.6;
-    text-transform: uppercase;
+    opacity: 0.7;
+    margin-top: 8px;
+  }
+
+  @media (max-width: 600px) {
+    .stitch-card {
+      padding: 24px 20px;
+    }
+    .theme-toggle {
+      top: 16px;
+      right: 16px;
+    }
   }
 </style>
