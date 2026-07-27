@@ -67,8 +67,8 @@ self.onmessage = (e: MessageEvent) => {
         // Kirim segera saat start/update
         sendHeartbeat();
 
-        // Kirim setiap 20 detik
-        intervalId = setInterval(sendHeartbeat, 20_000);
+        // Kirim setiap 30 detik
+        intervalId = setInterval(sendHeartbeat, 30_000);
 
     } else if (action === 'immediate') {
         const { labId, kelas, apiUrl, apiKey, status = 'online', keepalive = false } = payload;
