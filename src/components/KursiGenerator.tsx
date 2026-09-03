@@ -162,14 +162,13 @@ function KursiGeneratorInner() {
     useEffect(() => {
         if (!labId || !workerRef.current) return;
 
-        const MA_URL = import.meta.env.PUBLIC_PRAKTIKAN_API_URL || import.meta.env.PUBLIC_MANAJEMENASPRAK_URL || "https://manajemenasprak-backend.iflabdev.workers.dev";
-        const API_KEY = import.meta.env.PUBLIC_PRAKTIKAN_GET_API_KEY || import.meta.env.PRAKTIKAN_GET_API_KEY || "";
-
+        // Heartbeat Monitoring dikirim melalui internal server proxy Astro (/api/monitoring/heartbeat)
+        // Keuntungan keamanan: Browser mahasiswa TIDAK memuat atau mengirim API Key sama sekali!
         const payload = {
             labId,
             kelas: kelas || "-",  // Kirim "-" saat kelas belum dipilih, bukan diam sama sekali
-            apiUrl: MA_URL,
-            apiKey: API_KEY,
+            apiUrl: "",           // Gunakan relative path proxy lokal Astro
+            apiKey: "",           // Tanpa API Key di client-side
         };
 
         // Start/update worker (worker otomatis clear interval lama saat action='start')
@@ -184,11 +183,8 @@ function KursiGeneratorInner() {
         };
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
-        // Saat tab/browser ditutup → kirim sinyal "offline" via keepalive fetch
-        // keepalive: true memastikan request selesai meski halaman sedang di-unload
+        // Saat tab/browser ditutup → kirim sinyal "offline" via keepalive fetch ke proxy lokal
         const handleBeforeUnload = () => {
-            const url = `${MA_URL}/api/monitoring/heartbeat`;
-
             const body = JSON.stringify({
                 lab_id: labId,
                 kelas: kelas || "-",
@@ -197,11 +193,10 @@ function KursiGeneratorInner() {
                 client_timestamp: Date.now(),
             });
             
-            fetch(url, {
+            fetch('/api/monitoring/heartbeat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-praktikan-api-key': API_KEY,
                 },
                 body,
                 keepalive: true,

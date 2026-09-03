@@ -21,14 +21,17 @@ const postHeartbeat = async (
             client_timestamp: Date.now(),
         });
 
-        const headers = {
+        const headers: Record<string, string> = {
             "Content-Type": "application/json",
-            "x-praktikan-api-key": apiKey,
         };
+        if (apiKey) {
+            headers["x-praktikan-api-key"] = apiKey;
+        }
 
-        // Backend Hono selalu di-mount di /api/monitoring/heartbeat
-        // (lihat src/index.ts: .route('/api/monitoring', monitoringRoute))
-        const targetUrl = `${apiUrl}/api/monitoring/heartbeat`;
+        // Jika apiUrl tidak diset atau string kosong, gunakan endpoint proxy lokal Astro /api/monitoring/heartbeat
+        const targetUrl = apiUrl && apiUrl.startsWith('http')
+            ? `${apiUrl}/api/monitoring/heartbeat`
+            : "/api/monitoring/heartbeat";
 
         let res = await fetch(targetUrl, {
             method: "POST",
