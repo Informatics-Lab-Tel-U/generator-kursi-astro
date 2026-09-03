@@ -5,7 +5,7 @@ import type { Racer, SeatData } from "../components/types";
 
 interface ProjectorState {
     seats: SeatData[];
-    disabledSeats: number[];
+    disabledSeats: Set<number> | number[];
     timer: TimerState;
     notes: string;
     racers: Racer[];
@@ -31,7 +31,10 @@ export function useProjectorSync(state: ProjectorState) {
 
         channel.onmessage = (event) => {
             if (event.data?.type === "REQUEST_SYNC") {
-                channel.postMessage(stateRef.current);
+                channel.postMessage({
+                    ...stateRef.current,
+                    disabledSeats: Array.from(stateRef.current.disabledSeats),
+                });
             }
         };
 
@@ -43,6 +46,18 @@ export function useProjectorSync(state: ProjectorState) {
 
     // Kirim update ke projector setiap kali state berubah
     useEffect(() => {
-        channelRef.current?.postMessage(state);
-    }, [state]);
+        channelRef.current?.postMessage({
+            ...state,
+            disabledSeats: Array.from(state.disabledSeats),
+        });
+    }, [
+        state.seats,
+        state.disabledSeats,
+        state.timer,
+        state.notes,
+        state.racers,
+        state.projectorConfig,
+        state.kelas,
+        state.eligibleStudents,
+    ]);
 }

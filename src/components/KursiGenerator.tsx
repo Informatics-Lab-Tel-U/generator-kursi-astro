@@ -71,7 +71,7 @@ function KursiGeneratorInner() {
     // Sinkronisasi state ke window Proyektor via BroadcastChannel
     useProjectorSync({
         seats,
-        disabledSeats: disabledSeats as Set<number>,
+        disabledSeats,
         timer,
         notes,
         racers,
