@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import "./KursiGenerator.css";
 
 import type { TabId, ProjectorConfig, TimerState } from "./types";
 import type { Racer } from "./types";
