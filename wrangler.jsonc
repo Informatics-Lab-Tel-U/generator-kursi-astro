@@ -8,8 +8,11 @@
     "global_fetch_strictly_public"
   ],
   "vars": {
-    "PUBLIC_PRAKTIKAN_API_URL": "https://manajemenasprak-backend.iflabdev.workers.dev",
-    "PUBLIC_PRAKTIKAN_GET_API_KEY": "YOUR_PRAKTIKAN_GET_API_KEY"
+    "PUBLIC_PRAKTIKAN_API_URL": "https://manajemenasprak-backend.iflabdev.workers.dev"
+    // VULN-02 FIX: PRAKTIKAN_GET_API_KEY has been removed from vars (it was hardcoded and committed to Git).
+    // Set it as a Cloudflare Workers secret instead:
+    //   wrangler secret put PRAKTIKAN_GET_API_KEY
+    // Never put secrets in wrangler.jsonc / wrangler.toml — they are committed to version control.
   },
   "assets": {
     "directory": "./dist/client"
