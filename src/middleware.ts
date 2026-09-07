@@ -1,9 +1,10 @@
 import { defineMiddleware } from "astro:middleware";
 
 const BACKEND_URL = 
+  import.meta.env.PRAKTIKAN_API_URL || 
   import.meta.env.PUBLIC_PRAKTIKAN_API_URL || 
   import.meta.env.PUBLIC_HONO_BACKEND_URL || 
-  "https://manajemenasprak-backend.iflabdev.workers.dev";
+  (import.meta.env.DEV ? "http://localhost:8787" : "");
 
 // PERF-02 FIX: Cache maintenance status for 15 seconds to avoid a fresh network roundtrip
 // on every single page request. Same strategy used by the Next.js frontend middleware.

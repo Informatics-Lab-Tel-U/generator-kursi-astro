@@ -4,14 +4,14 @@ export async function fetchBackendApi(
     pathAndQuery: string,
     options?: { headers?: HeadersInit; method?: string; body?: BodyInit | null }
 ) {
-    // Secret server-side API key (Cloudflare Worker secret or env var)
-    // NEVER expose with PUBLIC_ prefix to client bundles
-    const apiKey = import.meta.env.INTERNAL_API_KEY
-        || import.meta.env.PRAKTIKAN_GET_API_KEY
-        || "";
+    const apiKey = import.meta.env.INTERNAL_API_KEY || "";
     const apiUrl = import.meta.env.PRAKTIKAN_API_URL
         || import.meta.env.PUBLIC_PRAKTIKAN_API_URL
-        || "https://manajemenasprak-backend.iflabdev.workers.dev";
+        || (import.meta.env.DEV ? "http://localhost:8787" : "");
+
+    if (!apiUrl) {
+        throw new Error("[apiHelper] PRAKTIKAN_API_URL is not configured.");
+    }
 
     const targetUrl = `${apiUrl}${pathAndQuery}`;
 
@@ -23,7 +23,6 @@ export async function fetchBackendApi(
     if (apiKey) {
         headers.set("x-praktikan-api-key", apiKey);
         headers.set("x-api-key", apiKey);
-        headers.set("Authorization", `Bearer ${apiKey}`);
     }
 
     const controller = new AbortController();

@@ -55,7 +55,11 @@ export function useSeats(
     // Auto-generate saat data mahasiswa berubah
     useEffect(() => {
         if (!matkul || !kelas || eligibleStudents.length === 0) {
-            setSeats(makeEmptySeats(50));
+            setSeats((prev) => {
+                const isAlreadyDefaultEmpty =
+                    prev.length === 50 && prev.every((s) => s.student === null);
+                return isAlreadyDefaultEmpty ? prev : makeEmptySeats(50);
+            });
             return;
         }
         const shuffled = fisherYatesShuffle(eligibleStudents);
