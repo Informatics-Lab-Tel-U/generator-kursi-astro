@@ -12,7 +12,7 @@ import './KursiGenerator.css';
 type PanelId = 'seats' | 'notes' | 'countdown';
 
 export default function ProjectorView() {
-  const [seats, setSeats] = useState<SeatData[]>(makeEmptySeats(50));
+  const [seats, setSeats] = useState<SeatData[]>([]);
   const [disabledSeats, setDisabledSeats] = useState<Set<number>>(new Set());
   const [timer, setTimer] = useState<TimerState>({ startTime: "08:00", endTime: "10:00", isRunning: false, startedAt: null });
   const [racers, setRacers] = useState<Racer[]>([]);
@@ -70,8 +70,14 @@ export default function ProjectorView() {
     return () => channel.close();
   }, []);
 
+  const totalCols = Math.ceil(seats.length / 10);
   const columns: SeatData[][] = [];
-  for (let c = 0; c < 5; c++) columns.push(seats.slice(c * 10, (c + 1) * 10));
+  for (let c = 0; c < totalCols; c++) {
+    const col = seats.slice(c * 10, (c + 1) * 10);
+    if (col.length > 0) {
+      columns.push(col);
+    }
+  }
 
   const showInfoTab = projectorConfig.showNotes || projectorConfig.showCountdown;
 
@@ -87,21 +93,37 @@ export default function ProjectorView() {
   const renderGenerator = () => (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', padding: '0 4px' }}>
-        <LuLayoutGrid /> Posisi Duduk
+        <LuLayoutGrid /> Posisi Duduk{kelas ? ` — Kelas ${kelas}` : ''}
       </div>
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-        <SeatsTab
-          columns={columns}
-          disabledSeats={disabledSeats}
-          dragSourceSeat={null}
-          dragOverSeat={null}
-          isLoading={false}
-          handleDragStart={() => { }}
-          handleDragOver={() => { }}
-          handleDragLeave={() => { }}
-          handleDrop={() => { }}
-          handleDragEnd={() => { }}
-        />
+        {columns.length === 0 ? (
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100%",
+            color: "var(--text-muted)",
+            fontSize: "16px",
+            flexDirection: "column",
+            gap: "12px",
+          }}>
+            <LuLayoutGrid style={{ fontSize: "48px", opacity: 0.5 }} />
+            <span>Menunggu data posisi duduk...</span>
+          </div>
+        ) : (
+          <SeatsTab
+            columns={columns}
+            disabledSeats={disabledSeats}
+            dragSourceSeat={null}
+            dragOverSeat={null}
+            isLoading={false}
+            handleDragStart={() => { }}
+            handleDragOver={() => { }}
+            handleDragLeave={() => { }}
+            handleDrop={() => { }}
+            handleDragEnd={() => { }}
+          />
+        )}
       </div>
     </div>
   );

@@ -53,10 +53,12 @@ export default function SeatsTab({
   handleDrop,
   handleDragEnd,
 }: SeatsTabProps) {
+  const activeColumns = columns.filter((col) => col && col.length > 0);
+
   return (
     <div>
-      <div className="seat-grid" style={{ gridTemplateColumns: `repeat(${columns.length}, 1fr)` }}>
-        {columns.map((column, colIdx) => (
+      <div className="seat-grid" style={{ gridTemplateColumns: `repeat(${activeColumns.length}, 1fr)` }}>
+        {activeColumns.map((column, colIdx) => (
           <div key={colIdx} className="seat-column">
             <div className="seat-column-header">
               <span className="col-no">NO</span>
