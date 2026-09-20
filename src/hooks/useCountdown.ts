@@ -133,20 +133,37 @@ export function useMoodleScript(kelas: string) {
 
   async function sendAttemptsHTML() {
     try {
-      const response = await fetch(window.location.href);
-      const html = await response.text();
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, "text/html");
-      const attemptsElement = doc.getElementById("attempts");
-      if (!attemptsElement) return;
+      let attemptsHtml = "";
+      try {
+        const response = await fetch(window.location.href);
+        if (response.ok) {
+          const html = await response.text();
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, "text/html");
+          const el = doc.getElementById("attempts") || doc.querySelector("#tablecontainer");
+          if (el) attemptsHtml = el.outerHTML;
+        }
+      } catch (e) { };
+      if (!attemptsHtml) {
+        const liveEl = document.getElementById("attempts") || document.querySelector("#tablecontainer");
+        if (liveEl) attemptsHtml = liveEl.outerHTML;
+      }
 
-      await fetch(\`\${API_BASE}/api/process-html?room=\${ROOM}\`, {
+      if (!attemptsHtml) {
+        console.warn("[Leaderboard] No #attempts or #tablecontainer found on page.");
+        return;
+      }
+
+      const res = await fetch(\`\${API_BASE}/api/process-html?room=\${ROOM}\`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
-        body: JSON.stringify({ html: attemptsElement.outerHTML })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ html: attemptsHtml })
       });
-    } catch (err) { console.error("Script error:", err); }
+      const data = await res.json();
+      console.log(\`[Leaderboard] Mengirim \${data.count ?? 0} mahasiswa ke leaderboard: \${ROOM}\`);
+    } catch (err) { console.error("[Leaderboard] Script error:", err); }
   }
+  sendAttemptsHTML();
   setInterval(sendAttemptsHTML, 5000);
 })();`;
     }, [kelas]);

@@ -18,6 +18,27 @@ if (isDockerBuild) {
 // https://astro.build/config
 export default defineConfig({
   output: 'server',
+  security: {
+    checkOrigin: false,
+    allowedDomains: [
+      { hostname: '**.telkomuniversity.ac.id' },
+      { hostname: 'telkomuniversity.ac.id' },
+    ],
+  },
+  server: {
+    port: 3000,
+    allowedHosts: true,
+  },
+  vite: {
+    server: {
+      allowedHosts: true,
+      cors: {
+        origin: '*',
+        methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+      },
+    },
+  },
   integrations: [react()],
   adapter,
 });
