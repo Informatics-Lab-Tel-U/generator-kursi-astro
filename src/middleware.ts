@@ -29,15 +29,83 @@ async function checkMaintenanceMode(): Promise<boolean> {
   }
 }
 
+const rawAllowedOrigins = import.meta.env.PRAKTIKAN_GET_ALLOWED_ORIGINS || "";
+const allowedOriginsList = rawAllowedOrigins
+  .split(",")
+  .map((o: string) => o.trim())
+  .filter(Boolean);
+
+function resolveAllowedOrigin(requestOrigin: string, pathname: string, appOrigin: string): string | null {
+  if (!requestOrigin) return null;
+  if (requestOrigin === appOrigin) return requestOrigin;
+  if (allowedOriginsList.includes(requestOrigin)) return requestOrigin;
+
+  // Allow local dev origins
+  if (import.meta.env.DEV) {
+    if (requestOrigin.startsWith("http://localhost:") || requestOrigin.startsWith("http://127.0.0.1:")) {
+      return requestOrigin;
+    }
+  }
+
+  // Allow Moodle LMS origins for process-html
+  if (pathname.startsWith("/api/process-html")) {
+    try {
+      const parsed = new URL(requestOrigin);
+      if (parsed.hostname.endsWith(".telkomuniversity.ac.id") || parsed.hostname === "telkomuniversity.ac.id") {
+        return requestOrigin;
+      }
+    } catch {}
+    return requestOrigin; // Allow cross-origin scrape from Moodle
+  }
+
+  return null;
+}
+
 export const onRequest = defineMiddleware(async (context, next) => {
   const { pathname } = context.url;
 
-  // Ignore static assets, favicon, API routes if any
+  // Handle CORS for all API routes
+  if (pathname.startsWith("/api/")) {
+    const requestOrigin = context.request.headers.get("origin") || "";
+    const corsOrigin = resolveAllowedOrigin(requestOrigin, pathname, context.url.origin) || (pathname.startsWith("/api/process-html") ? "*" : "");
+
+    if (context.request.method === "OPTIONS") {
+      const preflightHeaders = new Headers({
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Max-Age": "86400",
+      });
+      if (corsOrigin) {
+        preflightHeaders.set("Access-Control-Allow-Origin", corsOrigin);
+        if (corsOrigin !== "*") preflightHeaders.set("Vary", "Origin");
+      }
+      return new Response(null, {
+        status: 204,
+        headers: preflightHeaders,
+      });
+    }
+
+    const response = await next();
+    const headers = new Headers(response.headers);
+    if (corsOrigin) {
+      headers.set("Access-Control-Allow-Origin", corsOrigin);
+      if (corsOrigin !== "*") headers.append("Vary", "Origin");
+    }
+    headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+    headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    headers.set("X-Content-Type-Options", "nosniff");
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
+  }
+
+  // Ignore static assets, favicon
   if (
     pathname.startsWith("/_image") ||
     pathname.startsWith("/_astro") ||
-    pathname.includes(".") ||
-    pathname.startsWith("/api/")
+    pathname.includes(".")
   ) {
     return next();
   }
@@ -58,5 +126,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
     console.error("Failed to check maintenance mode for generator kursi:", error);
   }
 
-  return next();
+  const pageRes = await next();
+  const pageHeaders = new Headers(pageRes.headers);
+  pageHeaders.set("X-Content-Type-Options", "nosniff");
+  pageHeaders.set("X-Frame-Options", "SAMEORIGIN");
+  pageHeaders.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  return new Response(pageRes.body, {
+    status: pageRes.status,
+    statusText: pageRes.statusText,
+    headers: pageHeaders,
+  });
 });

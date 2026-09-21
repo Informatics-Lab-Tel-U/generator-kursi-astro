@@ -1,16 +1,14 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 export function useTheme() {
-    const [theme, setTheme] = useState<"light" | "dark">(() => {
-        if (typeof window !== "undefined") {
-            return (
-                (document.documentElement.getAttribute("data-theme") as
-                    | "light"
-                    | "dark") || "dark"
-            );
+    const [theme, setTheme] = useState<"light" | "dark">("dark");
+
+    useEffect(() => {
+        const current = document.documentElement.getAttribute("data-theme") as "light" | "dark" | null;
+        if (current && (current === "light" || current === "dark")) {
+            setTheme(current);
         }
-        return "dark";
-    });
+    }, []);
 
     const toggleTheme = useCallback(() => {
         setTheme((prev) => {

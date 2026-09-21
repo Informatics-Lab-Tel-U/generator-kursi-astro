@@ -5,14 +5,27 @@ import { leaderboardStore } from "../../lib/store";
 
 export const prerender = false;
 
+export const OPTIONS: APIRoute = async () => {
+    return new Response(null, {
+        status: 204,
+        headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+            "Access-Control-Max-Age": "86400",
+        }
+    });
+};
+
 export const ALL: APIRoute = async ({ request }) => {
     if (request.method === "OPTIONS") {
         return new Response(null, {
             status: 204,
             headers: {
                 "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "POST, OPTIONS",
-                "Access-Control-Allow-Headers": "Content-Type, ngrok-skip-browser-warning, Authorization",
+                "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization",
+                "Access-Control-Max-Age": "86400",
             }
         });
     }
@@ -22,11 +35,29 @@ export const ALL: APIRoute = async ({ request }) => {
 export const POST: APIRoute = async ({ request, url }) => {
     try {
         const room = url.searchParams.get("room") || "default";
-        const body = await request.json();
+        
+        // Security: Prevent DoS from excessively large HTML payloads (max 3 MB)
+        const MAX_PAYLOAD_BYTES = 3 * 1024 * 1024;
+        let body: any;
+        try {
+            const raw = await request.text();
+            if (raw.length > MAX_PAYLOAD_BYTES) {
+                return new Response(JSON.stringify({ error: "Payload too large. Maximum size is 3MB." }), {
+                    status: 413,
+                    headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+                });
+            }
+            body = raw ? JSON.parse(raw) : {};
+        } catch {
+            body = {};
+        }
         const html = body.html;
 
         if (!html) {
-            return new Response(JSON.stringify({ error: "No HTML provided" }), { status: 400 });
+            return new Response(JSON.stringify({ error: "No HTML provided" }), { 
+                status: 400,
+                headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+            });
         }
 
         const root = parse(html);
@@ -40,6 +71,9 @@ export const POST: APIRoute = async ({ request, url }) => {
         const data = [];
 
         for (const row of rows) {
+            // Skip empty rows and divider rows
+            if (row.classList.contains("emptyrow") || row.querySelector(".tabledivider")) continue;
+
             const cells = row.querySelectorAll("td");
             if (cells.length === 0) continue;
 
@@ -49,7 +83,7 @@ export const POST: APIRoute = async ({ request, url }) => {
             cells.forEach((cell, index) => {
                 const header = headers[index] || `Column ${index}`;
                 // Some nodes like icons might still be there, but textContent will ignore them
-                let text = cell.textContent.trim().replace(/\s+/g, ' ');
+                let text = cell.textContent.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
                 
                 rowData[header] = text;
                 if (text && text !== '-' && text !== 'Not yet graded') {
@@ -57,7 +91,7 @@ export const POST: APIRoute = async ({ request, url }) => {
                 }
             });
 
-            // Handle standard Moodle columns
+            // Handle standard Moodle columns for student name
             const firstName = rowData["First name"] || rowData["Nama depan"] || "";
             const surname = rowData["Surname"] || rowData["Nama akhir"] || "";
             if (firstName || surname) {
@@ -72,23 +106,40 @@ export const POST: APIRoute = async ({ request, url }) => {
                 rowData["NAME"] = rowData["Nama"];
             }
 
-            // Translate state for consistency
-            if (rowData["State"]) {
-                rowData["STATE"] = rowData["State"];
-            } else if (rowData["Keadaan"]) {
-                if (rowData["Keadaan"].toLowerCase().includes("selesai")) {
+            // Exclude summary rows such as 'Overall average' or 'Rata-rata keseluruhan'
+            if (!rowData["NAME"] || /overall average|rata-rata/i.test(rowData["NAME"])) {
+                continue;
+            }
+
+            // Translate state/status for consistency (supports English & Indonesian LMS)
+            const rawState = rowData["Status"] || rowData["State"] || rowData["Keadaan"] || "";
+            if (rawState) {
+                if (/selesai|finish/i.test(rawState)) {
                     rowData["STATE"] = "Finished";
-                } else if (rowData["Keadaan"].toLowerCase().includes("sedang")) {
+                } else if (/sedang|progress/i.test(rawState)) {
                     rowData["STATE"] = "In progress";
                 } else {
-                    rowData["STATE"] = rowData["Keadaan"];
+                    rowData["STATE"] = rawState;
                 }
             }
 
-            if (rowData["Time taken"]) {
-                rowData["TIME TAKEN"] = rowData["Time taken"];
-            } else if (rowData["Waktu yang diperlukan"]) {
-                rowData["TIME TAKEN"] = rowData["Waktu yang diperlukan"];
+            // Duration / Time taken
+            const rawDuration = rowData["Duration"] || rowData["Time taken"] || rowData["Durasi"] || rowData["Waktu yang diperlukan"] || "";
+            if (rawDuration) {
+                rowData["TIME TAKEN"] = rawDuration;
+            }
+
+            // ID number / NIM
+            const rawNim = rowData["ID number"] || rowData["Nomor ID"] || rowData["NIM"] || "";
+            if (rawNim) {
+                rowData["NIM"] = rawNim;
+                rowData["ID NUMBER"] = rawNim;
+            }
+
+            // Grade
+            const gradeKey = Object.keys(rowData).find(k => /^(grade|nilai)/i.test(k));
+            if (gradeKey && rowData[gradeKey]) {
+                rowData["GRADE"] = rowData[gradeKey];
             }
 
             if (isRelevant && rowData["NAME"]) {

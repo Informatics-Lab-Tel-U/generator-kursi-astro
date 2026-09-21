@@ -8,8 +8,15 @@ export const GET: APIRoute = async ({ url }) => {
     try {
         const room = url.searchParams.get("room") || "default";
 
-        const data = leaderboardStore.get(room) || [];
-        
+        const rawData = leaderboardStore.get(room) || [];
+        const data = Array.isArray(rawData)
+            ? rawData.map((row: Record<string, any>) => ({
+                NAME: row["NAME"] || "Unknown",
+                STATE: row["STATE"] || "-",
+                "TIME TAKEN": row["TIME TAKEN"] || "-",
+            }))
+            : [];
+
         return new Response(JSON.stringify(data), {
             status: 200,
             headers: {

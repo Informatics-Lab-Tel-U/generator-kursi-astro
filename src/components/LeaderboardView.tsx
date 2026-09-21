@@ -11,19 +11,30 @@ function parseTimeTaken(timeStr: string): number {
     if (!timeStr || timeStr === '-' || timeStr === 'Not yet graded') return Infinity;
 
     let totalMinutes = 0;
-    const hoursMatch = timeStr.match(/(\d+)\s*hour/i) || timeStr.match(/(\d+)\s*jam/i);
+    const hoursMatch = timeStr.match(/(\d+)\s*(?:hour|jam)/i);
     if (hoursMatch) {
-        totalMinutes += parseInt(hoursMatch[1]) * 60;
+        totalMinutes += parseInt(hoursMatch[1], 10) * 60;
     }
-    const minsMatch = timeStr.match(/(\d+)\s*mins/i) || timeStr.match(/(\d+)\s*menit/i);
+    const minsMatch = timeStr.match(/(\d+)\s*(?:min|menit)/i);
     if (minsMatch) {
-        totalMinutes += parseInt(minsMatch[1]);
+        totalMinutes += parseInt(minsMatch[1], 10);
     }
-    const secsMatch = timeStr.match(/(\d+)\s*sec/i) || timeStr.match(/(\d+)\s*detik/i);
+    const secsMatch = timeStr.match(/(\d+)\s*(?:sec|detik)/i);
     if (secsMatch) {
-        totalMinutes += parseInt(secsMatch[1]) / 60;
+        totalMinutes += parseInt(secsMatch[1], 10) / 60;
     }
-    return totalMinutes === 0 ? Infinity : totalMinutes;
+
+    if (totalMinutes > 0) return totalMinutes;
+
+    // format waktu: "HH:MM:SS" ato "MM:SS"
+    const colonParts = timeStr.split(':').map(Number);
+    if (colonParts.length === 3 && !colonParts.some(isNaN)) {
+        return colonParts[0] * 60 + colonParts[1] + colonParts[2] / 60;
+    } else if (colonParts.length === 2 && !colonParts.some(isNaN)) {
+        return colonParts[0] + colonParts[1] / 60;
+    }
+
+    return Infinity;
 }
 
 export default function LeaderboardView({ room, students }: LeaderboardViewProps) {
@@ -34,9 +45,9 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
     const [isConnected, setIsConnected] = useState(false);
     const [sortMode, setSortMode] = useState<'finished' | 'in-progress'>('finished');
 
-    useEffect(() => {
-        if (!room) return;
+    const activeRoom = room || 'default';
 
+    useEffect(() => {
         setRealtimeData([]);
         setLastUpdated(null);
         setIsConnected(false);
@@ -50,7 +61,7 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
             if (document.visibilityState === "hidden") return;
 
             try {
-                const response = await fetch(`/api/leaderboard?room=${encodeURIComponent(room)}`);
+                const response = await fetch(`/api/leaderboard?room=${encodeURIComponent(activeRoom)}`);
                 if (response.ok) {
                     const incomingData = await response.json();
                     if (Array.isArray(incomingData)) {
@@ -88,7 +99,7 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
         return () => {
             if (intervalId) clearInterval(intervalId);
         };
-    }, [room]);
+    }, [activeRoom]);
 
 
     useEffect(() => {
@@ -127,11 +138,11 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
 
     return (
         <div className="leaderboard-natural" style={{
-            backgroundColor: 'var(--glass-bg)', 
+            backgroundColor: 'var(--glass-bg)',
             backdropFilter: 'blur(var(--glass-blur))',
             WebkitBackdropFilter: 'blur(var(--glass-blur))',
             width: '100%',
-            borderRadius: 'var(--radius-lg)', 
+            borderRadius: 'var(--radius-lg)',
             display: 'flex', flexDirection: 'column',
             border: '1px solid var(--glass-border)',
             boxShadow: 'var(--shadow-sm)',
@@ -207,7 +218,7 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
                                 <tbody>
                                     {sortedData.map((row, idx) => {
                                         const isFinished = row['STATE'] === 'Finished';
-                                        
+
                                         let stateBadgeColor = 'var(--text-muted)';
                                         let stateBadgeBg = 'var(--bg-hover)';
                                         if (isFinished) {
@@ -225,14 +236,14 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
                                         }
 
                                         return (
-                                            <tr key={idx} style={{ 
+                                            <tr key={idx} style={{
                                                 borderBottom: idx === sortedData.length - 1 ? 'none' : '1px solid var(--border-light)',
                                                 background: isFinished ? 'rgba(16, 185, 129, 0.04)' : 'transparent',
                                                 transition: 'background 0.2s'
                                             }}>
                                                 <td style={{ padding: '16px', fontWeight: 'bold', color: 'var(--text-muted)', textAlign: 'center' }}>
                                                     {isFinished && idx < 3 ? (
-                                                        <span style={{ 
+                                                        <span style={{
                                                             display: 'inline-block', width: '24px', height: '24px', lineHeight: '24px',
                                                             borderRadius: '50%', background: idx === 0 ? '#FBBF24' : idx === 1 ? '#9CA3AF' : '#D97706',
                                                             color: 'white', fontSize: '12px'
@@ -247,7 +258,7 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
                                                     {row['NAME'] || '-'}
                                                 </td>
                                                 <td style={{ padding: '16px' }}>
-                                                    <span style={{ 
+                                                    <span style={{
                                                         display: 'inline-block', padding: '4px 10px', borderRadius: '12px',
                                                         fontSize: '11px', fontWeight: 700, letterSpacing: '0.02em',
                                                         color: stateBadgeColor, backgroundColor: stateBadgeBg
