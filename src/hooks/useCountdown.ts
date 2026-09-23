@@ -162,7 +162,7 @@ export function useMoodleScript(kelas: string) {
 
       const res = await fetch(\`\${API_BASE}/api/process-html?room=\${ROOM}\`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ html: attemptsHtml })
       });
       const data = await res.json();

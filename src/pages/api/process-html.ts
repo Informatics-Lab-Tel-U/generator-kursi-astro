@@ -11,7 +11,7 @@ export const OPTIONS: APIRoute = async () => {
         headers: {
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, ngrok-skip-browser-warning, *",
             "Access-Control-Max-Age": "86400",
         }
     });
@@ -24,7 +24,7 @@ export const ALL: APIRoute = async ({ request }) => {
             headers: {
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
-                "Access-Control-Allow-Headers": "Content-Type, Authorization",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization, ngrok-skip-browser-warning, *",
                 "Access-Control-Max-Age": "86400",
             }
         });
