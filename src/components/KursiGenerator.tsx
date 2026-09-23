@@ -2,7 +2,7 @@ import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./KursiGenerator.css";
 
-import type { TabId, ProjectorConfig, TimerState } from "./types";
+import type { TabId, ProjectorConfig, TimerState, ScheduleState } from "./types";
 import type { Racer } from "./types";
 import { getDefaultTimerSession } from "./utils";
 
@@ -11,13 +11,15 @@ import { useMonitoring } from "../hooks/useMonitoring";
 import { useStudentData } from "../hooks/useStudentData";
 import { useSeats } from "../hooks/useSeats";
 import { useProjectorSync } from "../hooks/useProjectorSync";
+import { useScheduleAutoAdvance } from "../hooks/useCountdown";
 
 import Sidebar from "./Sidebar";
 import SeatsTab from "./SeatsTab";
 import NotesTab from "./NotesTab";
 import CountdownTab from "./CountdownTab";
+import LeaderboardTab from "./LeaderboardTab";
 import KursiGeneratorHeader from "./KursiGeneratorHeader";
-import { LuLayoutGrid, LuPanelLeftOpen } from "react-icons/lu";
+import { LuLayoutGrid } from "react-icons/lu";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +38,7 @@ function KursiGeneratorInner() {
     const [kelas, setKelas] = useState("");
     const [activeTab, setActiveTab] = useState<TabId>("seats");
     const [showSidebar, setShowSidebar] = useState(true);
+    const [countdownMode, setCountdownMode] = useState<"simple" | "advanced">("simple");
     const [notes, setNotes] = useState("<h2>Modul 13</h2><hr><p>Password: abcd123</p>");
     const [racers, setRacers] = useState<Racer[]>([]);
     const [timer, setTimer] = useState<TimerState>(() => {
@@ -51,6 +54,11 @@ function KursiGeneratorInner() {
         showSeats: true,
         showNotes: false,
         showCountdown: false,
+    });
+
+    const [schedule, setSchedule] = useState<ScheduleState>({
+        blocks: [],
+        activeBlockId: null,
     });
 
     // Custom hooks — masing-masing bertanggung jawab atas satu domain logika
@@ -69,6 +77,10 @@ function KursiGeneratorInner() {
         seats,
     } = useSeats(eligibleStudents, matkul, kelas, isLoading);
 
+    const activeBlock = countdownMode === "advanced"
+        ? schedule.blocks.find((b) => b.id === schedule.activeBlockId)
+        : null;
+
     // Sinkronisasi state ke window Proyektor via BroadcastChannel
     useProjectorSync({
         seats,
@@ -79,23 +91,19 @@ function KursiGeneratorInner() {
         projectorConfig,
         kelas,
         eligibleStudents,
+        activeBlockLabel: activeBlock ? activeBlock.label : undefined,
+        activeBlockColor: activeBlock ? activeBlock.color : undefined,
+        schedule: countdownMode === "advanced" ? schedule : undefined,
     });
+
+    // Auto-advance sesi di root — berjalan di semua tab, tidak bergantung tab countdown aktif
+    useScheduleAutoAdvance({ schedule, setSchedule, timer, setTimer, countdownMode });
 
     return (
         <div className="app-container">
-            {!showSidebar && (
-                <button
-                    className="sidebar-toggle closed"
-                    onClick={() => setShowSidebar(true)}
-                    aria-label="Buka sidebar"
-                >
-                    <LuPanelLeftOpen style={{ fontSize: "20px" }} />
-                </button>
-            )}
 
             <Sidebar
                 showSidebar={showSidebar}
-                setShowSidebar={setShowSidebar}
                 matkul={matkul}
                 setMatkul={setMatkul}
                 kelas={kelas}
@@ -129,6 +137,10 @@ function KursiGeneratorInner() {
                     setProjectorConfig={setProjectorConfig}
                     theme={theme}
                     toggleTheme={toggleTheme}
+                    showSidebar={showSidebar}
+                    setShowSidebar={setShowSidebar}
+                    countdownMode={countdownMode}
+                    setCountdownMode={setCountdownMode}
                 />
 
                 {activeTab === "seats" && (
@@ -169,6 +181,19 @@ function KursiGeneratorInner() {
                         setRacers={setRacers}
                         kelas={kelas}
                         eligibleStudents={eligibleStudents}
+                        schedule={countdownMode === "advanced" ? schedule : undefined}
+                        setSchedule={countdownMode === "advanced" ? setSchedule : undefined}
+                        activeBlockLabel={activeBlock?.label}
+                        activeBlockColor={activeBlock?.color}
+                    />
+                )}
+
+                {activeTab === "leaderboard" && (
+                    <LeaderboardTab
+                        kelas={kelas}
+                        eligibleStudents={eligibleStudents}
+                        racers={racers}
+                        setRacers={setRacers}
                     />
                 )}
             </main>

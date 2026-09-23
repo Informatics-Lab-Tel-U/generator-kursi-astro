@@ -14,26 +14,31 @@ interface SeatsTabProps {
   handleDragEnd: () => void;
 }
 
-// Color palette for asprak badges
-const ASPRAK_COLORS: Record<string, { bg: string; color: string }> = {};
-const COLOR_POOL = [
-  { bg: 'rgba(138,180,248,0.04)', color: '#8ab4f8' },
-  { bg: 'rgba(129,201,149,0.04)', color: '#81c995' },
-  { bg: 'rgba(253,214,99,0.04)', color: '#fdd663' },
-  { bg: 'rgba(242,139,130,0.04)', color: '#f28b82' },
-  { bg: 'rgba(197,138,249,0.04)', color: '#c58af9' },
-  { bg: 'rgba(252,167,112,0.04)', color: '#fca770' },
-  { bg: 'rgba(120,215,252,0.04)', color: '#78d7fc' },
-  { bg: 'rgba(255,138,186,0.04)', color: '#ff8aba' },
-];
-let colorIdx = 0;
+// Color palette for asprak badges (consistent per-asprak)
+const COLOR_VARIANTS = [
+  'blue',
+  'green',
+  'amber',
+  'purple',
+  'rose',
+  'cyan',
+  'indigo',
+  'teal',
+] as const;
 
-function getAsprakColor(asprak: string) {
-  if (!ASPRAK_COLORS[asprak]) {
-    ASPRAK_COLORS[asprak] = COLOR_POOL[colorIdx % COLOR_POOL.length];
-    colorIdx++;
+const ASPRAK_VARIANTS: Record<string, string> = {};
+
+function getAsprakVariant(asprak: string): string {
+  if (!ASPRAK_VARIANTS[asprak]) {
+    let hash = 0;
+    for (let i = 0; i < asprak.length; i++) {
+      hash = (hash << 5) - hash + asprak.charCodeAt(i);
+      hash |= 0;
+    }
+    const idx = Math.abs(hash) % COLOR_VARIANTS.length;
+    ASPRAK_VARIANTS[asprak] = COLOR_VARIANTS[idx];
   }
-  return ASPRAK_COLORS[asprak];
+  return ASPRAK_VARIANTS[asprak];
 }
 
 function formatName(name: string): { defaultName: string, smallName: string } {
@@ -70,10 +75,6 @@ export default function SeatsTab({
               const isDragSource = dragSourceSeat === seat.seatNo;
               const isDragOver = dragOverSeat === seat.seatNo;
               const hasStudent = seat.student !== null;
-              const asprakColor = seat.student?.asprak
-                ? getAsprakColor(seat.student.asprak)
-                : null;
-
               return (
                 <div
                   key={seat.seatNo}
@@ -117,13 +118,7 @@ export default function SeatsTab({
                     ) : isDisabled ? (
                       <span className="disabled-label">—</span>
                     ) : seat.student?.asprak ? (
-                      <span
-                        className="asprak-badge"
-                        style={{
-                          background: asprakColor?.bg,
-                          color: asprakColor?.color,
-                        }}
-                      >
+                      <span className={`asprak-badge asprak-badge-${getAsprakVariant(seat.student.asprak)}`}>
                         {seat.student.asprak}
                       </span>
                     ) : (

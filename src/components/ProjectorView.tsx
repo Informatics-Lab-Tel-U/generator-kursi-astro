@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import type { SeatData, TimerState, Racer, ProjectorConfig, Student } from './types';
+import type { SeatData, TimerState, Racer, ProjectorConfig, Student, ScheduleState } from './types';
+import { PROJECTOR_CHANNEL_NAME } from './scheduleConfig';
 import { makeEmptySeats } from './utils';
 
 import SeatsTab from './SeatsTab';
 import NotesTab from './NotesTab';
 import CountdownTab from './CountdownTab';
+import LeaderboardView from './LeaderboardView';
 import { LuLayoutGrid, LuFileText, LuTimer, LuMonitor } from 'react-icons/lu';
 
 import './KursiGenerator.css';
@@ -24,6 +26,9 @@ export default function ProjectorView() {
   });
   const [kelas, setKelas] = useState<string>("");
   const [eligibleStudents, setEligibleStudents] = useState<Student[]>([]);
+  const [activeBlockLabel, setActiveBlockLabel] = useState<string>("");
+  const [activeBlockColor, setActiveBlockColor] = useState<string>("");
+  const [schedule, setSchedule] = useState<ScheduleState | undefined>(undefined);
 
   const [activeTab, setActiveTab] = useState<'generator' | 'info'>('generator');
   const [notesWidth, setNotesWidth] = useState(350);
@@ -52,7 +57,7 @@ export default function ProjectorView() {
   };
 
   useEffect(() => {
-    const channel = new BroadcastChannel('kursi-gen-sync');
+    const channel = new BroadcastChannel(PROJECTOR_CHANNEL_NAME);
     channel.onmessage = (event) => {
       const data = event.data;
       if (data.seats) setSeats(data.seats);
@@ -63,6 +68,9 @@ export default function ProjectorView() {
       if (data.projectorConfig) setProjectorConfig(data.projectorConfig);
       if (data.kelas !== undefined) setKelas(data.kelas);
       if (data.eligibleStudents) setEligibleStudents(data.eligibleStudents);
+      if (data.activeBlockLabel !== undefined) setActiveBlockLabel(data.activeBlockLabel);
+      if (data.activeBlockColor !== undefined) setActiveBlockColor(data.activeBlockColor);
+      if (data.schedule !== undefined) setSchedule(data.schedule);
     };
 
     channel.postMessage({ type: 'REQUEST_SYNC' });
@@ -93,7 +101,7 @@ export default function ProjectorView() {
   const renderGenerator = () => (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', padding: '0 4px' }}>
-        <LuLayoutGrid /> Posisi Duduk{kelas ? ` — Kelas ${kelas}` : ''}
+        <LuLayoutGrid /> Posisi Duduk{kelas ? `: Kelas ${kelas}` : ''}
       </div>
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
         {columns.length === 0 ? (
@@ -131,11 +139,14 @@ export default function ProjectorView() {
   const renderInfo = () => (
     <div style={{ display: 'flex', gap: '16px', flex: 1, overflow: 'hidden' }}>
       {projectorConfig.showNotes && (
-        <div style={{
-          width: projectorConfig.showCountdown ? `${notesWidth}px` : '100%',
-          flex: projectorConfig.showCountdown ? '0 0 auto' : '1',
-          display: 'flex', flexDirection: 'column', overflow: 'hidden'
-        }}>
+        <div
+          className="notes-natural"
+          style={{
+            width: projectorConfig.showCountdown ? `${notesWidth}px` : '100%',
+            flex: projectorConfig.showCountdown ? '0 0 auto' : '1',
+            display: 'flex', flexDirection: 'column', overflow: 'hidden'
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', padding: '0 4px' }}>
             <LuFileText /> Catatan Praktikum
           </div>
@@ -173,15 +184,27 @@ export default function ProjectorView() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', padding: '0 4px' }}>
             <LuTimer /> Hitung Mundur
           </div>
-          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: '0 0 auto', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
             <CountdownTab
               timer={timer}
               racers={racers}
               readOnly={true}
               kelas={kelas}
               eligibleStudents={eligibleStudents}
+              activeBlockLabel={activeBlockLabel}
+              activeBlockColor={activeBlockColor}
+              schedule={schedule}
             />
           </div>
+          {/* Leaderboard table di bawah countdown */}
+          {kelas && (
+            <div
+              className="leaderboard-natural"
+              style={{ marginTop: '16px', flexShrink: 0 }}
+            >
+              <LeaderboardView room={kelas} students={eligibleStudents} />
+            </div>
+          )}
         </div>
       )}
     </div>

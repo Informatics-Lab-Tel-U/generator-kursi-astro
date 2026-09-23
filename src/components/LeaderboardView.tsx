@@ -52,6 +52,11 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
         setLastUpdated(null);
         setIsConnected(false);
 
+        // Jangan polling jika room tidak valid atau strip
+        if (!room || room === "-") {
+            return;
+        }
+
         let consecutiveErrors = 0;
         const MAX_ERRORS = 3; // Berhenti polling setelah 3x gagal berturut-turut
         let intervalId: ReturnType<typeof setInterval> | null = null;
@@ -94,10 +99,20 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
         };
 
         fetchData();
-        intervalId = setInterval(fetchData, 3000);
+        // Polling setiap 6 detik (mengurangi 50% beban request Cloudflare Workers dibanding 3s)
+        intervalId = setInterval(fetchData, 6000);
+
+        // Ketika tab kembali aktif setelah diminimize/background, langsung fetch seketika
+        const onVisibilityChange = () => {
+            if (document.visibilityState === "visible") {
+                fetchData();
+            }
+        };
+        document.addEventListener("visibilitychange", onVisibilityChange);
 
         return () => {
             if (intervalId) clearInterval(intervalId);
+            document.removeEventListener("visibilitychange", onVisibilityChange);
         };
     }, [activeRoom]);
 
@@ -114,26 +129,31 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
     }, [lastUpdateDate]);
 
     const sortedData = useMemo(() => {
-        return [...realtimeData].sort((a, b) => {
-            const stateA = a['STATE'] || '';
-            const stateB = b['STATE'] || '';
-            const isAInProgress = stateA === 'In progress' || stateA === 'Not yet graded';
-            const isBInProgress = stateB === 'In progress' || stateB === 'Not yet graded';
+        return [...realtimeData]
+            .filter(row => {
+                const name = (row['NAME'] || '').trim().toLowerCase();
+                return !(name.includes('overall') && name.includes('average')) && !name.includes('rata-rata');
+            })
+            .sort((a, b) => {
+                const stateA = a['STATE'] || '';
+                const stateB = b['STATE'] || '';
+                const isAInProgress = stateA === 'In progress' || stateA === 'Not yet graded';
+                const isBInProgress = stateB === 'In progress' || stateB === 'Not yet graded';
 
-            if (sortMode === 'in-progress') {
-                if (isAInProgress && !isBInProgress) return -1;
-                if (!isAInProgress && isBInProgress) return 1;
-            } else {
-                if (stateA === 'Finished' && stateB !== 'Finished') return -1;
-                if (stateA !== 'Finished' && stateB === 'Finished') return 1;
-            }
-            return parseTimeTaken(a['TIME TAKEN'] || '') - parseTimeTaken(b['TIME TAKEN'] || '');
-        });
+                if (sortMode === 'in-progress') {
+                    if (isAInProgress && !isBInProgress) return -1;
+                    if (!isAInProgress && isBInProgress) return 1;
+                } else {
+                    if (stateA === 'Finished' && stateB !== 'Finished') return -1;
+                    if (stateA !== 'Finished' && stateB === 'Finished') return 1;
+                }
+                return parseTimeTaken(a['TIME TAKEN'] || '') - parseTimeTaken(b['TIME TAKEN'] || '');
+            });
     }, [realtimeData, sortMode]);
 
-    const hasData = realtimeData.length > 0;
-    const totalStudents = realtimeData.length;
-    const completedStudentsCount = realtimeData.filter(row => row['STATE'] === 'Finished').length;
+    const hasData = sortedData.length > 0;
+    const totalStudents = sortedData.length;
+    const completedStudentsCount = sortedData.filter(row => row['STATE'] === 'Finished').length;
     const notCompletedStudentsCount = totalStudents - completedStudentsCount;
 
     return (

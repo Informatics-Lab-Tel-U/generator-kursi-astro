@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { parse } from "node-html-parser";
-import { leaderboardStore } from "../../lib/store";
+import { leaderboardStore, lastHtmlStore } from "../../lib/store";
 
 
 export const prerender = false;
@@ -60,6 +60,19 @@ export const POST: APIRoute = async ({ request, url }) => {
             });
         }
 
+        // Optimasi Cloudflare Workers: Jika HTML identik dengan sebelumnya, skip CPU-heavy parsing
+        if (lastHtmlStore.get(room) === html) {
+            const cachedData = leaderboardStore.get(room) || [];
+            return new Response(JSON.stringify({ success: true, count: cachedData.length, unchanged: true }), {
+                status: 200,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*"
+                }
+            });
+        }
+        lastHtmlStore.set(room, html);
+
         const root = parse(html);
         
         // Clean up noise elements that mess up textContent extraction
@@ -91,19 +104,30 @@ export const POST: APIRoute = async ({ request, url }) => {
                 }
             });
 
-            // Handle standard Moodle columns for student name
-            const firstName = rowData["First name"] || rowData["Nama depan"] || "";
-            const surname = rowData["Surname"] || rowData["Nama akhir"] || "";
+            // Helper to get value case-insensitively
+            const getValue = (...keys: string[]) => {
+                for (const k of keys) {
+                    const foundKey = Object.keys(rowData).find(
+                        (rk) => rk.trim().toLowerCase() === k.toLowerCase()
+                    );
+                    if (foundKey && rowData[foundKey]) return rowData[foundKey];
+                }
+                return "";
+            };
+
+            // Handle standard Moodle columns
+            const firstName = getValue("First name", "Nama depan");
+            const surname = getValue("Surname", "Nama akhir");
             if (firstName || surname) {
                 rowData["NAME"] = `${firstName} ${surname}`.trim();
-            } else if (rowData["First name / Last name"]) {
-                rowData["NAME"] = rowData["First name / Last name"];
-            } else if (rowData["Nama depan / Nama akhir"]) {
-                rowData["NAME"] = rowData["Nama depan / Nama akhir"];
-            } else if (rowData["Name"]) {
-                rowData["NAME"] = rowData["Name"];
-            } else if (rowData["Nama"]) {
-                rowData["NAME"] = rowData["Nama"];
+            } else {
+                const combinedName = getValue(
+                    "First name / Last name",
+                    "Nama depan / Nama akhir",
+                    "Name",
+                    "Nama"
+                );
+                if (combinedName) rowData["NAME"] = combinedName;
             }
 
             // Exclude summary rows such as 'Overall average' or 'Rata-rata keseluruhan'
@@ -112,11 +136,12 @@ export const POST: APIRoute = async ({ request, url }) => {
             }
 
             // Translate state/status for consistency (supports English & Indonesian LMS)
-            const rawState = rowData["Status"] || rowData["State"] || rowData["Keadaan"] || "";
+            const rawState = getValue("Status", "State", "Keadaan");
             if (rawState) {
-                if (/selesai|finish/i.test(rawState)) {
+                const lower = rawState.toLowerCase();
+                if (lower.includes("selesai") || lower.includes("finish")) {
                     rowData["STATE"] = "Finished";
-                } else if (/sedang|progress/i.test(rawState)) {
+                } else if (lower.includes("sedang") || lower.includes("progress")) {
                     rowData["STATE"] = "In progress";
                 } else {
                     rowData["STATE"] = rawState;
@@ -124,13 +149,13 @@ export const POST: APIRoute = async ({ request, url }) => {
             }
 
             // Duration / Time taken
-            const rawDuration = rowData["Duration"] || rowData["Time taken"] || rowData["Durasi"] || rowData["Waktu yang diperlukan"] || "";
+            const rawDuration = getValue("Duration", "Time taken", "Durasi", "Waktu yang diperlukan");
             if (rawDuration) {
                 rowData["TIME TAKEN"] = rawDuration;
             }
 
             // ID number / NIM
-            const rawNim = rowData["ID number"] || rowData["Nomor ID"] || rowData["NIM"] || "";
+            const rawNim = getValue("ID number", "Nomor ID", "NIM");
             if (rawNim) {
                 rowData["NIM"] = rawNim;
                 rowData["ID NUMBER"] = rawNim;
@@ -143,7 +168,11 @@ export const POST: APIRoute = async ({ request, url }) => {
             }
 
             if (isRelevant && rowData["NAME"]) {
-                data.push(rowData);
+                const lowerName = rowData["NAME"].toLowerCase();
+                const isAggregate = (lowerName.includes("overall") && lowerName.includes("average")) || lowerName.includes("rata-rata");
+                if (!isAggregate) {
+                    data.push(rowData);
+                }
             }
         }
 

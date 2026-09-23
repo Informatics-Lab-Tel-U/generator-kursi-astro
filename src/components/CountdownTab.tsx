@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import type { TimerState, Racer, RacerJitter, Student } from "./types";
+import type { TimerState, Racer, RacerJitter, Student, ScheduleState } from "./types";
 import { formatTimeWithMs, formatClockTime } from "./utils";
-import { LuPlay, LuPause, LuCar, LuCamera, LuCopy, LuCheck } from "react-icons/lu";
-import LeaderboardView from "./LeaderboardView";
-import { useBlinkEffect, useCountdownTimer, useRacers, useMoodleScript } from "../hooks/useCountdown";
+import { LuPlay, LuPause } from "react-icons/lu";
+import { useBlinkEffect, useCountdownTimer, useRacers } from "../hooks/useCountdown";
+import ScheduleFlow from "./ScheduleFlow";
 
 interface CountdownTabProps {
     timer: TimerState;
@@ -13,6 +13,10 @@ interface CountdownTabProps {
     readOnly?: boolean;
     kelas?: string;
     eligibleStudents?: Student[];
+    schedule?: ScheduleState;
+    setSchedule?: React.Dispatch<React.SetStateAction<ScheduleState>>;
+    activeBlockLabel?: string;
+    activeBlockColor?: string;
 }
 
 export default function CountdownTab({
@@ -23,6 +27,10 @@ export default function CountdownTab({
     readOnly = false,
     kelas = "",
     eligibleStudents = [],
+    schedule,
+    setSchedule,
+    activeBlockLabel,
+    activeBlockColor,
 }: CountdownTabProps) {
     const [now, setNow] = useState(new Date());
     const jitterMapRef = useRef<Record<string, RacerJitter>>({});
@@ -52,41 +60,56 @@ export default function CountdownTab({
     const warningForcedOff = useBlinkEffect(isWarning);
     const dangerForcedOff = useBlinkEffect(isDanger);
 
-    const prevIsFinishedRef = useRef(isFinished);
     const [showGreenFinish, setShowGreenFinish] = useState(false);
     useEffect(() => {
-        if (!prevIsFinishedRef.current && isFinished) {
-            setShowGreenFinish(true);
-            const t = setTimeout(() => setShowGreenFinish(false), 3000);
-            return () => clearTimeout(t);
+        if (!isFinished) {
+            setShowGreenFinish(false);
+            return;
         }
-        prevIsFinishedRef.current = isFinished;
-    }, [isFinished]);
+        setShowGreenFinish(true);
+        const t = setTimeout(() => setShowGreenFinish(false), 2000);
+        return () => clearTimeout(t);
+    }, [isFinished, schedule?.activeBlockId]);
 
-    const actuallyFinished = showGreenFinish;
-    const actuallyDanger = isDanger && !dangerForcedOff;
-    const actuallyWarning = isWarning && !warningForcedOff && !actuallyDanger;
+    const actuallyFinished = showGreenFinish && (!timer.isRunning || remainMs === 0);
+    const actuallyDanger = isDanger && !dangerForcedOff && !actuallyFinished;
+    const actuallyWarning = isWarning && !warningForcedOff && !actuallyDanger && !actuallyFinished;
+
+    const activeBlock = schedule?.blocks.find((b) => b.id === schedule.activeBlockId);
+    const activeBlockIdx = schedule
+        ? schedule.blocks.findIndex((b) => b.id === schedule.activeBlockId)
+        : -1;
+    const nextBlock = schedule && activeBlockIdx >= 0 && activeBlockIdx < schedule.blocks.length - 1
+        ? schedule.blocks[activeBlockIdx + 1]
+        : null;
+    const isLastBlock = schedule && activeBlockIdx === schedule.blocks.length - 1 && schedule.blocks.length > 0;
 
     // Sync body class untuk tampilan proyektor fullscreen
+    // time-transition = sesi selesai, ada sesi berikutnya (biru)
+    // time-finished   = sesi terakhir selesai, HANDS UP (hijau)
     useEffect(() => {
-        if (actuallyFinished && readOnly) {
+        const allStates = ["time-finished", "time-transition", "time-danger", "time-warning"];
+        const remove = (...cls: string[]) => cls.forEach(c => document.body.classList.remove(c));
+
+        if (actuallyFinished && readOnly && nextBlock) {
+            document.body.classList.add("time-transition");
+            remove("time-finished", "time-danger", "time-warning");
+        } else if (actuallyFinished && readOnly) {
             document.body.classList.add("time-finished");
-            document.body.classList.remove("time-danger", "time-warning");
+            remove("time-transition", "time-danger", "time-warning");
         } else if (actuallyDanger && readOnly) {
             document.body.classList.add("time-danger");
-            document.body.classList.remove("time-finished", "time-warning");
+            remove("time-finished", "time-transition", "time-warning");
         } else if (actuallyWarning && readOnly) {
             document.body.classList.add("time-warning");
-            document.body.classList.remove("time-finished", "time-danger");
+            remove("time-finished", "time-transition", "time-danger");
         } else {
-            document.body.classList.remove("time-finished", "time-warning", "time-danger");
+            remove(...allStates);
         }
-        return () => document.body.classList.remove("time-finished", "time-warning", "time-danger");
-    }, [actuallyFinished, actuallyDanger, actuallyWarning, readOnly]);
+        return () => remove(...allStates);
+    }, [actuallyFinished, actuallyDanger, actuallyWarning, nextBlock, readOnly]);
 
-    const { newRacerName, setNewRacerName, addRacer, removeRacer, startRace, handleRacerImageUpload } =
-        useRacers(racers, setRacers);
-    const { isCopied, showScript, setShowScript, generateScript, copyScript } = useMoodleScript(kelas);
+    const { startRace } = useRacers(racers);
 
     const handleStartRace = () => {
         const { jitter, startTimer } = startRace(setTimer);
@@ -94,10 +117,37 @@ export default function CountdownTab({
         startTimer();
     };
 
+
+    // State tampilan proyektor berdasarkan kondisi alur sesi:
+    // "finished-final": sesi terakhir selesai (tidak ada next block)
+    // "finished-next": sesi selesai dan ada sesi berikutnya (auto-advance sedang berjalan)
+    // "running": countdown normal berjalan untuk semua jenis node
+    // "idle": timer tidak berjalan
+    const projectorState: "finished-final" | "finished-next" | "running" | "idle" =
+        isFinished && isLastBlock
+            ? "finished-final"
+            : isFinished && nextBlock
+            ? "finished-next"
+            : timer.isRunning
+            ? "running"
+            : "idle";
+
     return (
         <div className="countdown-tab" style={{ width: "100%" }}>
-            {/* ── Timer Config ─────────────────────────────── */}
-            {!readOnly && (
+            {/* Timeline sesi builder (mode advanced) */}
+            {!readOnly && schedule && setSchedule && setTimer && (
+                <ScheduleFlow
+                    schedule={schedule}
+                    setSchedule={setSchedule}
+                    setTimer={setTimer}
+                    timer={timer}
+                    onStart={handleStartRace}
+                    onStop={() => setTimer?.((p) => ({ ...p, isRunning: false, startedAt: null }))}
+                />
+            )}
+
+            {/* Konfigurasi timer sederhana (mode timer umum) */}
+            {!readOnly && !schedule && (
                 <div className="countdown-config-card">
                     <div className="countdown-field">
                         <label>Waktu Mulai</label>
@@ -137,122 +187,96 @@ export default function CountdownTab({
                 </div>
             )}
 
-            {/* ── Racer Setup ─────────────────────────────── */}
-            {!readOnly && !timer.isRunning && (
-                <div className="racer-setup">
-                    <h3 style={{ margin: "0 0 16px 0", fontSize: "15px", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
-                        <LuCar /> Daftar Pembalap (ASPRAK)
-                    </h3>
-                    <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
-                        <input
-                            type="text"
-                            className="sidebar-input"
-                            placeholder="Kode ASPRAK (e.g. AFF)"
-                            value={newRacerName}
-                            onChange={(e) => setNewRacerName(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && addRacer()}
-                        />
-                        <button className="btn btn-primary" onClick={addRacer}>+ Tambah</button>
-                    </div>
-                    <div className="racer-list">
-                        {racers.length === 0 ? (
-                            <div style={{ padding: "12px", textAlign: "center", color: "var(--text-muted)", fontSize: "13px" }}>
-                                Belum ada pembalap
-                            </div>
-                        ) : (
-                            racers.map((r) => (
-                                <div key={r.id} className="racer-list-item">
-                                    <div className="racer-avatar-preview">
-                                        {r.imageBase64 ? <img src={r.imageBase64} alt={r.name} /> : <span>{r.name}</span>}
-                                    </div>
-                                    <span className="racer-name">{r.name}</span>
-                                    <label className="btn btn-secondary" style={{ cursor: "pointer", margin: 0, padding: "6px 10px", fontSize: "12px", display: "flex", alignItems: "center", gap: "4px" }}>
-                                        <LuCamera /> Foto
-                                        <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => handleRacerImageUpload(r.id, e)} />
-                                    </label>
-                                    <button
-                                        className="btn"
-                                        style={{ padding: "6px 10px", fontSize: "12px", margin: 0, background: "var(--danger-surface)", color: "var(--danger)" }}
-                                        onClick={() => removeRacer(r.id)}
-                                    >✕</button>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </div>
-            )}
+            {/* Area hitung mundur dan race track */}
+            <div className="race-track-container">
 
-            {/* ── Moodle Script ─────────────────────────────── */}
-            {!readOnly && (
-                <div className="countdown-config-card" style={{ marginTop: "16px", flexDirection: "column", alignItems: "stretch" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                        <h3 style={{ margin: 0, fontSize: "15px", fontWeight: 600 }}>Setup Moodle Leaderboard</h3>
-                        <button
-                            className="btn btn-secondary"
-                            onClick={() => setShowScript(!showScript)}
-                            style={{ padding: "4px 8px", fontSize: "11px", margin: 0 }}
-                        >
-                            {showScript ? "Sembunyikan" : "Tampilkan Script"}
-                        </button>
-                    </div>
-                    {showScript && (
-                        <p style={{ margin: "0 0 12px 0", fontSize: "13px", color: "var(--text-muted)" }}>
-                            Copy script di bawah ini, lalu buka halaman grading Moodle. Buka Developer Console (F12 → Console), paste, lalu tekan Enter.
-                        </p>
-                    )}
-                    <div style={{ position: "relative", background: "var(--bg-body)", padding: "12px", minHeight: "48px", borderRadius: "8px", border: "1px solid var(--border-color)" }}>
-                        {showScript ? (
-                            <pre style={{ margin: 0, fontSize: "11px", overflowX: "auto", color: "var(--text-secondary)", paddingRight: "80px" }}>
-                                {generateScript()}
-                            </pre>
-                        ) : (
-                            <div style={{ fontSize: "12px", color: "var(--text-muted)", paddingTop: "4px" }}>
-                                Script tersembunyi. Klik "Tampilkan Script" atau langsung Copy.
-                            </div>
-                        )}
-                        <button
-                            className="btn btn-secondary"
-                            onClick={copyScript}
-                            style={{ position: "absolute", top: "8px", right: "8px", padding: "6px 10px", fontSize: "12px", display: "flex", alignItems: "center", gap: "4px" }}
-                        >
-                            {isCopied ? <><LuCheck style={{ color: "var(--success)" }} /> Copied</> : <><LuCopy /> Copy</>}
-                        </button>
-                    </div>
-                    <div style={{ marginTop: "8px", fontSize: "12px", color: "var(--text-muted)", textAlign: "right" }}>
-                        credit to{" "}
-                        <a href="#" target="_blank" rel="noreferrer" style={{ fontFamily: 'Consolas, "Courier New", monospace', color: "var(--accent)", textDecoration: "none", fontWeight: 600 }}>
-                            @rafiathallah
-                        </a>
-                    </div>
-                </div>
-            )}
-
-            {/* ── Countdown Display & Race Track ─────────── */}
-            <div className="race-track-container" style={{ marginTop: readOnly ? 0 : "24px" }}>
-                <div style={{ textAlign: "center", marginBottom: readOnly ? "0" : "24px" }}>
-                    <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "8px" }}>
-                        Waktu Tersisa
-                    </div>
-                    <div className={`countdown-time ${readOnly ? (actuallyFinished ? "finished" : actuallyDanger ? "danger" : actuallyWarning ? "warning" : "") : ""}`}>
-                        {remainMs === 0 && timer.isRunning && readOnly ? (
-                            <span>HANDS UP !</span>
-                        ) : (() => {
-                            const { main, centi } = formatTimeWithMs(remainMs);
-                            return <>{main}<span style={{ fontSize: "0.65em", opacity: 0.5 }}>.{centi}</span></>;
-                        })()}
-                    </div>
-                    {timer.isRunning && timer.startedAt && (
-                        <div style={{ fontSize: "14px", fontWeight: 500, color: "var(--text-secondary)", marginTop: "8px" }}>
-                            Selesai Pukul: {formatClockTime(endD)}
+                {/* ======================================================
+                    MODE PROYEKTOR: tampilan khusus per-state sesi
+                    ====================================================== */}
+                {readOnly && projectorState === "finished-next" && (
+                    <div style={{ textAlign: "center", padding: "40px 24px" }}>
+                        {/* Label sesi sebelumnya yang baru selesai */}
+                        <div className="session-title-pill" style={{ marginBottom: "16px" }}>
+                            <span>{activeBlock?.label || "Sesi"} selesai</span>
                         </div>
-                    )}
-                </div>
 
+                        {/* Nama step berikutnya sebagai hero text */}
+                        {nextBlock && (
+                            <>
+                                <div style={{
+                                    fontSize: "12px", fontWeight: 600,
+                                    color: "var(--text-muted)", textTransform: "uppercase",
+                                    letterSpacing: "0.1em", marginBottom: "8px",
+                                }}>
+                                    Selanjutnya
+                                </div>
+                                <div className="countdown-time finished" style={{ fontSize: "clamp(48px, 10vw, 96px)" }}>
+                                    <span>{nextBlock.label}</span>
+                                </div>
+                                <div style={{
+                                    fontSize: "15px", fontWeight: 500,
+                                    color: "var(--text-secondary)", marginTop: "12px",
+                                }}>
+                                    {nextBlock.startTime} – {nextBlock.endTime}
+                                </div>
+                            </>
+                        )}
+                    </div>
+                )}
+
+                {readOnly && projectorState === "finished-final" && (
+                    <div style={{ textAlign: "center", padding: "40px 24px" }}>
+                        <div className={`countdown-time ${actuallyFinished ? "finished" : ""}`}>
+                            <span>HANDS UP !</span>
+                        </div>
+                        <div style={{ fontSize: "14px", color: "var(--text-muted)", marginTop: "16px" }}>
+                            Semua sesi telah selesai
+                        </div>
+                    </div>
+                )}
+
+                {/* Tampilan normal (running/idle) di mode proyektor untuk SEMUA sesi */}
+                {(!readOnly || (projectorState === "running" || projectorState === "idle")) && (
+                    <div style={{ textAlign: "center", marginBottom: readOnly ? "0" : "24px" }}>
+                        {/* Badge sesi aktif */}
+                        {(activeBlockLabel || (schedule && activeBlock)) && (
+                            <div style={{ marginBottom: "12px" }}>
+                                <div className="session-title-pill">
+                                    <span>{activeBlockLabel || activeBlock?.label}</span>
+                                </div>
+                            </div>
+                        )}
+
+                        <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "8px" }}>
+                            Waktu Tersisa
+                        </div>
+                        <div className={`countdown-time ${readOnly ? (actuallyFinished ? "finished" : actuallyDanger ? "danger" : actuallyWarning ? "warning" : "") : ""}`}>
+                            {remainMs === 0 && timer.isRunning && readOnly && !nextBlock ? (
+                                <span>HANDS UP !</span>
+                            ) : (() => {
+                                const { main, centi } = formatTimeWithMs(remainMs);
+                                return <>{main}<span style={{ fontSize: "0.65em", opacity: 0.5 }}>.{centi}</span></>;
+                            })()}
+                        </div>
+
+                        {/* Info sesi berikutnya jika ada */}
+                        {readOnly && nextBlock && (
+                            <div className="session-title-pill" style={{ marginTop: "24px" }}>
+                                <span>
+                                    Berikutnya: <strong>{nextBlock.label}</strong>
+                                    <span style={{ marginLeft: "8px", opacity: 0.7 }}>({nextBlock.startTime} - {nextBlock.endTime})</span>
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Race track (hanya di mode non-readOnly) */}
                 {!readOnly && (
                     <div className="race-track">
                         {racers.length === 0 ? (
                             <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)", fontSize: "14px" }}>
-                                Belum ada pembalap. Tambahkan pembalap di atas.
+                                Belum ada pembalap. Tambahkan pembalap di tab Leaderboard.
                             </div>
                         ) : (
                             racers.map((racer) => {
@@ -284,8 +308,6 @@ export default function CountdownTab({
                     </div>
                 )}
             </div>
-
-            <LeaderboardView room={kelas} students={eligibleStudents} />
         </div>
     );
 }

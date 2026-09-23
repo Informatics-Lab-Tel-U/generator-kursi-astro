@@ -18,16 +18,19 @@ if (isDockerBuild) {
 // https://astro.build/config
 export default defineConfig({
   output: 'server',
+  integrations: [react()],
+  adapter,
+  server: {
+    port: 3000,
+    allowedHosts: true,
+  },
   security: {
     checkOrigin: false,
     allowedDomains: [
       { hostname: '**.telkomuniversity.ac.id' },
       { hostname: 'telkomuniversity.ac.id' },
+      { hostname: 'lms.telkomuniversity.ac.id', protocol: 'https' },
     ],
-  },
-  server: {
-    port: 3000,
-    allowedHosts: true,
   },
   vite: {
     server: {
@@ -35,10 +38,20 @@ export default defineConfig({
       cors: {
         origin: '*',
         methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization'],
+        allowedHeaders: ['Content-Type', 'ngrok-skip-browser-warning', 'Authorization'],
       },
     },
+    optimizeDeps: {
+      exclude: [
+        '@astrojs/cloudflare/entrypoints/server.js',
+        'astro/compiler-runtime',
+        'astro:content',
+        'astro:transitions/client',
+      ],
+    },
+    ssr: {
+      noExternal: [],
+      external: ['@astrojs/cloudflare'],
+    },
   },
-  integrations: [react()],
-  adapter,
 });
