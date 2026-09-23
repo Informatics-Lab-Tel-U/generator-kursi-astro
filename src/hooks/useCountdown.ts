@@ -132,6 +132,7 @@ export function useMoodleScript(kelas: string) {
   const API_BASE = "${origin}";
   const ROOM = "${kelas || "default"}";
 
+  let lastHtml = "";
   async function sendAttemptsHTML() {
     try {
       const attemptsElement = document.getElementById("attempts") || document.querySelector("table.generaltable");
@@ -140,12 +141,18 @@ export function useMoodleScript(kelas: string) {
         return;
       }
 
+      const currentHtml = attemptsElement.outerHTML;
+      if (currentHtml === lastHtml) {
+        return; // Skip jika HTML tidak berubah untuk menghemat kuota Cloudflare Workers
+      }
+
       const res = await fetch(\`\${API_BASE}/api/process-html?room=\${ROOM}\`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
-        body: JSON.stringify({ html: attemptsElement.outerHTML })
+        body: JSON.stringify({ html: currentHtml })
       });
       const data = await res.json();
+      lastHtml = currentHtml;
       console.log(\`%c[Leaderboard Sync]%c Berhasil kirim \${data.count ?? 0} data ke \${ROOM}\`, "color: #22c55e; font-weight: bold", "color: auto");
     } catch (err) { console.error("[Leaderboard Sync Error]", err); }
   }

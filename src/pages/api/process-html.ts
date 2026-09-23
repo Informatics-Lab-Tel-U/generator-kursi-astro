@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { parse } from "node-html-parser";
-import { leaderboardStore } from "../../lib/store";
+import { leaderboardStore, lastHtmlStore } from "../../lib/store";
 
 
 export const prerender = false;
@@ -28,6 +28,19 @@ export const POST: APIRoute = async ({ request, url }) => {
         if (!html) {
             return new Response(JSON.stringify({ error: "No HTML provided" }), { status: 400 });
         }
+
+        // Optimasi Cloudflare Workers: Jika HTML identik dengan sebelumnya, skip CPU-heavy parsing
+        if (lastHtmlStore.get(room) === html) {
+            const cachedData = leaderboardStore.get(room) || [];
+            return new Response(JSON.stringify({ success: true, count: cachedData.length, unchanged: true }), {
+                status: 200,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*"
+                }
+            });
+        }
+        lastHtmlStore.set(room, html);
 
         const root = parse(html);
         

@@ -41,6 +41,11 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
         setLastUpdated(null);
         setIsConnected(false);
 
+        // Jangan polling jika room tidak valid atau strip
+        if (!room || room === "-") {
+            return;
+        }
+
         let consecutiveErrors = 0;
         const MAX_ERRORS = 3; // Berhenti polling setelah 3x gagal berturut-turut
         let intervalId: ReturnType<typeof setInterval> | null = null;
@@ -83,10 +88,20 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
         };
 
         fetchData();
-        intervalId = setInterval(fetchData, 3000);
+        // Polling setiap 6 detik (mengurangi 50% beban request Cloudflare Workers dibanding 3s)
+        intervalId = setInterval(fetchData, 6000);
+
+        // Ketika tab kembali aktif setelah diminimize/background, langsung fetch seketika
+        const onVisibilityChange = () => {
+            if (document.visibilityState === "visible") {
+                fetchData();
+            }
+        };
+        document.addEventListener("visibilitychange", onVisibilityChange);
 
         return () => {
             if (intervalId) clearInterval(intervalId);
+            document.removeEventListener("visibilitychange", onVisibilityChange);
         };
     }, [room]);
 
