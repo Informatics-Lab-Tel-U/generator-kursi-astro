@@ -135,38 +135,24 @@ export function useMoodleScript(kelas: string) {
   let lastHtml = "";
   async function sendAttemptsHTML() {
     try {
-      let attemptsHtml = "";
-      try {
-        const response = await fetch(window.location.href);
-        if (response.ok) {
-          const html = await response.text();
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(html, "text/html");
-          const el = doc.getElementById("attempts") || doc.querySelector("#tablecontainer") || doc.querySelector("table.generaltable");
-          if (el) attemptsHtml = el.outerHTML;
-        }
-      } catch (e) { };
-      if (!attemptsHtml) {
-        const liveEl = document.getElementById("attempts") || document.querySelector("#tablecontainer") || document.querySelector("table.generaltable");
-        if (liveEl) attemptsHtml = liveEl.outerHTML;
-      }
-
-      if (!attemptsHtml) {
-        console.warn("[Leaderboard] No #attempts, #tablecontainer, or generaltable found on page.");
+            const attemptsElement = document.getElementById("attempts") || document.querySelector("#tablecontainer") || document.querySelector("table.generaltable");
+      if (!attemptsElement) {
+        console.warn("[Leaderboard] Tabel kuis belum ditemukan di halaman.");
         return;
       }
 
-      if (attemptsHtml === lastHtml) {
+      const currentHtml = attemptsElement.outerHTML;
+      if (currentHtml === lastHtml) {
         return; // Skip jika HTML tidak berubah untuk menghemat kuota Cloudflare Workers
       }
 
       const res = await fetch(\`\${API_BASE}/api/process-html?room=\${ROOM}\`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ html: attemptsHtml })
+        body: JSON.stringify({ html: currentHtml })
       });
       const data = await res.json();
-      lastHtml = attemptsHtml;
+      lastHtml = currentHtml;
       console.log(\`%c[Leaderboard Sync]%c Berhasil kirim \${data.count ?? 0} data ke \${ROOM}\`, "color: #22c55e; font-weight: bold", "color: auto");
     } catch (err) { console.error("[Leaderboard Sync Error]", err); }
   }
