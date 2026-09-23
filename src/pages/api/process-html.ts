@@ -57,38 +57,48 @@ export const POST: APIRoute = async ({ request, url }) => {
                 }
             });
 
+            // Helper to get value case-insensitively
+            const getValue = (...keys: string[]) => {
+                for (const k of keys) {
+                    const foundKey = Object.keys(rowData).find(
+                        (rk) => rk.trim().toLowerCase() === k.toLowerCase()
+                    );
+                    if (foundKey && rowData[foundKey]) return rowData[foundKey];
+                }
+                return "";
+            };
+
             // Handle standard Moodle columns
-            const firstName = rowData["First name"] || rowData["Nama depan"] || "";
-            const surname = rowData["Surname"] || rowData["Nama akhir"] || "";
+            const firstName = getValue("First name", "Nama depan");
+            const surname = getValue("Surname", "Nama akhir");
             if (firstName || surname) {
                 rowData["NAME"] = `${firstName} ${surname}`.trim();
-            } else if (rowData["First name / Last name"]) {
-                rowData["NAME"] = rowData["First name / Last name"];
-            } else if (rowData["Nama depan / Nama akhir"]) {
-                rowData["NAME"] = rowData["Nama depan / Nama akhir"];
-            } else if (rowData["Name"]) {
-                rowData["NAME"] = rowData["Name"];
-            } else if (rowData["Nama"]) {
-                rowData["NAME"] = rowData["Nama"];
+            } else {
+                const combinedName = getValue(
+                    "First name / Last name",
+                    "Nama depan / Nama akhir",
+                    "Name",
+                    "Nama"
+                );
+                if (combinedName) rowData["NAME"] = combinedName;
             }
 
             // Translate state for consistency
-            if (rowData["State"]) {
-                rowData["STATE"] = rowData["State"];
-            } else if (rowData["Keadaan"]) {
-                if (rowData["Keadaan"].toLowerCase().includes("selesai")) {
+            const rawState = getValue("Status", "State", "Keadaan");
+            if (rawState) {
+                const lower = rawState.toLowerCase();
+                if (lower.includes("selesai") || lower.includes("finish")) {
                     rowData["STATE"] = "Finished";
-                } else if (rowData["Keadaan"].toLowerCase().includes("sedang")) {
+                } else if (lower.includes("sedang") || lower.includes("progress")) {
                     rowData["STATE"] = "In progress";
                 } else {
-                    rowData["STATE"] = rowData["Keadaan"];
+                    rowData["STATE"] = rawState;
                 }
             }
 
-            if (rowData["Time taken"]) {
-                rowData["TIME TAKEN"] = rowData["Time taken"];
-            } else if (rowData["Waktu yang diperlukan"]) {
-                rowData["TIME TAKEN"] = rowData["Waktu yang diperlukan"];
+            const rawTime = getValue("Duration", "Time taken", "Durasi", "Waktu yang diperlukan");
+            if (rawTime) {
+                rowData["TIME TAKEN"] = rawTime;
             }
 
             if (isRelevant && rowData["NAME"]) {

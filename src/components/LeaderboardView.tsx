@@ -11,15 +11,15 @@ function parseTimeTaken(timeStr: string): number {
     if (!timeStr || timeStr === '-' || timeStr === 'Not yet graded') return Infinity;
 
     let totalMinutes = 0;
-    const hoursMatch = timeStr.match(/(\d+)\s*hour/i) || timeStr.match(/(\d+)\s*jam/i);
+    const hoursMatch = timeStr.match(/(\d+)\s*hours?/i) || timeStr.match(/(\d+)\s*jam/i);
     if (hoursMatch) {
         totalMinutes += parseInt(hoursMatch[1]) * 60;
     }
-    const minsMatch = timeStr.match(/(\d+)\s*mins/i) || timeStr.match(/(\d+)\s*menit/i);
+    const minsMatch = timeStr.match(/(\d+)\s*mins?/i) || timeStr.match(/(\d+)\s*menit/i);
     if (minsMatch) {
         totalMinutes += parseInt(minsMatch[1]);
     }
-    const secsMatch = timeStr.match(/(\d+)\s*sec/i) || timeStr.match(/(\d+)\s*detik/i);
+    const secsMatch = timeStr.match(/(\d+)\s*secs?/i) || timeStr.match(/(\d+)\s*detik/i);
     if (secsMatch) {
         totalMinutes += parseInt(secsMatch[1]) / 60;
     }
@@ -103,26 +103,31 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
     }, [lastUpdateDate]);
 
     const sortedData = useMemo(() => {
-        return [...realtimeData].sort((a, b) => {
-            const stateA = a['STATE'] || '';
-            const stateB = b['STATE'] || '';
-            const isAInProgress = stateA === 'In progress' || stateA === 'Not yet graded';
-            const isBInProgress = stateB === 'In progress' || stateB === 'Not yet graded';
+        return [...realtimeData]
+            .filter(row => {
+                const name = (row['NAME'] || '').trim().toLowerCase();
+                return name !== 'overall average';
+            })
+            .sort((a, b) => {
+                const stateA = a['STATE'] || '';
+                const stateB = b['STATE'] || '';
+                const isAInProgress = stateA === 'In progress' || stateA === 'Not yet graded';
+                const isBInProgress = stateB === 'In progress' || stateB === 'Not yet graded';
 
-            if (sortMode === 'in-progress') {
-                if (isAInProgress && !isBInProgress) return -1;
-                if (!isAInProgress && isBInProgress) return 1;
-            } else {
-                if (stateA === 'Finished' && stateB !== 'Finished') return -1;
-                if (stateA !== 'Finished' && stateB === 'Finished') return 1;
-            }
-            return parseTimeTaken(a['TIME TAKEN'] || '') - parseTimeTaken(b['TIME TAKEN'] || '');
-        });
+                if (sortMode === 'in-progress') {
+                    if (isAInProgress && !isBInProgress) return -1;
+                    if (!isAInProgress && isBInProgress) return 1;
+                } else {
+                    if (stateA === 'Finished' && stateB !== 'Finished') return -1;
+                    if (stateA !== 'Finished' && stateB === 'Finished') return 1;
+                }
+                return parseTimeTaken(a['TIME TAKEN'] || '') - parseTimeTaken(b['TIME TAKEN'] || '');
+            });
     }, [realtimeData, sortMode]);
 
-    const hasData = realtimeData.length > 0;
-    const totalStudents = realtimeData.length;
-    const completedStudentsCount = realtimeData.filter(row => row['STATE'] === 'Finished').length;
+    const hasData = sortedData.length > 0;
+    const totalStudents = sortedData.length;
+    const completedStudentsCount = sortedData.filter(row => row['STATE'] === 'Finished').length;
     const notCompletedStudentsCount = totalStudents - completedStudentsCount;
 
     return (

@@ -1,4 +1,13 @@
 import type { SeatData } from './types';
+import {
+  DAY_SESSIONS,
+  FALLBACK_SESSION,
+  TEMPLATE_DURATIONS,
+  BLOCK_COLOR,
+  GAP_BLOCK_PATTERN,
+} from './scheduleConfig';
+
+export { GAP_BLOCK_PATTERN } from './scheduleConfig';
 
 export function formatTimeWithMs(remainMs: number): { main: string; centi: string } {
   if (remainMs < 0) remainMs = 0;
@@ -43,35 +52,13 @@ export function makeEmptySeats(totalSeats: number = 50): SeatData[] {
 export function getDefaultTimerSession(): { start: string; end: string } {
   const now = new Date();
   const day = now.getDay();
-  let daySessions: { start: string; end: string }[] = [];
-
-  if (day >= 1 && day <= 4) {
-    daySessions = [
-      { start: "06:40", end: "08:20" },
-      { start: "09:40", end: "11:20" },
-      { start: "12:40", end: "14:20" },
-      { start: "15:40", end: "17:20" },
-    ];
-  } else if (day === 5) {
-    daySessions = [
-      { start: "07:40", end: "09:20" },
-      { start: "13:40", end: "15:20" },
-    ];
-  } else if (day === 6) {
-    daySessions = [
-      { start: "07:40", end: "09:20" },
-      { start: "10:40", end: "12:20" },
-      { start: "13:40", end: "15:20" },
-      { start: "16:40", end: "18:20" },
-    ];
-  }
+  const daySessions = DAY_SESSIONS[day] ?? [];
 
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
   let targetSession = null;
   for (const session of daySessions) {
     const [endH, endM] = session.end.split(":").map(Number);
-    const endMins = endH * 60 + endM;
-    if (currentMinutes <= endMins) {
+    if (currentMinutes <= endH * 60 + endM) {
       targetSession = session;
       break;
     }
@@ -80,5 +67,51 @@ export function getDefaultTimerSession(): { start: string; end: string } {
     targetSession = daySessions[daySessions.length - 1];
   }
 
-  return targetSession || { start: "08:00", end: "10:00" };
+  return targetSession ?? FALLBACK_SESSION;
+}
+
+/** Tambah menit ke string waktu "HH:MM", kembalikan "HH:MM" */
+export function addMinutes(time: string, minutes: number): string {
+  const [h, m] = time.split(":").map(Number);
+  const total = h * 60 + m + minutes;
+  const hh = Math.floor(total / 60) % 24;
+  const mm = total % 60;
+  return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+}
+
+/**
+ * Hasilkan template schedule berdasarkan sesi aktif hari ini.
+ * Semua durasi diambil dari TEMPLATE_DURATIONS di scheduleConfig.ts.
+ */
+export function getDefaultScheduleTemplates() {
+  const { start, end } = getDefaultTimerSession();
+  const { JURNAL_MENIT, GAP_AKHIR_MENIT, TES_AWAL_MENIT } = TEMPLATE_DURATIONS;
+
+  return [
+    { id: "blank", label: "Kosong", blocks: [] },
+    {
+      id: "jurnal",
+      label: "Jurnal Saja",
+      blocks: [
+        { label: "Jurnal", startTime: start, endTime: end, color: BLOCK_COLOR.JURNAL },
+      ],
+    },
+    {
+      id: "jurnal-tes",
+      label: "Jurnal + Tes Akhir",
+      blocks: [
+        { label: "Jurnal",    startTime: start,                                        endTime: addMinutes(start, JURNAL_MENIT),                      color: BLOCK_COLOR.JURNAL },
+        { label: "Gap",       startTime: addMinutes(start, JURNAL_MENIT),              endTime: addMinutes(start, JURNAL_MENIT + GAP_AKHIR_MENIT),    color: BLOCK_COLOR.GAP },
+        { label: "Tes Akhir", startTime: addMinutes(start, JURNAL_MENIT + GAP_AKHIR_MENIT), endTime: end,                                           color: BLOCK_COLOR.TES },
+      ],
+    },
+    {
+      id: "tes-jurnal",
+      label: "Tes Awal + Jurnal",
+      blocks: [
+        { label: "Tes Awal", startTime: start,                       endTime: addMinutes(start, TES_AWAL_MENIT), color: BLOCK_COLOR.TES },
+        { label: "Jurnal",   startTime: addMinutes(start, TES_AWAL_MENIT), endTime: end,                         color: BLOCK_COLOR.JURNAL },
+      ],
+    },
+  ];
 }

@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
-import type { ProjectorConfig, TimerState } from "../components/types";
-import type { Student } from "../components/types";
-import type { Racer, SeatData } from "../components/types";
+import type { ProjectorConfig, TimerState, ScheduleState, Student, Racer, SeatData } from "../components/types";
+import { PROJECTOR_CHANNEL_NAME } from "../components/scheduleConfig";
 
 interface ProjectorState {
     seats: SeatData[];
@@ -12,6 +11,9 @@ interface ProjectorState {
     projectorConfig: ProjectorConfig;
     kelas: string;
     eligibleStudents: Student[];
+    activeBlockLabel?: string;
+    activeBlockColor?: string;
+    schedule?: ScheduleState;
 }
 
 /**
@@ -26,7 +28,7 @@ export function useProjectorSync(state: ProjectorState) {
 
     // Buat channel sekali saat mount, respond ke REQUEST_SYNC dari projector
     useEffect(() => {
-        const channel = new BroadcastChannel("kursi-gen-sync");
+        const channel = new BroadcastChannel(PROJECTOR_CHANNEL_NAME);
         channelRef.current = channel;
 
         channel.onmessage = (event) => {
@@ -59,5 +61,8 @@ export function useProjectorSync(state: ProjectorState) {
         state.projectorConfig,
         state.kelas,
         state.eligibleStudents,
+        state.activeBlockLabel,
+        state.activeBlockColor,
+        state.schedule,
     ]);
 }

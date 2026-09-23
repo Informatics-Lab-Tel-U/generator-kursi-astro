@@ -20,4 +20,38 @@ export default defineConfig({
   output: 'server',
   integrations: [react()],
   adapter,
+  security: {
+    checkOrigin: false,
+    allowedDomains: [
+      {
+        hostname: 'lms.telkomuniversity.ac.id',
+        protocol: 'https',
+      },
+      {
+        hostname: '**.telkomuniversity.ac.id',
+        protocol: 'https',
+      },
+    ],
+  },
+  vite: {
+    server: {
+      cors: {
+        origin: '*',
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+        allowedHeaders: ['Content-Type', 'ngrok-skip-browser-warning', 'Authorization'],
+      },
+    },
+    optimizeDeps: {
+      exclude: [
+        '@astrojs/cloudflare/entrypoints/server.js',
+        'astro/compiler-runtime',
+        'astro:content',
+        'astro:transitions/client',
+      ],
+    },
+    ssr: {
+      noExternal: [],
+      external: ['@astrojs/cloudflare'],
+    },
+  },
 });

@@ -4,9 +4,12 @@ import {
     LuLayoutGrid,
     LuFileText,
     LuTimer,
+    LuTrophy,
     LuMonitor,
     LuSun,
     LuMoon,
+    LuPanelLeftOpen,
+    LuPanelLeftClose,
 } from "react-icons/lu";
 
 interface KursiGeneratorHeaderProps {
@@ -20,12 +23,17 @@ interface KursiGeneratorHeaderProps {
     setProjectorConfig: React.Dispatch<React.SetStateAction<ProjectorConfig>>;
     theme: "light" | "dark";
     toggleTheme: () => void;
+    showSidebar: boolean;
+    setShowSidebar: (val: boolean) => void;
+    countdownMode: "simple" | "advanced";
+    setCountdownMode: (mode: "simple" | "advanced") => void;
 }
 
 const TAB_CONFIG: { id: TabId; label: string; icon: React.ReactNode }[] = [
     { id: "seats", label: "Kursi", icon: <LuLayoutGrid /> },
     { id: "notes", label: "Catatan", icon: <LuFileText /> },
     { id: "countdown", label: "Hitung Mundur", icon: <LuTimer /> },
+    { id: "leaderboard", label: "Leaderboard", icon: <LuTrophy /> },
 ];
 
 export default function KursiGeneratorHeader({
@@ -39,11 +47,23 @@ export default function KursiGeneratorHeader({
     setProjectorConfig,
     theme,
     toggleTheme,
+    showSidebar,
+    setShowSidebar,
+    countdownMode,
+    setCountdownMode,
 }: KursiGeneratorHeaderProps) {
     return (
         <header className="main-header">
             <div className="header-top-row">
-                <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                    <button
+                        className={`sidebar-toggle-btn ${showSidebar ? "active" : ""}`}
+                        onClick={() => setShowSidebar(!showSidebar)}
+                        aria-label={showSidebar ? "Tutup sidebar konfigurasi" : "Buka sidebar konfigurasi"}
+                        title={showSidebar ? "Tutup sidebar konfigurasi" : "Buka sidebar konfigurasi"}
+                    >
+                        {showSidebar ? <LuPanelLeftClose /> : <LuPanelLeftOpen />}
+                    </button>
                     <h1 className="main-title">Generator {matkul} {kelas}</h1>
                     <div className="main-subtitle">{assignedCount}/{activeSeatCount} kursi terisi</div>
                 </div>
@@ -58,6 +78,7 @@ export default function KursiGeneratorHeader({
             </div>
 
             <div className="header-bottom-row">
+                {/* Tab bar */}
                 <div className="tab-bar">
                     {TAB_CONFIG.map(({ id, label, icon }) => (
                         <button
@@ -72,7 +93,26 @@ export default function KursiGeneratorHeader({
                     ))}
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                {/* Mode switch untuk tab Hitung Mundur */}
+                {activeTab === "countdown" && (
+                    <div className="countdown-mode-switch">
+                        <button
+                            className={`countdown-mode-btn ${countdownMode === "simple" ? "active" : ""}`}
+                            onClick={() => setCountdownMode("simple")}
+                        >
+                            Basic
+                        </button>
+                        <button
+                            className={`countdown-mode-btn ${countdownMode === "advanced" ? "active" : ""}`}
+                            onClick={() => setCountdownMode("advanced")}
+                        >
+                            Advanced
+                        </button>
+                    </div>
+                )}
+
+                {/* Kontrol proyektor di sisi kanan */}
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", marginLeft: "auto" }}>
                     <div className="projector-bar">
                         <span className="projector-bar-label">Proyektor:</span>
                         {(["showSeats", "showNotes", "showCountdown"] as const).map((key) => (

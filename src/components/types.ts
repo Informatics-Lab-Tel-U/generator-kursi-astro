@@ -36,7 +36,20 @@ export interface ProjectorConfig {
   showCountdown: boolean;
 }
 
-export type TabId = 'seats' | 'notes' | 'countdown';
+export type TabId = 'seats' | 'notes' | 'countdown' | 'leaderboard';
+
+export interface TimeBlock {
+  id: string;
+  label: string;
+  startTime: string;
+  endTime: string;
+  color?: string;
+}
+
+export interface ScheduleState {
+  blocks: TimeBlock[];
+  activeBlockId: string | null;
+}
 
 export interface SeatVersion {
   id: string;

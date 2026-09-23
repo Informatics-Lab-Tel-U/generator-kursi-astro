@@ -1,10 +1,9 @@
 import type { Student, ProjectorConfig } from './types';
-import { LuSettings, LuBook, LuUsers, LuBan, LuDices, LuRotateCcw, LuFileText, LuLoader, LuPanelLeftClose } from 'react-icons/lu';
+import { LuSettings, LuBook, LuUsers, LuBan, LuDices, LuRotateCcw, LuLoader } from 'react-icons/lu';
 import CustomSelect from './CustomSelect';
 
 interface SidebarProps {
   showSidebar: boolean;
-  setShowSidebar: (val: boolean) => void;
   matkul: string;
   setMatkul: (val: string) => void;
   kelas: string;
@@ -28,7 +27,6 @@ interface SidebarProps {
 
 export default function Sidebar({
   showSidebar,
-  setShowSidebar,
   matkul,
   setMatkul,
   kelas,
@@ -50,29 +48,11 @@ export default function Sidebar({
 
   return (
     <aside className={`sidebar ${showSidebar ? "open" : "closed"}`}>
-      <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="sidebar-header">
         <div style={{ display: 'flex', alignItems: 'center' }}>
             <LuSettings style={{ fontSize: '16px', marginRight: '6px' }} />
             Konfigurasi
         </div>
-        <button 
-            onClick={() => setShowSidebar(false)}
-            style={{ 
-                background: 'transparent', 
-                border: 'none', 
-                color: 'var(--text-secondary)', 
-                cursor: 'pointer', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                padding: '4px',
-                borderRadius: '4px'
-            }}
-            aria-label="Tutup sidebar"
-            title="Tutup sidebar"
-        >
-            <LuPanelLeftClose style={{ fontSize: '18px' }} />
-        </button>
       </div>
 
       {/* Matkul & Kelas */}
@@ -155,17 +135,6 @@ export default function Sidebar({
         >
           <LuRotateCcw /> Reset
         </button>
-      </div>
-
-      {/* Notes info */}
-      <div className="sidebar-section">
-        <label className="sidebar-label">
-          <LuFileText style={{ marginRight: '6px' }} /> Catatan
-        </label>
-        <div className="sidebar-info">
-          Catatan dapat diubah melalui tab{" "}
-          <strong>Catatan</strong>.
-        </div>
       </div>
 
       {/* Riwayat / Versi */}
