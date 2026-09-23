@@ -102,7 +102,11 @@ export const POST: APIRoute = async ({ request, url }) => {
             }
 
             if (isRelevant && rowData["NAME"]) {
-                data.push(rowData);
+                const lowerName = rowData["NAME"].toLowerCase();
+                const isAggregate = (lowerName.includes("overall") && lowerName.includes("average")) || lowerName.includes("rata-rata");
+                if (!isAggregate) {
+                    data.push(rowData);
+                }
             }
         }
 

@@ -106,7 +106,7 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
         return [...realtimeData]
             .filter(row => {
                 const name = (row['NAME'] || '').trim().toLowerCase();
-                return name !== 'overall average';
+                return !(name.includes('overall') && name.includes('average')) && !name.includes('rata-rata');
             })
             .sort((a, b) => {
                 const stateA = a['STATE'] || '';
