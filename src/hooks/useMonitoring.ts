@@ -5,7 +5,7 @@ import { detectCurrentLabRoom } from "../lib/fontDetector";
  * Mengelola deteksi labId PC Lab (via font fingerprint / URL param / localStorage)
  * dan mengirim heartbeat monitoring ke backend via server proxy Astro.
  */
-export function useMonitoring(kelas: string) {
+export function useMonitoring(matkul: string, kelas: string) {
     const [labId, setLabId] = useState<string | null>(null);
     const workerRef = useRef<Worker | null>(null);
 
@@ -54,9 +54,14 @@ export function useMonitoring(kelas: string) {
         if (!labId || !workerRef.current) return;
 
         // Heartbeat dikirim via internal server proxy Astro — tanpa API Key di browser
+        // Gabungkan matkul + kelas → "Kalkulus | IK-01-01", atau hanya kelas jika matkul kosong
+        const kelasLabel = matkul && kelas
+            ? `${matkul} | ${kelas}`
+            : (kelas || "-");
+
         const payload = {
             labId,
-            kelas: kelas || "-",
+            kelas: kelasLabel,
             apiUrl: "",   // gunakan relative path /api/monitoring/heartbeat
             apiKey: "",   // API Key ditangani di sisi server proxy
         };
@@ -72,12 +77,15 @@ export function useMonitoring(kelas: string) {
         document.addEventListener("visibilitychange", handleVisibilityChange);
 
         const handleBeforeUnload = () => {
+            const kelasLabel = matkul && kelas
+                ? `${matkul} | ${kelas}`
+                : (kelas || "-");
             fetch("/api/monitoring/heartbeat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     lab_id: labId,
-                    kelas: kelas || "-",
+                    kelas: kelasLabel,
                     status: "offline",
                     response_time_ms: null,
                     client_timestamp: Date.now(),
@@ -91,7 +99,7 @@ export function useMonitoring(kelas: string) {
             document.removeEventListener("visibilitychange", handleVisibilityChange);
             window.removeEventListener("beforeunload", handleBeforeUnload);
         };
-    }, [labId, kelas]);
+    }, [labId, matkul, kelas]);
 
     return { labId };
 }

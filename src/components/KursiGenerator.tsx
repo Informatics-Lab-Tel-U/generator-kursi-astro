@@ -62,7 +62,7 @@ function KursiGeneratorInner() {
     });
 
     // Custom hooks — masing-masing bertanggung jawab atas satu domain logika
-    const { labId } = useMonitoring(kelas);
+    const { labId } = useMonitoring(matkul, kelas);
 
     const {
         matkulOptions, kelasOptions, eligibleStudents,
