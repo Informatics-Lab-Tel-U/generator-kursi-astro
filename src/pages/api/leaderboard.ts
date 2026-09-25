@@ -1,14 +1,14 @@
 import type { APIRoute } from "astro";
-import { leaderboardStore } from "../../lib/store";
-
+import { getLeaderboardData, normalizeRoomId } from "../../lib/leaderboardStorage";
 
 export const prerender = false;
 
-export const GET: APIRoute = async ({ url }) => {
+export const GET: APIRoute = async ({ url, locals }) => {
     try {
-        const room = url.searchParams.get("room") || "default";
+        const rawRoom = url.searchParams.get("room") || "default";
+        const room = normalizeRoomId(rawRoom);
 
-        const rawData = leaderboardStore.get(room) || [];
+        const rawData = await getLeaderboardData(room, locals);
         const data = Array.isArray(rawData)
             ? rawData.map((row: Record<string, any>) => ({
                 NAME: row["NAME"] || "Unknown",
@@ -25,9 +25,6 @@ export const GET: APIRoute = async ({ url }) => {
                 "Cache-Control": "public, max-age=2, s-maxage=3, stale-while-revalidate=5",
             },
         });
-
-
-
     } catch (e) {
         return new Response(JSON.stringify({ error: "Server Error", details: String(e) }), {
             status: 500,
@@ -37,5 +34,5 @@ export const GET: APIRoute = async ({ url }) => {
             },
         });
     }
-}
+};
 

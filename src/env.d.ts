@@ -6,6 +6,7 @@ declare module "cloudflare:workers" {
         PRAKTIKAN_GET_API_KEY: string;
         PRAKTIKAN_API_URL: string;
         MANAJEMEN_ASPRAK?: { fetch: typeof fetch };
+        LEADERBOARD_KV?: any;
         [key: string]: any;
     };
 }

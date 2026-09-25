@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { parse } from "node-html-parser";
 import { leaderboardStore, lastHtmlStore } from "../../lib/store";
+import { saveLeaderboardData, normalizeRoomId } from "../../lib/leaderboardStorage";
 
 
 export const prerender = false;
@@ -32,9 +33,10 @@ export const ALL: APIRoute = async ({ request }) => {
     return new Response(null, { status: 405 });
 };
 
-export const POST: APIRoute = async ({ request, url }) => {
+export const POST: APIRoute = async ({ request, url, locals }) => {
     try {
-        const room = url.searchParams.get("room") || "default";
+        const rawRoom = url.searchParams.get("room") || "default";
+        const room = normalizeRoomId(rawRoom);
         
         // Security: Prevent DoS from excessively large HTML payloads (max 3 MB)
         const MAX_PAYLOAD_BYTES = 3 * 1024 * 1024;
@@ -115,15 +117,22 @@ export const POST: APIRoute = async ({ request, url }) => {
                 return "";
             };
 
-            // Handle standard Moodle columns
+            // Handle standard Moodle columns across English and Indonesian LMS
             const firstName = getValue("First name", "Nama depan");
-            const surname = getValue("Surname", "Nama akhir");
+            const surname = getValue("Surname", "Last name", "Nama akhir", "Nama belakang");
             if (firstName || surname) {
                 rowData["NAME"] = `${firstName} ${surname}`.trim();
             } else {
                 const combinedName = getValue(
+                    "First name / Surname",
                     "First name / Last name",
                     "Nama depan / Nama akhir",
+                    "Nama depan / Nama belakang",
+                    "Nama Lengkap",
+                    "Nama Mahasiswa",
+                    "Nama Siswa",
+                    "User full name",
+                    "Full name",
                     "Name",
                     "Nama"
                 );
@@ -176,10 +185,13 @@ export const POST: APIRoute = async ({ request, url }) => {
             }
         }
 
-        // Simpan ke in-memory store (murni temporary)
-        leaderboardStore.set(room, data);
+        const { kvSaved } = await saveLeaderboardData(room, data, locals);
 
-        return new Response(JSON.stringify({ success: true, count: data.length, kvSaved: false }), {
+        return new Response(JSON.stringify({ 
+            success: true, 
+            count: data.length, 
+            kvSaved 
+        }), {
             status: 200,
             headers: {
                 "Content-Type": "application/json",
