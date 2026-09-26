@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import type { TabId, ProjectorConfig, TimerState } from "./types";
-import { formatTimeWithMs } from "./utils";
-import { useCountdownTimer } from "../hooks/useCountdown";
+
 import {
     LuLayoutGrid,
     LuFileText,
@@ -65,20 +64,7 @@ export default function KursiGeneratorHeader({
     timer,
     activeBlockLabel,
 }: KursiGeneratorHeaderProps) {
-    const [now, setNow] = useState(new Date());
 
-    useEffect(() => {
-        if (!timer?.isRunning) return;
-        const interval = setInterval(() => {
-            setNow(new Date());
-        }, 500);
-        return () => clearInterval(interval);
-    }, [timer?.isRunning]);
-
-    const { remainMs, isWarning, isDanger, isFinished } = useCountdownTimer(
-        timer || { startTime: "08:00", endTime: "10:00", isRunning: false, startedAt: null },
-        now
-    );
 
     return (
         <header className="w-full flex flex-col gap-3 mb-5">
@@ -99,35 +85,8 @@ export default function KursiGeneratorHeader({
                     </Badge>
                 </div>
                 <div className="flex items-center gap-4">
-                    {timer?.isRunning && activeTab !== "countdown" && (
-                        <div
-                            onClick={() => setActiveTab("countdown")}
-                            className="text-right cursor-pointer select-none hover:opacity-80 transition-opacity"
-                            title="Klik untuk membuka tab Hitung Mundur"
-                        >
-                            <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest leading-none mb-0.5">
-                                {activeBlockLabel || "Waktu"}
-                            </div>
-                            <div
-                                className={`countdown-time leading-none ${
-                                    isDanger ? "danger" : isWarning ? "warning" : ""
-                                }`}
-                                style={{ fontSize: "20px", fontWeight: 700 }}
-                            >
-                                {isFinished ? (
-                                    <span>00:00</span>
-                                ) : (() => {
-                                    const { main, centi } = formatTimeWithMs(remainMs);
-                                    return (
-                                        <>
-                                            <span>{main}</span>
-                                            <span style={{ fontSize: "0.65em", opacity: 0.5 }}>.{centi}</span>
-                                        </>
-                                    );
-                                })()}
-                            </div>
-                        </div>
-                    )}
+
+
                     <Button
                         variant="ghost"
                         size="icon"

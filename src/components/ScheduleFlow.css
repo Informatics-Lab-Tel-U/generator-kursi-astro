@@ -69,7 +69,7 @@
     border-radius: var(--radius-lg);
     border: 1px solid var(--border);
     overflow: hidden;
-    background: var(--bg-input);
+    background: var(--background);
     position: relative;
 }
 
@@ -241,7 +241,7 @@
 
 /* React Flow overrides */
 .schedule-flow-canvas .react-flow__background {
-    background: var(--bg-input);
+    background: var(--background);
 }
 
 .schedule-flow-canvas .react-flow__controls {
@@ -402,10 +402,10 @@
     padding: 5px 8px;
     border-radius: 6px;
     border: 1px solid var(--border);
-    background: var(--bg-input);
+    background: var(--background);
     color: var(--text-primary);
     font-size: 12px;
-    font-family: "Consolas", "Courier New", monospace;
+    font-family: inherit;
     font-weight: 600;
     outline: none;
     box-sizing: border-box;
