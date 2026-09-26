@@ -135,6 +135,8 @@ export default function CountdownTab({
     const handleStartRace = () => {
         const { jitter, startTimer } = startRace(setTimer);
         jitterMapRef.current = jitter;
+        // Sync jitter ke proyektor via localStorage (BroadcastChannel tidak membawa jitter)
+        try { localStorage.setItem("asprak_race_jitter", JSON.stringify(jitter)); } catch {}
         startTimer();
     };
 
@@ -157,17 +159,33 @@ export default function CountdownTab({
 
     // Pastikan jitterMapRef terisi untuk semua pembalap (termasuk di mode proyektor)
     useEffect(() => {
-        racers.forEach((r) => {
+        racers.forEach((r, idx) => {
             if (!jitterMapRef.current[r.id]) {
+                // Fallback dengan spread bermakna (bukan ±1) agar tidak sejajar
                 jitterMapRef.current[r.id] = {
                     currentOffset: 0,
                     targetOffset: Math.random() * 30 - 15,
                     speed: 0.02 + Math.random() * 0.04,
-                    finalOffset: (Math.random() - 0.5) * 2,
+                    finalOffset: idx === 0 ? 0 : -(idx * 3) - Math.random() * 3,
                 };
             }
         });
     }, [racers]);
+
+    // Sync jitter dari localStorage ke proyektor saat race dimulai
+    // (main window menyimpan jitter via handleStartRace; localStorage shared antar tab)
+    useEffect(() => {
+        if (!timer.startedAt || !timer.isRunning) return;
+        try {
+            const raw = localStorage.getItem("asprak_race_jitter");
+            if (!raw) return;
+            const stored: Record<string, any> = JSON.parse(raw);
+            const hasAllRacers = racers.every((r) => stored[r.id]);
+            if (hasAllRacers) {
+                jitterMapRef.current = { ...stored };
+            }
+        } catch {}
+    }, [timer.startedAt, timer.isRunning, racers]);
 
     // Observe race-track container width for accurate car layout
     useEffect(() => {
@@ -308,7 +326,7 @@ export default function CountdownTab({
                                     const gridBase = _gridScreen0 - _camDisp;
 
                                     const xFinishScreen = Math.min(trackWidth - 260, Math.max(280, trackWidth * 0.72));
-                                    const finishBase = xFinishScreen + 30 + (j.finalOffset * 10);
+                                    const finishBase = xFinishScreen + 30 + (j.finalOffset * 18);
 
                                     const midBase = trackWidth * 0.40;
                                     const blendedOffset = j.currentOffset * (1 - p) + j.finalOffset * p;
