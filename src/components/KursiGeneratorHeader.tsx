@@ -60,7 +60,7 @@ export default function KursiGeneratorHeader({
     setCountdownMode,
 }: KursiGeneratorHeaderProps) {
     return (
-        <header className="w-full flex flex-col gap-2.5 pb-2">
+        <header className="w-full flex flex-col gap-3 mb-5">
             <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-3 flex-wrap">
                     <Button

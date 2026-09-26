@@ -29,7 +29,7 @@ export default function OthersTab({
   };
 
   return (
-    <div className="w-full flex flex-col gap-4">
+    <div className="w-full flex flex-col gap-5">
       <div>
         <h2 className="text-sm font-semibold tracking-tight text-foreground">
           Riwayat Generate

@@ -38,7 +38,7 @@ export default function LeaderboardTab({
     } = useMoodleScript(kelas);
 
     return (
-        <div className="leaderboard-tab w-full flex flex-col gap-5 pt-2">
+        <div className="leaderboard-tab w-full flex flex-col gap-5">
             {/* Pengaturan pembalap asprak */}
             <div className="rounded-lg border border-border bg-card p-4">
                 <div className="flex justify-between items-center mb-3">
