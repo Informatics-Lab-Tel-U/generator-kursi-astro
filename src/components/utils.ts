@@ -29,6 +29,19 @@ export function formatTimeWithMs(remainMs: number): { main: string; centi: strin
   return { main: `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`, centi: centiStr };
 }
 
+export function formatMiniTime(remainMs: number): string {
+  if (remainMs < 0) remainMs = 0;
+  const totalSeconds = Math.floor(remainMs / 1000);
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+
+  if (h > 0) {
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
 export function fisherYatesShuffle<T>(arr: T[]): T[] {
   const result = [...arr];
   for (let i = result.length - 1; i > 0; i--) {

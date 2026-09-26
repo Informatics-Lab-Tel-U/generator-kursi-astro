@@ -140,6 +140,8 @@ function KursiGeneratorInner() {
                     setShowSidebar={setShowSidebar}
                     countdownMode={countdownMode}
                     setCountdownMode={setCountdownMode}
+                    timer={timer}
+                    activeBlockLabel={activeBlock?.label}
                 />
 
                 {activeTab === "seats" && (

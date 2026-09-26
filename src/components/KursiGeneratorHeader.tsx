@@ -1,5 +1,7 @@
-import React from "react";
-import type { TabId, ProjectorConfig } from "./types";
+import React, { useState, useEffect } from "react";
+import type { TabId, ProjectorConfig, TimerState } from "./types";
+import { formatTimeWithMs } from "./utils";
+import { useCountdownTimer } from "../hooks/useCountdown";
 import {
     LuLayoutGrid,
     LuFileText,
@@ -33,6 +35,8 @@ interface KursiGeneratorHeaderProps {
     setShowSidebar: (val: boolean) => void;
     countdownMode: "simple" | "advanced";
     setCountdownMode: (mode: "simple" | "advanced") => void;
+    timer?: TimerState;
+    activeBlockLabel?: string;
 }
 
 const TAB_CONFIG: { id: TabId; label: string; icon: React.ReactNode }[] = [
@@ -58,7 +62,24 @@ export default function KursiGeneratorHeader({
     setShowSidebar,
     countdownMode,
     setCountdownMode,
+    timer,
+    activeBlockLabel,
 }: KursiGeneratorHeaderProps) {
+    const [now, setNow] = useState(new Date());
+
+    useEffect(() => {
+        if (!timer?.isRunning) return;
+        const interval = setInterval(() => {
+            setNow(new Date());
+        }, 500);
+        return () => clearInterval(interval);
+    }, [timer?.isRunning]);
+
+    const { remainMs, isWarning, isDanger, isFinished } = useCountdownTimer(
+        timer || { startTime: "08:00", endTime: "10:00", isRunning: false, startedAt: null },
+        now
+    );
+
     return (
         <header className="w-full flex flex-col gap-3 mb-5">
             <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -77,16 +98,47 @@ export default function KursiGeneratorHeader({
                         {assignedCount}/{activeSeatCount} kursi terisi
                     </Badge>
                 </div>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-8"
-                    onClick={toggleTheme}
-                    aria-label={theme === "dark" ? "Ganti ke tema terang" : "Ganti ke tema gelap"}
-                    title={theme === "dark" ? "Tema Terang" : "Tema Gelap"}
-                >
-                    {theme === "dark" ? <LuSun className="size-4" /> : <LuMoon className="size-4" />}
-                </Button>
+                <div className="flex items-center gap-4">
+                    {timer?.isRunning && activeTab !== "countdown" && (
+                        <div
+                            onClick={() => setActiveTab("countdown")}
+                            className="text-right cursor-pointer select-none hover:opacity-80 transition-opacity"
+                            title="Klik untuk membuka tab Hitung Mundur"
+                        >
+                            <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest leading-none mb-0.5">
+                                {activeBlockLabel || "Waktu"}
+                            </div>
+                            <div
+                                className={`countdown-time leading-none ${
+                                    isDanger ? "danger" : isWarning ? "warning" : ""
+                                }`}
+                                style={{ fontSize: "20px", fontWeight: 700 }}
+                            >
+                                {isFinished ? (
+                                    <span>00:00</span>
+                                ) : (() => {
+                                    const { main, centi } = formatTimeWithMs(remainMs);
+                                    return (
+                                        <>
+                                            <span>{main}</span>
+                                            <span style={{ fontSize: "0.65em", opacity: 0.5 }}>.{centi}</span>
+                                        </>
+                                    );
+                                })()}
+                            </div>
+                        </div>
+                    )}
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8"
+                        onClick={toggleTheme}
+                        aria-label={theme === "dark" ? "Ganti ke tema terang" : "Ganti ke tema gelap"}
+                        title={theme === "dark" ? "Tema Terang" : "Tema Gelap"}
+                    >
+                        {theme === "dark" ? <LuSun className="size-4" /> : <LuMoon className="size-4" />}
+                    </Button>
+                </div>
             </div>
 
             <div className="flex items-center justify-between gap-4 flex-wrap">

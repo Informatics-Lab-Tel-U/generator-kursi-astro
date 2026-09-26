@@ -948,7 +948,7 @@ body.time-finished .countdown-time {
     color: #ffffff !important;
 }
 
-/* Prevent leaderboard and notes from changing colors during warnings/danger/finished */
+/* Prevent leaderboard, notes, and seats from changing colors during warnings/danger/finished */
 body.time-warning .leaderboard-natural,
 body.time-danger .leaderboard-natural,
 body.time-transition .leaderboard-natural,
@@ -956,7 +956,11 @@ body.time-finished .leaderboard-natural,
 body.time-warning .notes-natural,
 body.time-danger .notes-natural,
 body.time-transition .notes-natural,
-body.time-finished .notes-natural {
+body.time-finished .notes-natural,
+body.time-warning .seats-natural,
+body.time-danger .seats-natural,
+body.time-transition .seats-natural,
+body.time-finished .seats-natural {
     --bg-header: rgba(255, 255, 255, 0.07) !important;
     --bg-card: var(--card) !important;
     --bg-row-even: rgba(255, 255, 255, 0.03) !important;
@@ -969,11 +973,15 @@ body.time-finished .notes-natural {
     --border-light: oklch(1 0 0 / 6%) !important;
 }
 
-/* Force opaque background on tiptap card elements agar konsisten dengan var(--card) */
+/* Force opaque background on tiptap card and seat columns agar konsisten dengan var(--card) */
 body.time-warning .notes-natural .tiptap-wrapper,
 body.time-danger .notes-natural .tiptap-wrapper,
 body.time-transition .notes-natural .tiptap-wrapper,
-body.time-finished .notes-natural .tiptap-wrapper {
+body.time-finished .notes-natural .tiptap-wrapper,
+body.time-warning .seats-natural .seat-column,
+body.time-danger .seats-natural .seat-column,
+body.time-transition .seats-natural .seat-column,
+body.time-finished .seats-natural .seat-column {
     background-color: var(--card) !important;
     border-color: oklch(1 0 0 / 12%) !important;
 }
@@ -998,7 +1006,11 @@ body.time-finished .notes-natural .tiptap {
 [data-theme='light'] body.time-warning .notes-natural,
 [data-theme='light'] body.time-danger .notes-natural,
 [data-theme='light'] body.time-transition .notes-natural,
-[data-theme='light'] body.time-finished .notes-natural {
+[data-theme='light'] body.time-finished .notes-natural,
+[data-theme='light'] body.time-warning .seats-natural,
+[data-theme='light'] body.time-danger .seats-natural,
+[data-theme='light'] body.time-transition .seats-natural,
+[data-theme='light'] body.time-finished .seats-natural {
     --bg-header: #1f1f1f !important;
     --bg-card: #ffffff !important;
     --bg-row-even: #f1f3f4 !important;
@@ -1015,7 +1027,11 @@ body.time-finished .notes-natural .tiptap {
 [data-theme='light'] body.time-warning .notes-natural .tiptap-wrapper,
 [data-theme='light'] body.time-danger .notes-natural .tiptap-wrapper,
 [data-theme='light'] body.time-transition .notes-natural .tiptap-wrapper,
-[data-theme='light'] body.time-finished .notes-natural .tiptap-wrapper {
+[data-theme='light'] body.time-finished .notes-natural .tiptap-wrapper,
+[data-theme='light'] body.time-warning .seats-natural .seat-column,
+[data-theme='light'] body.time-danger .seats-natural .seat-column,
+[data-theme='light'] body.time-transition .seats-natural .seat-column,
+[data-theme='light'] body.time-finished .seats-natural .seat-column {
     background-color: #ffffff !important;
     border-color: rgba(0, 0, 0, 0.08) !important;
 }
@@ -1031,6 +1047,14 @@ body.time-finished .notes-natural .tiptap {
 [data-theme='light'] body.time-transition .notes-natural .tiptap,
 [data-theme='light'] body.time-finished .notes-natural .tiptap {
     color: #1f1f1f !important;
+}
+
+/* Mini timer label in Projector View: high contrast white against yellow/red/blue/green */
+body.time-warning .mini-timer-label,
+body.time-danger .mini-timer-label,
+body.time-transition .mini-timer-label,
+body.time-finished .mini-timer-label {
+    color: rgba(255, 255, 255, 0.85) !important;
 }
 
 /* Session Title Pill (Projector View) - Always solid neutral, flat no-shadow, immune to dynamic background */
