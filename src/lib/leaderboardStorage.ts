@@ -17,9 +17,10 @@ async function getKV(): Promise<any | null> {
     return null;
 }
 
-// L1 in-memory read cache: skip KV read jika data masih fresh (< 6 detik)
+// L1 in-memory read cache: skip KV read jika data masih fresh (< 2.5 detik)
+// TTL harus lebih pendek dari polling interval script Moodle (5s) dan browser (5s)
 const readCache = new Map<string, { data: any[]; expiry: number }>();
-const READ_CACHE_TTL_MS = 6_000;
+const READ_CACHE_TTL_MS = 2_500;
 
 export async function saveLeaderboardData(
     room: string,

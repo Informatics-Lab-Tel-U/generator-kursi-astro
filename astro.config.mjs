@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
+import tailwindcss from '@tailwindcss/vite';
 
 // When DOCKER_BUILD=true, use Node.js standalone adapter for containerized deployment.
 // Otherwise, use Cloudflare adapter for CF Pages / Workers deployment.
@@ -35,6 +36,7 @@ export default defineConfig({
     ],
   },
   vite: {
+    plugins: [tailwindcss()],
     server: {
       allowedHosts: true,
       cors: {

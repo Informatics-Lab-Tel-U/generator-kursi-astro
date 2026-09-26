@@ -7,7 +7,8 @@ import SeatsTab from './SeatsTab';
 import NotesTab from './NotesTab';
 import CountdownTab from './CountdownTab';
 import LeaderboardView from './LeaderboardView';
-import { LuLayoutGrid, LuFileText, LuTimer, LuMonitor } from 'react-icons/lu';
+import { LuLayoutGrid, LuMonitor } from 'react-icons/lu';
+import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 
 import './KursiGenerator.css';
 
@@ -100,9 +101,6 @@ export default function ProjectorView() {
 
   const renderGenerator = () => (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', padding: '0 4px' }}>
-        <LuLayoutGrid /> Posisi Duduk{kelas ? `: Kelas ${kelas}` : ''}
-      </div>
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
         {columns.length === 0 ? (
           <div style={{
@@ -147,9 +145,6 @@ export default function ProjectorView() {
             display: 'flex', flexDirection: 'column', overflow: 'hidden'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', padding: '0 4px' }}>
-            <LuFileText /> Catatan Praktikum
-          </div>
           <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
             <NotesTab notes={notes} readOnly={true} />
           </div>
@@ -181,9 +176,6 @@ export default function ProjectorView() {
           minWidth: 0,
           display: 'flex', flexDirection: 'column', overflow: 'hidden'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', padding: '0 4px' }}>
-            <LuTimer /> Hitung Mundur
-          </div>
           <div style={{ flex: '0 0 auto', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
             <CountdownTab
               timer={timer}
@@ -226,20 +218,12 @@ export default function ProjectorView() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '16px 16px', boxSizing: 'border-box', background: 'var(--bg-page)' }}>
       {projectorConfig.showSeats && showInfoTab && (
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', flexShrink: 0 }}>
-          <div className="tab-bar">
-            <button
-              className={`tab ${activeTab === 'generator' ? 'active' : ''}`}
-              onClick={() => setActiveTab('generator')}
-            >
-              Posisi Duduk
-            </button>
-            <button
-              className={`tab ${activeTab === 'info' ? 'active' : ''}`}
-              onClick={() => setActiveTab('info')}
-            >
-              Informasi Tambahan
-            </button>
-          </div>
+          <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'generator' | 'info')}>
+            <TabsList>
+              <TabsTrigger value="generator">Posisi Duduk</TabsTrigger>
+              <TabsTrigger value="info">Informasi Tambahan</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
       )}
 

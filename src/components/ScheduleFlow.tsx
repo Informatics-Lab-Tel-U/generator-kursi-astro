@@ -23,6 +23,7 @@ import TimeBlockNode from "./TimeBlockNode";
 import { getDefaultScheduleTemplates } from "./utils";
 import { BLOCK_COLOR_SEQUENCE } from "./scheduleConfig";
 import { LuPlus, LuLayoutTemplate, LuChevronUp, LuPlay, LuPause } from "react-icons/lu";
+import { Button } from "./ui/button";
 
 
 // Templates sesi praktikum — waktu disesuaikan dengan sesi aktif hari ini
@@ -317,32 +318,41 @@ export default function ScheduleFlow({
 
                     {/* Tombol Tambah Blok di pojok kiri atas canvas */}
                     <Panel position="top-left">
-                        <button className="schedule-flow-add-btn" onClick={addBlock}>
-                            <LuPlus /> Tambah Blok
-                        </button>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            className="gap-1.5 border border-border"
+                            onClick={addBlock}
+                        >
+                            <LuPlus className="size-4" /> Tambah Blok
+                        </Button>
                     </Panel>
 
                     {/* Tombol Mulai di pojok kanan atas canvas */}
                     <Panel position="top-right">
                         {timer && (!timer.isRunning ? (
-                            <button
+                            <Button
                                 type="button"
-                                className="schedule-flow-play-btn"
+                                variant="default"
+                                size="sm"
                                 disabled={!activeBlock}
                                 onClick={onStart}
                                 title={activeBlock ? "Mulai sesi ini" : "Pilih sesi terlebih dahulu"}
+                                className="gap-1.5"
                             >
-                                <LuPlay /> Mulai
-                            </button>
+                                <LuPlay className="size-4" /> Mulai
+                            </Button>
                         ) : (
-                            <button
+                            <Button
                                 type="button"
-                                className="schedule-flow-pause-btn"
+                                variant="destructive"
+                                size="sm"
                                 onClick={onStop}
                                 title="Hentikan sesi"
+                                className="gap-1.5"
                             >
-                                <LuPause /> Hentikan
-                            </button>
+                                <LuPause className="size-4" /> Hentikan
+                            </Button>
                         ))}
                     </Panel>
 
@@ -350,40 +360,42 @@ export default function ScheduleFlow({
                     <Panel position="bottom-left">
                         <div className="schedule-template-dropdown-wrapper" ref={templateMenuRef}>
                             {showTemplateMenu && (
-                                <div className="schedule-template-menu">
-                                    <div className="schedule-template-menu-header">Pilih Template</div>
+                                <div className="schedule-template-menu bg-popover text-popover-foreground border border-border rounded-lg p-1.5 min-w-[180px] flex flex-col gap-1 z-50">
+                                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2.5 py-1">Pilih Template</div>
                                     {getDefaultScheduleTemplates().map((t) => (
-                                        <button
+                                        <Button
                                             key={t.id}
                                             type="button"
-                                            className="schedule-template-menu-item"
+                                            variant="ghost"
+                                            size="sm"
+                                            className="w-full justify-start text-xs font-medium h-8 px-2.5 text-foreground hover:bg-accent hover:text-accent-foreground cursor-pointer"
                                             onClick={() => {
                                                 applyTemplate(t);
                                                 setShowTemplateMenu(false);
                                             }}
                                         >
                                             {t.label}
-                                        </button>
+                                        </Button>
                                     ))}
                                 </div>
                             )}
-                            <button
+                            <Button
                                 type="button"
-                                className="schedule-flow-add-btn"
+                                variant="secondary"
+                                size="sm"
                                 onClick={() => setShowTemplateMenu((v) => !v)}
                                 aria-expanded={showTemplateMenu}
                                 aria-haspopup="true"
+                                className="gap-1.5 border border-border"
                             >
-                                <LuLayoutTemplate /> Template
+                                <LuLayoutTemplate className="size-4" /> Template
                                 <LuChevronUp
+                                    className="size-3.5 opacity-70 transition-transform duration-150"
                                     style={{
-                                        fontSize: "12px",
-                                        opacity: 0.7,
                                         transform: showTemplateMenu ? "rotate(180deg)" : "none",
-                                        transition: "transform 0.15s ease",
                                     }}
                                 />
-                            </button>
+                            </Button>
                         </div>
                     </Panel>
 
@@ -403,15 +415,17 @@ export default function ScheduleFlow({
                                 <LuLayoutTemplate style={{ fontSize: "32px", opacity: 0.3 }} />
                                 <span>Pilih template atau tambah blok secara manual</span>
                                 <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
-                                    <button className="schedule-flow-add-btn" onClick={addBlock}>
-                                        <LuPlus /> Tambah Blok
-                                    </button>
-                                    <button
-                                        className="schedule-flow-add-btn"
+                                    <Button variant="outline" size="sm" className="gap-1.5" onClick={addBlock}>
+                                        <LuPlus className="size-4" /> Tambah Blok
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="gap-1.5"
                                         onClick={() => setShowTemplateMenu((v) => !v)}
                                     >
-                                        <LuLayoutTemplate /> Pilih Template
-                                    </button>
+                                        <LuLayoutTemplate className="size-4" /> Pilih Template
+                                    </Button>
                                 </div>
                             </div>
                         </Panel>

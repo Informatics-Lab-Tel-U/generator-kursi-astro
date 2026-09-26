@@ -5,12 +5,18 @@ import {
     LuFileText,
     LuTimer,
     LuTrophy,
+    LuSlidersHorizontal,
     LuMonitor,
     LuSun,
     LuMoon,
     LuPanelLeftOpen,
     LuPanelLeftClose,
 } from "react-icons/lu";
+import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
+import { Checkbox } from "./ui/checkbox";
+import { Label } from "./ui/label";
+import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 
 interface KursiGeneratorHeaderProps {
     matkul: string;
@@ -34,6 +40,7 @@ const TAB_CONFIG: { id: TabId; label: string; icon: React.ReactNode }[] = [
     { id: "notes", label: "Catatan", icon: <LuFileText /> },
     { id: "countdown", label: "Hitung Mundur", icon: <LuTimer /> },
     { id: "leaderboard", label: "Leaderboard", icon: <LuTrophy /> },
+    { id: "others", label: "Lainnya", icon: <LuSlidersHorizontal /> },
 ];
 
 export default function KursiGeneratorHeader({
@@ -53,84 +60,86 @@ export default function KursiGeneratorHeader({
     setCountdownMode,
 }: KursiGeneratorHeaderProps) {
     return (
-        <header className="main-header">
-            <div className="header-top-row">
-                <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-                    <button
-                        className={`sidebar-toggle-btn ${showSidebar ? "active" : ""}`}
+        <header className="w-full flex flex-col gap-2.5 pb-2">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-3 flex-wrap">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8"
                         onClick={() => setShowSidebar(!showSidebar)}
                         aria-label={showSidebar ? "Tutup sidebar konfigurasi" : "Buka sidebar konfigurasi"}
                         title={showSidebar ? "Tutup sidebar konfigurasi" : "Buka sidebar konfigurasi"}
                     >
-                        {showSidebar ? <LuPanelLeftClose /> : <LuPanelLeftOpen />}
-                    </button>
-                    <h1 className="main-title">Generator {matkul} {kelas}</h1>
-                    <div className="main-subtitle">{assignedCount}/{activeSeatCount} kursi terisi</div>
+                        {showSidebar ? <LuPanelLeftClose className="size-4" /> : <LuPanelLeftOpen className="size-4" />}
+                    </Button>
+                    <Badge variant="secondary" className="font-normal text-xs">
+                        {assignedCount}/{activeSeatCount} kursi terisi
+                    </Badge>
                 </div>
-                <button
-                    className="theme-toggle"
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-8"
                     onClick={toggleTheme}
                     aria-label={theme === "dark" ? "Ganti ke tema terang" : "Ganti ke tema gelap"}
                     title={theme === "dark" ? "Tema Terang" : "Tema Gelap"}
                 >
-                    {theme === "dark" ? <LuSun /> : <LuMoon />}
-                </button>
+                    {theme === "dark" ? <LuSun className="size-4" /> : <LuMoon className="size-4" />}
+                </Button>
             </div>
 
-            <div className="header-bottom-row">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
                 {/* Tab bar */}
-                <div className="tab-bar">
-                    {TAB_CONFIG.map(({ id, label, icon }) => (
-                        <button
-                            key={id}
-                            className={`tab ${activeTab === id ? "active" : ""}`}
-                            onClick={() => setActiveTab(id)}
-                            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+                <div className="flex items-center gap-3">
+                    <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as TabId)}>
+                        <TabsList>
+                            {TAB_CONFIG.map(({ id, label, icon }) => (
+                                <TabsTrigger key={id} value={id}>
+                                    {icon}
+                                    <span>{label}</span>
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
+                    </Tabs>
+
+                    {/* Mode switch untuk tab Hitung Mundur */}
+                    {activeTab === "countdown" && (
+                        <Tabs
+                            value={countdownMode}
+                            onValueChange={(val) => setCountdownMode(val as "simple" | "advanced")}
                         >
-                            {icon}
-                            <span>{label}</span>
-                        </button>
-                    ))}
+                            <TabsList>
+                                <TabsTrigger value="simple">Basic</TabsTrigger>
+                                <TabsTrigger value="advanced">Advanced</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                    )}
                 </div>
 
-                {/* Mode switch untuk tab Hitung Mundur */}
-                {activeTab === "countdown" && (
-                    <div className="countdown-mode-switch">
-                        <button
-                            className={`countdown-mode-btn ${countdownMode === "simple" ? "active" : ""}`}
-                            onClick={() => setCountdownMode("simple")}
-                        >
-                            Basic
-                        </button>
-                        <button
-                            className={`countdown-mode-btn ${countdownMode === "advanced" ? "active" : ""}`}
-                            onClick={() => setCountdownMode("advanced")}
-                        >
-                            Advanced
-                        </button>
-                    </div>
-                )}
-
                 {/* Kontrol proyektor di sisi kanan */}
-                <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", marginLeft: "auto" }}>
-                    <div className="projector-bar">
-                        <span className="projector-bar-label">Proyektor:</span>
+                <div className="flex items-center gap-4 flex-wrap ml-auto">
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-md border border-border/60">
+                        <span className="font-medium text-foreground/80">Proyektor:</span>
                         {(["showSeats", "showNotes", "showCountdown"] as const).map((key) => (
-                            <label key={key}>
-                                <input
-                                    type="checkbox"
+                            <div key={key} className="flex items-center gap-1.5">
+                                <Checkbox
+                                    id={`proj-${key}`}
                                     checked={projectorConfig[key]}
-                                    onChange={(e) =>
-                                        setProjectorConfig((p) => ({ ...p, [key]: e.target.checked }))
+                                    onCheckedChange={(checked) =>
+                                        setProjectorConfig((p) => ({ ...p, [key]: !!checked }))
                                     }
                                 />
-                                {key === "showSeats" ? "Kursi" : key === "showNotes" ? "Catatan" : "Waktu"}
-                            </label>
+                                <Label htmlFor={`proj-${key}`} className="text-xs font-normal cursor-pointer select-none">
+                                    {key === "showSeats" ? "Kursi" : key === "showNotes" ? "Catatan" : "Waktu"}
+                                </Label>
+                            </div>
                         ))}
                     </div>
-                    <button
-                        className="btn btn-primary"
-                        style={{ padding: "0 16px", height: "42px", boxSizing: "border-box", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px" }}
+                    <Button
+                        variant="default"
+                        size="default"
+                        className="gap-1.5"
                         onClick={() =>
                             window.open(
                                 "/projector",
@@ -139,9 +148,9 @@ export default function KursiGeneratorHeader({
                             )
                         }
                     >
-                        <LuMonitor />
-                        Tampilkan Window Proyektor
-                    </button>
+                        <LuMonitor className="size-4" />
+                        <span>Tampilkan Window Proyektor</span>
+                    </Button>
                 </div>
             </div>
         </header>

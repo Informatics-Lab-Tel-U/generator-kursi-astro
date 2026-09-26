@@ -1,8 +1,12 @@
 import React from "react";
 import type { Racer, Student } from "./types";
-import { LuCamera, LuCopy, LuCheck } from "react-icons/lu";
+import { LuCamera, LuCopy, LuCheck, LuTrash2, LuUserPlus } from "react-icons/lu";
 import LeaderboardView from "./LeaderboardView";
 import { useRacers, useMoodleScript } from "../hooks/useCountdown";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Badge } from "./ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 
 interface LeaderboardTabProps {
     kelas?: string;
@@ -34,91 +38,81 @@ export default function LeaderboardTab({
     } = useMoodleScript(kelas);
 
     return (
-        <div className="leaderboard-tab" style={{ width: "100%", display: "flex", flexDirection: "column", gap: "20px" }}>
-            {/* Header info */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-                <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "var(--text-primary)" }}>
-                    Leaderboard Praktikum{kelas ? `: Kelas ${kelas}` : ""}
-                </h2>
-            </div>
-
+        <div className="leaderboard-tab w-full flex flex-col gap-5 pt-2">
             {/* Pengaturan pembalap asprak */}
-            <div className="racer-setup" style={{ margin: 0 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                    <h3 style={{ margin: 0, fontSize: "15px", fontWeight: 600, color: "var(--text-primary)" }}>
+            <div className="rounded-lg border border-border bg-card p-4">
+                <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-sm font-semibold text-foreground">
                         Daftar Pembalap (ASPRAK)
                     </h3>
-                    <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-                        {racers.length} pembalap terdaftar
-                    </span>
+                    <Badge variant="secondary" className="font-normal text-xs">
+                        {racers.length} pembalap
+                    </Badge>
                 </div>
 
-                <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
-                    <input
+                <div className="flex gap-2 mb-4">
+                    <Input
                         type="text"
-                        className="sidebar-input"
                         placeholder="Kode ASPRAK (contoh: AFF)"
                         value={newRacerName}
                         onChange={(e) => setNewRacerName(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && addRacer()}
                         aria-label="Kode ASPRAK baru"
+                        className="max-w-xs"
                     />
-                    <button className="btn btn-primary" onClick={addRacer}>
-                        + Tambah
-                    </button>
+                    <Button onClick={addRacer} className="gap-1.5">
+                        <LuUserPlus className="size-4" />
+                        <span>Tambah</span>
+                    </Button>
                 </div>
 
-                <div className="racer-list">
+                <div className="racer-list flex flex-col gap-2">
                     {racers.length === 0 ? (
-                        <div style={{ padding: "16px", textAlign: "center", color: "var(--text-muted)", fontSize: "13px" }}>
+                        <div className="p-4 text-center text-muted-foreground text-xs border border-dashed border-border rounded-md">
                             Belum ada pembalap. Tambahkan kode asprak untuk balapan di tab Hitung Mundur.
                         </div>
                     ) : (
                         racers.map((r) => (
-                            <div key={r.id} className="racer-list-item">
-                                <div className="racer-avatar-preview">
-                                    {r.imageBase64 ? (
-                                        <img src={r.imageBase64} alt={r.name} />
-                                    ) : (
-                                        <span>{r.name}</span>
-                                    )}
+                            <div
+                                key={r.id}
+                                className="flex items-center justify-between gap-3 p-2 rounded-md bg-muted/30 border border-border/50"
+                            >
+                                <div className="flex items-center gap-2.5">
+                                    <Avatar size="sm">
+                                        {r.imageBase64 && <AvatarImage src={r.imageBase64} alt={r.name} />}
+                                        <AvatarFallback className="font-semibold text-xs uppercase">
+                                            {r.name.slice(0, 3)}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <span className="font-medium text-xs text-foreground tracking-wide font-mono">
+                                        {r.name}
+                                    </span>
                                 </div>
-                                <span className="racer-name">{r.name}</span>
-                                <label
-                                    className="btn btn-secondary"
-                                    style={{
-                                        cursor: "pointer",
-                                        margin: 0,
-                                        padding: "6px 10px",
-                                        fontSize: "12px",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "4px",
-                                    }}
-                                >
-                                    <LuCamera /> Foto
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        style={{ display: "none" }}
-                                        onChange={(e) => handleRacerImageUpload(r.id, e)}
-                                    />
-                                </label>
-                                <button
-                                    className="btn"
-                                    style={{
-                                        padding: "6px 10px",
-                                        fontSize: "12px",
-                                        margin: 0,
-                                        background: "var(--danger-surface)",
-                                        color: "var(--danger)",
-                                    }}
-                                    onClick={() => removeRacer(r.id)}
-                                    title={`Hapus pembalap ${r.name}`}
-                                    aria-label={`Hapus pembalap ${r.name}`}
-                                >
-                                    ✕
-                                </button>
+                                <div className="flex items-center gap-1.5">
+                                    <label className="inline-flex cursor-pointer">
+                                        <span className="inline-flex items-center justify-center rounded-lg border border-border bg-background hover:bg-muted text-foreground text-xs font-medium h-7 px-2.5 gap-1.5 transition-colors">
+                                            <LuCamera className="size-3.5 text-muted-foreground" />
+                                            <span>Foto</span>
+                                        </span>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="sr-only"
+                                            onChange={(e) => handleRacerImageUpload(r.id, e)}
+                                        />
+                                    </label>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon-sm"
+                                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                        onClick={() => removeRacer(r.id)}
+                                        title={`Hapus pembalap ${r.name}`}
+                                        aria-label={`Hapus pembalap ${r.name}`}
+                                    >
+                                        <LuTrash2 className="size-3.5" />
+                                    </Button>
+                                </div>
                             </div>
                         ))
                     )}
@@ -126,51 +120,62 @@ export default function LeaderboardTab({
             </div>
 
             {/* Skrip integrasi moodle leaderboard */}
-            <div className="countdown-config-card" style={{ flexDirection: "column", alignItems: "stretch", margin: 0 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                    <h3 style={{ margin: 0, fontSize: "15px", fontWeight: 600 }}>Setup Moodle Leaderboard</h3>
-                    <button
-                        className="btn btn-secondary"
+            <div className="rounded-lg border border-border bg-card p-4 flex flex-col gap-3">
+                <div className="flex justify-between items-center">
+                    <h3 className="text-sm font-semibold text-foreground">Setup Moodle Leaderboard</h3>
+                    <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setShowScript(!showScript)}
-                        style={{ padding: "4px 8px", fontSize: "11px", margin: 0 }}
                     >
                         {showScript ? "Sembunyikan" : "Tampilkan Script"}
-                    </button>
+                    </Button>
                 </div>
 
                 {showScript && (
-                    <p style={{ margin: "0 0 12px 0", fontSize: "13px", color: "var(--text-muted)" }}>
+                    <p className="text-xs text-muted-foreground leading-relaxed m-0">
                         Copy script di bawah ini, lalu buka halaman grading Moodle. Buka Developer Console (F12, pilih tab Console), paste, lalu tekan Enter.
                     </p>
                 )}
 
-                <div style={{ position: "relative", background: "var(--bg-body)", padding: "12px", minHeight: "48px", borderRadius: "8px", border: "1px solid var(--border-color)" }}>
+                <div className="relative bg-muted/40 p-3 min-h-[48px] rounded-md border border-border/60">
                     {showScript ? (
-                        <pre style={{ margin: 0, fontSize: "11px", overflowX: "auto", color: "var(--text-secondary)", paddingRight: "80px" }}>
+                        <pre className="m-0 text-[11px] overflow-x-auto text-muted-foreground font-mono pr-20 whitespace-pre-wrap">
                             {generateScript()}
                         </pre>
                     ) : (
-                        <div style={{ fontSize: "12px", color: "var(--text-muted)", paddingTop: "4px" }}>
+                        <div className="text-xs text-muted-foreground">
                             Script tersembunyi. Klik "Tampilkan Script" atau langsung Copy.
                         </div>
                     )}
-                    <button
-                        className="btn btn-secondary"
+                    <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={copyScript}
-                        style={{ position: "absolute", top: "8px", right: "8px", padding: "6px 10px", fontSize: "12px", display: "flex", alignItems: "center", gap: "4px" }}
+                        className="absolute top-2 right-2 gap-1.5"
                         aria-label="Salin script Moodle"
                     >
-                        {isCopied ? <><LuCheck style={{ color: "var(--success)" }} /> Copied</> : <><LuCopy /> Copy</>}
-                    </button>
+                        {isCopied ? (
+                            <>
+                                <LuCheck className="size-3.5 text-primary" />
+                                <span>Copied</span>
+                            </>
+                        ) : (
+                            <>
+                                <LuCopy className="size-3.5" />
+                                <span>Copy</span>
+                            </>
+                        )}
+                    </Button>
                 </div>
 
-                <div style={{ marginTop: "8px", fontSize: "12px", color: "var(--text-muted)", textAlign: "right" }}>
+                <div className="text-right text-[11px] text-muted-foreground">
                     credit to{" "}
                     <a
                         href="https://github.com/rafiathallah"
                         target="_blank"
                         rel="noreferrer"
-                        style={{ fontFamily: 'Consolas, "Courier New", monospace', color: "var(--accent)", textDecoration: "none", fontWeight: 600 }}
+                        className="font-mono text-primary hover:underline font-semibold"
                     >
                         @rafiathallah
                     </a>

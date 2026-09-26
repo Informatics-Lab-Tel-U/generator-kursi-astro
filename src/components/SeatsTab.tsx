@@ -1,5 +1,7 @@
 import React from 'react';
 import type { SeatData } from './types';
+import { Skeleton } from './ui/skeleton';
+import { Badge } from './ui/badge';
 
 interface SeatsTabProps {
   columns: SeatData[][];
@@ -41,7 +43,7 @@ function getAsprakVariant(asprak: string): string {
   return ASPRAK_VARIANTS[asprak];
 }
 
-function formatName(name: string): { defaultName: string, smallName: string } {
+function formatName(name: string): { defaultName: string; smallName: string } {
   if (!name) return { defaultName: "", smallName: "" };
   return { defaultName: name, smallName: name };
 }
@@ -100,9 +102,9 @@ export default function SeatsTab({
                   <span className="cell-no">{seat.seatNo}</span>
                   <span className="cell-nim">
                     {isLoading ? (
-                      <span className="skeleton-bar" />
+                      <Skeleton className="h-4 w-3/4 rounded-sm" />
                     ) : isDisabled ? (
-                      <span className="disabled-label">—</span>
+                      <span className="text-muted-foreground/50 text-xs italic">Nonaktif</span>
                     ) : seat.student ? (
                       <>
                         <span className="name-default">{formatName(seat.student.name).defaultName}</span>
@@ -114,13 +116,16 @@ export default function SeatsTab({
                   </span>
                   <span className="cell-asprak">
                     {isLoading ? (
-                      <span className="skeleton-bar short" />
+                      <Skeleton className="h-4 w-10 rounded-sm" />
                     ) : isDisabled ? (
-                      <span className="disabled-label">—</span>
+                      <span className="text-muted-foreground/50 text-xs">-</span>
                     ) : seat.student?.asprak ? (
-                      <span className={`asprak-badge asprak-badge-${getAsprakVariant(seat.student.asprak)}`}>
+                      <Badge
+                        variant="secondary"
+                        className={`asprak-badge asprak-badge-${getAsprakVariant(seat.student.asprak)} h-6 px-2.5 text-xs font-bold tracking-wider`}
+                      >
                         {seat.student.asprak}
-                      </span>
+                      </Badge>
                     ) : (
                       ""
                     )}

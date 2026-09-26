@@ -2,6 +2,7 @@ import React, { useCallback, useState, useEffect, useRef, memo } from "react";
 import { Handle, Position } from "@xyflow/react";
 import type { NodeProps } from "@xyflow/react";
 import { LuTrash2, LuClock, LuArrowRight } from "react-icons/lu";
+import { Button } from "./ui/button";
 
 export interface TimeBlockNodeData {
     label: string;
@@ -162,8 +163,11 @@ function TimeBlockNode({ id, data }: NodeProps) {
                     placeholder="Nama sesi"
                     maxLength={20}
                 />
-                <button
-                    className="time-block-node__delete nodrag nopan"
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="time-block-node__delete nodrag nopan text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                     onClick={(e) => {
                         e.stopPropagation();
                         d.onDelete(id);
@@ -172,8 +176,8 @@ function TimeBlockNode({ id, data }: NodeProps) {
                     title="Hapus sesi"
                     aria-label={`Hapus sesi ${displayLabel || "ini"}`}
                 >
-                    <LuTrash2 />
-                </button>
+                    <LuTrash2 className="size-3.5" />
+                </Button>
             </div>
 
             {/* Time inputs */}
@@ -213,7 +217,7 @@ function TimeBlockNode({ id, data }: NodeProps) {
 
             {/* Duration badge */}
             <div className="time-block-node__footer">
-                <LuClock style={{ fontSize: "11px", opacity: 0.7 }} />
+                <LuClock className="size-3 opacity-70" />
                 <span>{duration}</span>
                 {d.isActive && <span className="time-block-node__active-badge">Aktif</span>}
             </div>

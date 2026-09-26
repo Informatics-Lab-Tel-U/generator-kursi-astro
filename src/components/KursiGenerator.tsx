@@ -18,6 +18,7 @@ import SeatsTab from "./SeatsTab";
 import NotesTab from "./NotesTab";
 import CountdownTab from "./CountdownTab";
 import LeaderboardTab from "./LeaderboardTab";
+import OthersTab from "./OthersTab";
 import KursiGeneratorHeader from "./KursiGeneratorHeader";
 import { LuLayoutGrid } from "react-icons/lu";
 
@@ -121,8 +122,6 @@ function KursiGeneratorInner() {
                 totalSeats={columns.flat().length}
                 projectorConfig={projectorConfig}
                 setProjectorConfig={setProjectorConfig}
-                versions={versions}
-                restoreVersion={restoreVersion}
             />
 
             <main className="main-content">
@@ -188,12 +187,23 @@ function KursiGeneratorInner() {
                     />
                 )}
 
-                {activeTab === "leaderboard" && (
+                {/* LeaderboardTab selalu di-mount (tidak pakai conditional &&) agar polling
+                    interval di LeaderboardView tidak berhenti saat user pindah ke tab lain.
+                    Hidden via CSS ketika tab tidak aktif. */}
+                <div style={{ display: activeTab === "leaderboard" ? "block" : "none" }}>
                     <LeaderboardTab
                         kelas={kelas}
                         eligibleStudents={eligibleStudents}
                         racers={racers}
                         setRacers={setRacers}
+                    />
+                </div>
+
+                {activeTab === "others" && (
+                    <OthersTab
+                        versions={versions}
+                        restoreVersion={restoreVersion}
+                        setActiveTab={setActiveTab}
                     />
                 )}
             </main>

@@ -1,6 +1,17 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import type { Student } from './types';
 import { LuSettings, LuFileText, LuBan } from 'react-icons/lu';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { cn } from 'cn';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from './ui/table';
 
 interface LeaderboardViewProps {
     room: string;
@@ -99,8 +110,9 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
         };
 
         fetchData();
-        // Polling setiap 6 detik (mengurangi 50% beban request Cloudflare Workers dibanding 3s)
-        intervalId = setInterval(fetchData, 6000);
+        // Polling setiap 5 detik — selaras dengan interval script Moodle (5s),
+        // sehingga setiap push Moodle akan terdeteksi pada polling berikutnya.
+        intervalId = setInterval(fetchData, 5000);
 
         // Ketika tab kembali aktif setelah diminimize/background, langsung fetch seketika
         const onVisibilityChange = () => {
@@ -157,97 +169,70 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
     const notCompletedStudentsCount = totalStudents - completedStudentsCount;
 
     return (
-        <div className="leaderboard-natural" style={{
-            backgroundColor: 'var(--glass-bg)',
-            backdropFilter: 'blur(var(--glass-blur))',
-            WebkitBackdropFilter: 'blur(var(--glass-blur))',
-            width: '100%',
-            borderRadius: 'var(--radius-lg)',
-            display: 'flex', flexDirection: 'column',
-            border: '1px solid var(--glass-border)',
-            boxShadow: 'var(--shadow-sm)',
-            color: 'var(--text-primary)',
-            overflow: 'hidden'
-        }}>
-            <div style={{
-                padding: '16px 20px', borderBottom: '1px solid var(--border-color)',
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                backgroundColor: 'rgba(255, 255, 255, 0.03)'
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <h2 style={{ margin: 0, fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
+        <div className="leaderboard-natural w-full flex flex-col rounded-lg border border-border bg-card overflow-hidden">
+            <div className="p-4 border-b border-border flex justify-between items-center bg-muted/20">
+                <div className="flex items-center gap-3">
+                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 m-0">
                         Leaderboard - {room || 'No Room'}
-                        {isDataStale && <LuBan style={{ color: 'var(--danger)' }} title="Data is stale (no updates for >60s)" />}
-                    </h2>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '4px 8px', borderRadius: '4px', background: 'var(--bg-body)', fontWeight: 600 }}>
-                        <div style={{
-                            width: '8px', height: '8px', borderRadius: '50%',
-                            background: isConnected ? 'var(--success)' : 'var(--danger)',
-                            boxShadow: isConnected ? '0 0 6px var(--success)' : 'none'
-                        }} />
-                        {isConnected ? 'Connected' : 'Disconnected'}
-                    </div>
+                        {isDataStale && <LuBan className="text-destructive size-4" title="Data is stale (no updates for >60s)" />}
+                    </h3>
+                    <Badge variant={isConnected ? "secondary" : "destructive"} className="gap-1.5 font-normal text-xs">
+                        <span className={`size-2 rounded-full ${isConnected ? "bg-emerald-500" : "bg-destructive"}`} />
+                        <span>{isConnected ? 'Connected' : 'Disconnected'}</span>
+                    </Badge>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <button
+                <div className="flex items-center gap-3">
+                    <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => setSortMode(prev => prev === 'finished' ? 'in-progress' : 'finished')}
-                        className="btn btn-secondary"
-                        style={{ padding: '6px 12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                        className="gap-1.5"
                     >
-                        <LuSettings /> {sortMode === 'in-progress' ? 'Urutkan: In Progress' : 'Urutkan: Normal'}
-                    </button>
+                        <LuSettings className="size-3.5" />
+                        <span>{sortMode === 'in-progress' ? 'Urutkan: In Progress' : 'Urutkan: Normal'}</span>
+                    </Button>
                 </div>
             </div>
 
-            <div style={{ padding: '20px', overflowY: 'auto', flex: 1, maxHeight: '600px' }}>
+            <div className="p-4 overflow-y-auto flex-1 max-h-[600px]">
                 {!hasData ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '200px', color: 'var(--text-muted)' }}>
-                        <LuFileText size={48} style={{ marginBottom: '16px', opacity: 0.5 }} />
-                        <h3 style={{ margin: '0 0 8px 0', fontSize: '16px' }}>Menunggu Data dari Moodle...</h3>
-                        <p style={{ fontSize: '13px', maxWidth: '400px', textAlign: 'center', margin: 0 }}>
+                    <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
+                        <LuFileText className="size-12 mb-3 opacity-40" />
+                        <h4 className="m-0 mb-1 text-sm font-semibold text-foreground">Menunggu Data dari Moodle...</h4>
+                        <p className="text-xs max-w-sm text-center m-0">
                             Pastikan script dijalankan di console Moodle. Data akan otomatis muncul di sini.
                         </p>
                     </div>
                 ) : (
                     <>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px' }}>
-                            <div style={{ background: 'var(--bg-body)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
-                                <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Total Peserta</div>
-                                <div style={{ fontSize: '24px', fontWeight: 'bold', marginTop: '4px' }}>{totalStudents}</div>
+                        <div className="grid grid-cols-3 gap-3 mb-4">
+                            <div className="bg-muted/30 p-3 rounded-lg border border-border text-center">
+                                <div className="text-xs text-muted-foreground font-medium">Total Peserta</div>
+                                <div className="text-xl font-bold mt-1 text-foreground">{totalStudents}</div>
                             </div>
-                            <div style={{ background: 'var(--success-surface)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.2)', textAlign: 'center' }}>
-                                <div style={{ fontSize: '11px', color: 'var(--success)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Selesai</div>
-                                <div style={{ fontSize: '24px', fontWeight: 'bold', marginTop: '4px', color: 'var(--success)' }}>{completedStudentsCount}</div>
+                            <div className="bg-muted/30 p-3 rounded-lg border border-border text-center">
+                                <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Selesai</div>
+                                <div className="text-xl font-bold mt-1 text-emerald-600 dark:text-emerald-400">{completedStudentsCount}</div>
                             </div>
-                            <div style={{ background: 'var(--warning-surface)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.2)', textAlign: 'center' }}>
-                                <div style={{ fontSize: '11px', color: 'var(--warning)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Sedang Mengerjakan</div>
-                                <div style={{ fontSize: '24px', fontWeight: 'bold', marginTop: '4px', color: 'var(--warning)' }}>{notCompletedStudentsCount}</div>
+                            <div className="bg-muted/30 p-3 rounded-lg border border-border text-center">
+                                <div className="text-xs text-amber-600 dark:text-amber-400 font-medium">Sedang Mengerjakan</div>
+                                <div className="text-xl font-bold mt-1 text-amber-600 dark:text-amber-400">{notCompletedStudentsCount}</div>
                             </div>
                         </div>
 
-                        <div style={{ borderRadius: '8px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
-                                <thead>
-                                    <tr style={{ background: 'var(--bg-header)', textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>
-                                        <th style={{ padding: '14px 16px', color: 'var(--text-muted)', fontWeight: 600, fontSize: '12px', textTransform: 'uppercase', width: '60px', textAlign: 'center' }}>Rank</th>
-                                        <th style={{ padding: '14px 16px', color: 'var(--text-muted)', fontWeight: 600, fontSize: '12px', textTransform: 'uppercase' }}>Nama Peserta</th>
-                                        <th style={{ padding: '14px 16px', color: 'var(--text-muted)', fontWeight: 600, fontSize: '12px', textTransform: 'uppercase', width: '150px' }}>Status</th>
-                                        <th style={{ padding: '14px 16px', color: 'var(--text-muted)', fontWeight: 600, fontSize: '12px', textTransform: 'uppercase', width: '120px', textAlign: 'right' }}>Waktu</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
+                        <div className="rounded-md border border-border overflow-hidden">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow className="bg-muted/40 hover:bg-muted/40">
+                                        <TableHead className="w-16 text-center text-xs font-medium text-muted-foreground">Rank</TableHead>
+                                        <TableHead className="text-xs font-medium text-muted-foreground">Nama Peserta</TableHead>
+                                        <TableHead className="w-36 text-xs font-medium text-muted-foreground">Status</TableHead>
+                                        <TableHead className="w-28 text-right text-xs font-medium text-muted-foreground">Waktu</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
                                     {sortedData.map((row, idx) => {
                                         const isFinished = row['STATE'] === 'Finished';
-
-                                        let stateBadgeColor = 'var(--text-muted)';
-                                        let stateBadgeBg = 'var(--bg-hover)';
-                                        if (isFinished) {
-                                            stateBadgeColor = 'var(--success)';
-                                            stateBadgeBg = 'var(--success-surface)';
-                                        } else if (row['STATE'] === 'In progress') {
-                                            stateBadgeColor = 'var(--warning)';
-                                            stateBadgeBg = 'var(--warning-surface)';
-                                        }
 
                                         let timeValue = row['TIME TAKEN'] || '-';
                                         if (typeof timeValue === 'string') {
@@ -256,44 +241,46 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
                                         }
 
                                         return (
-                                            <tr key={idx} style={{
-                                                borderBottom: idx === sortedData.length - 1 ? 'none' : '1px solid var(--border-light)',
-                                                background: isFinished ? 'rgba(16, 185, 129, 0.04)' : 'transparent',
-                                                transition: 'background 0.2s'
-                                            }}>
-                                                <td style={{ padding: '16px', fontWeight: 'bold', color: 'var(--text-muted)', textAlign: 'center' }}>
+                                            <TableRow
+                                                key={idx}
+                                                className={isFinished ? "bg-emerald-500/5 hover:bg-emerald-500/10" : ""}
+                                            >
+                                                <TableCell className="font-bold text-center">
                                                     {isFinished && idx < 3 ? (
-                                                        <span style={{
-                                                            display: 'inline-block', width: '24px', height: '24px', lineHeight: '24px',
-                                                            borderRadius: '50%', background: idx === 0 ? '#FBBF24' : idx === 1 ? '#9CA3AF' : '#D97706',
-                                                            color: 'white', fontSize: '12px'
-                                                        }}>
+                                                        <span
+                                                            className={`inline-flex items-center justify-center size-6 rounded-full text-xs font-bold text-white ${
+                                                                idx === 0 ? "bg-amber-500" : idx === 1 ? "bg-slate-400" : "bg-amber-700"
+                                                            }`}
+                                                        >
                                                             {idx + 1}
                                                         </span>
                                                     ) : (
-                                                        idx + 1
+                                                        <span className="text-muted-foreground text-xs">{idx + 1}</span>
                                                     )}
-                                                </td>
-                                                <td style={{ padding: '16px', fontWeight: isFinished ? 700 : 500, color: 'var(--text-primary)' }}>
+                                                </TableCell>
+                                                <TableCell className={`text-sm ${isFinished ? "font-semibold text-foreground" : "font-normal text-foreground/80"}`}>
                                                     {row['NAME'] || '-'}
-                                                </td>
-                                                <td style={{ padding: '16px' }}>
-                                                    <span style={{
-                                                        display: 'inline-block', padding: '4px 10px', borderRadius: '12px',
-                                                        fontSize: '11px', fontWeight: 700, letterSpacing: '0.02em',
-                                                        color: stateBadgeColor, backgroundColor: stateBadgeBg
-                                                    }}>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge
+                                                        variant={isFinished ? "secondary" : "outline"}
+                                                        className={cn(
+                                                            "text-xs px-2 py-0.5 font-medium",
+                                                            isFinished && "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-transparent",
+                                                            row['STATE'] === 'In progress' && "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-transparent"
+                                                        )}
+                                                    >
                                                         {row['STATE'] || '-'}
-                                                    </span>
-                                                </td>
-                                                <td style={{ padding: '16px', textAlign: 'right', fontWeight: 600, fontFamily: '"Google Sans", monospace', fontSize: '13px', color: isFinished ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="text-right font-mono text-xs font-medium text-foreground">
                                                     {timeValue}
-                                                </td>
-                                            </tr>
-                                        )
+                                                </TableCell>
+                                            </TableRow>
+                                        );
                                     })}
-                                </tbody>
-                            </table>
+                                </TableBody>
+                            </Table>
                         </div>
                     </>
                 )}

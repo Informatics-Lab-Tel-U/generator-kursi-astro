@@ -133,9 +133,26 @@ export function useMoodleScript(kelas: string) {
   const ROOM = "${kelas || "default"}";
 
   let lastHtml = "";
+
+  async function getAttemptsElement() {
+    try {
+      const res = await fetch(window.location.href, { cache: "no-cache" });
+      if (res.ok) {
+        const text = await res.text();
+        const doc = new DOMParser().parseFromString(text, "text/html");
+        const el = doc.getElementById("attempts") || doc.querySelector("#tablecontainer") || doc.querySelector("table.generaltable");
+        if (el) return { el, isFresh: true };
+      }
+    } catch (e) {
+      console.warn("[Leaderboard Sync] Gagal background fetch Moodle, fallback ke DOM:", e);
+    }
+    const liveEl = document.getElementById("attempts") || document.querySelector("#tablecontainer") || document.querySelector("table.generaltable");
+    return { el: liveEl, isFresh: false };
+  }
+
   async function sendAttemptsHTML() {
     try {
-            const attemptsElement = document.getElementById("attempts") || document.querySelector("#tablecontainer") || document.querySelector("table.generaltable");
+      const { el: attemptsElement, isFresh } = await getAttemptsElement();
       if (!attemptsElement) {
         console.warn("[Leaderboard] Tabel kuis belum ditemukan di halaman.");
         return;
@@ -143,9 +160,11 @@ export function useMoodleScript(kelas: string) {
 
       const currentHtml = attemptsElement.outerHTML;
       if (currentHtml === lastHtml) {
-        return; // Skip jika HTML tidak berubah untuk menghemat kuota Cloudflare Workers
+        console.log("[Leaderboard Sync] HTML tidak berubah (belum ada nilai baru), skip kirim.");
+        return;
       }
 
+      console.log("[Leaderboard Sync] Terdeteksi data baru! Mengirim ke server...");
       const res = await fetch(\`\${API_BASE}/api/process-html?room=\${ROOM}\`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -153,6 +172,14 @@ export function useMoodleScript(kelas: string) {
       });
       const data = await res.json();
       lastHtml = currentHtml;
+
+      if (isFresh) {
+        const liveContainer = document.getElementById("attempts") || document.querySelector("#tablecontainer") || document.querySelector("table.generaltable");
+        if (liveContainer && liveContainer.parentElement) {
+          liveContainer.replaceWith(attemptsElement);
+        }
+      }
+
       console.log(\`%c[Leaderboard Sync]%c Berhasil kirim \${data.count ?? 0} data ke \${ROOM}\`, "color: #22c55e; font-weight: bold", "color: auto");
     } catch (err) { console.error("[Leaderboard Sync Error]", err); }
   }

@@ -1,6 +1,18 @@
-import type { Student, ProjectorConfig } from './types';
-import { LuSettings, LuBook, LuUsers, LuBan, LuDices, LuRotateCcw, LuLoader } from 'react-icons/lu';
-import CustomSelect from './CustomSelect';
+import React from 'react';
+import type { Student, ProjectorConfig, SeatVersion } from './types';
+import { LuBook, LuUsers, LuBan, LuDices, LuRotateCcw, LuLoader } from 'react-icons/lu';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Label } from './ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 
 interface SidebarProps {
   showSidebar: boolean;
@@ -8,8 +20,8 @@ interface SidebarProps {
   setMatkul: (val: string) => void;
   kelas: string;
   setKelas: (val: string) => void;
-  matkulOptions: {value: string, label: string}[];
-  kelasOptions: {value: string, label: string}[];
+  matkulOptions: { value: string; label: string }[];
+  kelasOptions: { value: string; label: string }[];
   disabledSeats: Set<number>;
   toggleDisabledSeat: (seatNo: number) => void;
   eligibleStudents: Student[];
@@ -21,8 +33,8 @@ interface SidebarProps {
   totalSeats: number;
   projectorConfig: ProjectorConfig;
   setProjectorConfig: React.Dispatch<React.SetStateAction<ProjectorConfig>>;
-  versions: import('./types').SeatVersion[];
-  restoreVersion: (v: import('./types').SeatVersion) => void;
+  versions?: SeatVersion[];
+  restoreVersion?: (v: SeatVersion) => void;
 }
 
 export default function Sidebar({
@@ -42,128 +54,143 @@ export default function Sidebar({
   handleGenerate,
   handleReset,
   totalSeats,
-  versions,
-  restoreVersion,
 }: SidebarProps) {
-
   return (
     <aside className={`sidebar ${showSidebar ? "open" : "closed"}`}>
-      <div className="sidebar-header">
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-            <LuSettings style={{ fontSize: '16px', marginRight: '6px' }} />
-            Konfigurasi
-        </div>
+      <div className="sidebar-header min-h-8 pb-2 mb-3 flex items-center justify-between">
+        <span className="font-semibold text-sm text-foreground">Generator Kursi</span>
       </div>
 
       {/* Matkul & Kelas */}
-      <div className="sidebar-section">
-        <label className="sidebar-label">
-          <LuBook style={{ marginRight: '6px' }} /> Mata Kuliah
-        </label>
-        <CustomSelect
-          value={matkul}
-          onChange={(v) => {
-            setMatkul(v);
-            setKelas(""); // Reset kelas so user must explicitly pick again
-          }}
-          options={matkulOptions}
-          placeholder="-- Pilih Mata Kuliah --"
-          isLoading={isOptionsLoading}
-          disabled={isOptionsLoading}
-        />
+      <div className="sidebar-section flex flex-col gap-3">
+        <div className="flex flex-col gap-1.5">
+          <Label className="sidebar-label flex items-center gap-1.5 text-xs font-medium text-foreground/80">
+            <LuBook className="size-3.5 text-muted-foreground" />
+            <span>Mata Kuliah</span>
+          </Label>
+          <Select
+            items={matkulOptions}
+            value={matkul}
+            onValueChange={(v) => {
+              if (v) {
+                setMatkul(v);
+                setKelas(""); // Reset kelas so user must explicitly pick again
+              }
+            }}
+            disabled={isOptionsLoading}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="-- Pilih Mata Kuliah --" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Mata Kuliah</SelectLabel>
+                {matkulOptions.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
 
-        <label className="sidebar-label">
-          <LuUsers style={{ marginRight: '6px' }} /> Kelas
-        </label>
-        <CustomSelect
-          value={kelas}
-          onChange={(v) => setKelas(v)}
-          options={kelasOptions}
-          placeholder="-- Pilih Kelas --"
-          disabled={!matkul || isKelasLoading || isOptionsLoading}
-          isLoading={isKelasLoading}
-        />
+        <div className="flex flex-col gap-1.5">
+          <Label className="sidebar-label flex items-center gap-1.5 text-xs font-medium text-foreground/80">
+            <LuUsers className="size-3.5 text-muted-foreground" />
+            <span>Kelas</span>
+          </Label>
+          <Select
+            items={kelasOptions}
+            value={kelas}
+            onValueChange={(v) => {
+              if (v) setKelas(v);
+            }}
+            disabled={!matkul || isKelasLoading || isOptionsLoading}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="-- Pilih Kelas --" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Kelas</SelectLabel>
+                {kelasOptions.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Disabled seats */}
-      <div className="sidebar-section">
-        <label className="sidebar-label">
-          <LuBan style={{ marginRight: '6px' }} /> Meja tidak aktif
+      <div className="sidebar-section flex flex-col gap-2 mt-4">
+        <div className="flex items-center justify-between">
+          <Label className="sidebar-label flex items-center gap-1.5 text-xs font-medium text-foreground/80">
+            <LuBan className="size-3.5 text-destructive" />
+            <span>Meja tidak aktif</span>
+          </Label>
           {disabledSeats.size > 0 && (
-            <span className="badge badge-danger">
+            <Badge variant="destructive" className="h-5 px-1.5 text-xs">
               {disabledSeats.size}
-            </span>
+            </Badge>
           )}
-        </label>
-        <div className="seat-toggle-grid" style={{ gridTemplateColumns: `repeat(${totalSeats / 10}, 1fr)` }}>
-          {Array.from(
-            { length: totalSeats },
-            (_, i) => i + 1,
-          ).map((n) => (
-            <button
-              key={n}
-              className={`seat-toggle ${disabledSeats.has(n) ? "disabled" : ""}`}
-              onClick={() => toggleDisabledSeat(n)}
-            >
-              {n}
-            </button>
-          ))}
+        </div>
+        <div className="seat-toggle-grid" style={{ gridTemplateColumns: `repeat(${Math.max(1, Math.round(totalSeats / 10))}, 1fr)` }}>
+          {Array.from({ length: totalSeats }, (_, i) => i + 1).map((n) => {
+            const isDisabled = disabledSeats.has(n);
+            return (
+              <Button
+                key={n}
+                type="button"
+                size="icon-xs"
+                variant={isDisabled ? "destructive" : "outline"}
+                className={`h-7 w-full text-xs font-mono transition-all ${
+                  isDisabled ? "opacity-90" : "text-muted-foreground hover:text-foreground"
+                }`}
+                onClick={() => toggleDisabledSeat(n)}
+                title={isDisabled ? `Meja ${n} dinonaktifkan (klik untuk aktifkan)` : `Meja ${n} aktif (klik untuk matikan)`}
+              >
+                {n}
+              </Button>
+            );
+          })}
         </div>
       </div>
 
       {/* Generate */}
-      <div className="sidebar-section">
-        <div className="sidebar-info">
-          {eligibleStudents.length} praktikan di <strong>{kelas}</strong>
-        </div>
-        <button
-          className="btn btn-primary"
+      <div className="sidebar-section flex flex-col gap-2 mt-4">
+        <Button
+          variant="default"
+          size="default"
           onClick={handleGenerate}
           disabled={!matkul || !kelas || eligibleStudents.length === 0 || isLoading}
-          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+          className="w-full gap-2"
         >
           {isLoading ? (
-            <><LuLoader className="animate-spin" /> Generating...</>
+            <>
+              <LuLoader className="size-4 animate-spin" />
+              <span>Generating...</span>
+            </>
           ) : (
-            <><LuDices /> Generate Acak</>
+            <>
+              <LuDices className="size-4" />
+              <span>Generate Acak</span>
+            </>
           )}
-        </button>
-        <button 
-          className="btn btn-secondary" 
-          onClick={handleReset} 
-          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+        </Button>
+        <Button
+          variant="outline"
+          size="default"
+          onClick={handleReset}
+          className="w-full gap-2 text-muted-foreground hover:text-foreground"
         >
-          <LuRotateCcw /> Reset
-        </button>
+          <LuRotateCcw className="size-4" />
+          <span>Reset</span>
+        </Button>
       </div>
-
-      {/* Riwayat / Versi */}
-      {versions && versions.length > 0 && (
-          <div className="sidebar-section">
-            <label className="sidebar-label">Riwayat Generate (2 Jam Terakhir)</label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {versions.map(v => {
-                    const date = new Date(v.timestamp);
-                    const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                    return (
-                        <button 
-                            key={v.id} 
-                            className="btn btn-secondary"
-                            style={{ justifyContent: 'flex-start', fontSize: '12px', padding: '8px', textAlign: 'left', lineHeight: '1.4' }}
-                            onClick={() => restoreVersion(v)}
-                            title="Klik untuk merestore versi ini"
-                        >
-                            <strong>{timeStr}</strong>
-                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                                {v.matkul} - {v.kelas}
-                            </div>
-                        </button>
-                    )
-                })}
-            </div>
-          </div>
-      )}
-
     </aside>
   );
 }

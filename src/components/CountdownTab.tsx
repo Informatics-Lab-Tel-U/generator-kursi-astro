@@ -4,6 +4,9 @@ import { formatTimeWithMs, formatClockTime } from "./utils";
 import { LuPlay, LuPause } from "react-icons/lu";
 import { useBlinkEffect, useCountdownTimer, useRacers } from "../hooks/useCountdown";
 import ScheduleFlow from "./ScheduleFlow";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 
 interface CountdownTabProps {
     timer: TimerState;
@@ -148,40 +151,46 @@ export default function CountdownTab({
 
             {/* Konfigurasi timer sederhana (mode timer umum) */}
             {!readOnly && !schedule && (
-                <div className="countdown-config-card">
-                    <div className="countdown-field">
-                        <label>Waktu Mulai</label>
-                        <input
+                <div className="countdown-config-card rounded-lg border border-border bg-card p-4 flex items-end gap-3 flex-wrap">
+                    <div className="flex flex-col gap-1.5">
+                        <Label className="text-xs font-medium text-foreground/80">Waktu Mulai</Label>
+                        <Input
                             type="time"
                             value={timer.startTime}
                             onChange={(e) => setTimer?.((p) => ({ ...p, startTime: e.target.value }))}
+                            className="w-36 h-9"
                         />
                     </div>
-                    <div className="countdown-field">
-                        <label>Waktu Selesai</label>
-                        <input
+                    <div className="flex flex-col gap-1.5">
+                        <Label className="text-xs font-medium text-foreground/80">Waktu Selesai</Label>
+                        <Input
                             type="time"
                             value={timer.endTime}
                             onChange={(e) => setTimer?.((p) => ({ ...p, endTime: e.target.value }))}
+                            className="w-36 h-9"
                         />
                     </div>
                     <div>
                         {!timer.isRunning ? (
-                            <button
-                                className="btn btn-start"
-                                style={{ padding: "12px 28px", height: "45px", fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}
+                            <Button
+                                variant="default"
+                                size="default"
+                                className="h-9 gap-1.5 px-4"
                                 onClick={handleStartRace}
                             >
-                                <LuPlay /> Mulai
-                            </button>
+                                <LuPlay className="size-4" />
+                                <span>Mulai</span>
+                            </Button>
                         ) : (
-                            <button
-                                className="btn btn-pause"
-                                style={{ padding: "12px 28px", height: "45px", fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}
+                            <Button
+                                variant="destructive"
+                                size="default"
+                                className="h-9 gap-1.5 px-4"
                                 onClick={() => setTimer?.((p) => ({ ...p, isRunning: false, startedAt: null }))}
                             >
-                                <LuPause /> Hentikan
-                            </button>
+                                <LuPause className="size-4" />
+                                <span>Hentikan</span>
+                            </Button>
                         )}
                     </div>
                 </div>
@@ -194,29 +203,20 @@ export default function CountdownTab({
                     MODE PROYEKTOR: tampilan khusus per-state sesi
                     ====================================================== */}
                 {readOnly && projectorState === "finished-next" && (
-                    <div style={{ textAlign: "center", padding: "40px 24px" }}>
-                        {/* Label sesi sebelumnya yang baru selesai */}
+                    <div className="text-center py-10 px-6">
                         <div className="session-title-pill" style={{ marginBottom: "16px" }}>
                             <span>{activeBlock?.label || "Sesi"} selesai</span>
                         </div>
 
-                        {/* Nama step berikutnya sebagai hero text */}
                         {nextBlock && (
                             <>
-                                <div style={{
-                                    fontSize: "12px", fontWeight: 600,
-                                    color: "var(--text-muted)", textTransform: "uppercase",
-                                    letterSpacing: "0.1em", marginBottom: "8px",
-                                }}>
+                                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">
                                     Selanjutnya
                                 </div>
                                 <div className="countdown-time finished" style={{ fontSize: "clamp(48px, 10vw, 96px)" }}>
                                     <span>{nextBlock.label}</span>
                                 </div>
-                                <div style={{
-                                    fontSize: "15px", fontWeight: 500,
-                                    color: "var(--text-secondary)", marginTop: "12px",
-                                }}>
+                                <div className="text-sm font-medium text-muted-foreground mt-3">
                                     {nextBlock.startTime} – {nextBlock.endTime}
                                 </div>
                             </>
@@ -225,11 +225,11 @@ export default function CountdownTab({
                 )}
 
                 {readOnly && projectorState === "finished-final" && (
-                    <div style={{ textAlign: "center", padding: "40px 24px" }}>
+                    <div className="text-center py-10 px-6">
                         <div className={`countdown-time ${actuallyFinished ? "finished" : ""}`}>
                             <span>HANDS UP !</span>
                         </div>
-                        <div style={{ fontSize: "14px", color: "var(--text-muted)", marginTop: "16px" }}>
+                        <div className="text-sm text-muted-foreground mt-4">
                             Semua sesi telah selesai
                         </div>
                     </div>
@@ -237,17 +237,16 @@ export default function CountdownTab({
 
                 {/* Tampilan normal (running/idle) di mode proyektor untuk SEMUA sesi */}
                 {(!readOnly || (projectorState === "running" || projectorState === "idle")) && (
-                    <div style={{ textAlign: "center", marginBottom: readOnly ? "0" : "24px" }}>
-                        {/* Badge sesi aktif */}
+                    <div className={`text-center ${readOnly ? "" : "mb-6"}`}>
                         {(activeBlockLabel || (schedule && activeBlock)) && (
-                            <div style={{ marginBottom: "12px" }}>
+                            <div className="mb-3">
                                 <div className="session-title-pill">
                                     <span>{activeBlockLabel || activeBlock?.label}</span>
                                 </div>
                             </div>
                         )}
 
-                        <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "8px" }}>
+                        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">
                             Waktu Tersisa
                         </div>
                         <div className={`countdown-time ${readOnly ? (actuallyFinished ? "finished" : actuallyDanger ? "danger" : actuallyWarning ? "warning" : "") : ""}`}>
@@ -259,12 +258,11 @@ export default function CountdownTab({
                             })()}
                         </div>
 
-                        {/* Info sesi berikutnya jika ada */}
                         {readOnly && nextBlock && (
-                            <div className="session-title-pill" style={{ marginTop: "24px" }}>
+                            <div className="session-title-pill mt-6">
                                 <span>
                                     Berikutnya: <strong>{nextBlock.label}</strong>
-                                    <span style={{ marginLeft: "8px", opacity: 0.7 }}>({nextBlock.startTime} - {nextBlock.endTime})</span>
+                                    <span className="ml-2 opacity-70">({nextBlock.startTime} - {nextBlock.endTime})</span>
                                 </span>
                             </div>
                         )}
@@ -275,7 +273,7 @@ export default function CountdownTab({
                 {!readOnly && (
                     <div className="race-track">
                         {racers.length === 0 ? (
-                            <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)", fontSize: "14px" }}>
+                            <div className="py-10 text-center text-muted-foreground text-sm">
                                 Belum ada pembalap. Tambahkan pembalap di tab Leaderboard.
                             </div>
                         ) : (
