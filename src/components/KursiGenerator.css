@@ -792,16 +792,7 @@ body.time-finished .projector-time-hud {
     image-rendering: pixelated;
 }
 
-[data-theme='dark'] .race-road-bg {
-    opacity: 0.7;
-    filter: brightness(0.75);
-}
 
-.projector-race-card .race-road-bg,
-[data-theme='dark'] .projector-race-card .race-road-bg {
-    opacity: 1 !important;
-    filter: none !important;
-}
 
 @keyframes race-road-scroll {
     from {
