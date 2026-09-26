@@ -4,14 +4,7 @@ import type { Racer, TimerState } from "../components/types";
 const RACERS_STORAGE_KEY = "asprak_racers";
 const RACERS_EVENT = "asprak_racers_updated";
 
-export const DEFAULT_RACERS: Racer[] = [
-    { id: "1", name: "MAB", imageBase64: null },
-    { id: "2", name: "MAL", imageBase64: null },
-    { id: "3", name: "YAP", imageBase64: null },
-    { id: "4", name: "KAP", imageBase64: null },
-    { id: "5", name: "NAP", imageBase64: null },
-    { id: "6", name: "RAB", imageBase64: null },
-];
+export const DEFAULT_RACERS: Racer[] = [];
 
 export function getStoredRacers(): Racer[] {
     if (typeof window === "undefined") return DEFAULT_RACERS;
