@@ -205,7 +205,7 @@ export default function CountdownTab({
             {/* Mode proyektor: Sesi selesai dan ada sesi berikutnya */}
             {readOnly && projectorState === "finished-next" && (
                 <div className={`text-center ${horizontal ? "flex items-center justify-center gap-4 flex-wrap py-1 px-2" : "py-6 px-4"}`}>
-                    <div className="session-title-pill flex-shrink-0">
+                    <div className={`session-title-pill flex-shrink-0 ${horizontal ? "" : "mb-3"}`}>
                         <span>{activeBlock?.label || "Sesi"} selesai</span>
                     </div>
 
@@ -241,7 +241,7 @@ export default function CountdownTab({
             {(!readOnly || (projectorState === "running" || projectorState === "idle")) && (
                 <div className={horizontal ? "flex items-center justify-center gap-4 flex-wrap" : "text-center"}>
                     {(activeBlockLabel || (schedule && activeBlock)) && (
-                        <div className="session-title-pill flex-shrink-0">
+                        <div className={`session-title-pill flex-shrink-0 ${horizontal ? "" : "mb-3"}`}>
                             <span>{activeBlockLabel || activeBlock?.label}</span>
                         </div>
                     )}
