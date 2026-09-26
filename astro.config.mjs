@@ -12,7 +12,9 @@ if (isDockerBuild) {
   adapter = node({ mode: 'standalone' });
 } else {
   const { default: cloudflare } = await import('@astrojs/cloudflare');
-  adapter = cloudflare();
+  adapter = cloudflare({
+    sessionKVBindingName: 'LEADERBOARD_KV',
+  });
 }
 
 // https://astro.build/config

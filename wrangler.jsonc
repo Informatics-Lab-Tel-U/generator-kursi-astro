@@ -13,7 +13,6 @@
   "observability": {
     "enabled": true
   },
-  "keep_vars": true,
   "kv_namespaces": [
     {
       "binding": "LEADERBOARD_KV",
