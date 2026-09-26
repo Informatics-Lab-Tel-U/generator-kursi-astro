@@ -3,12 +3,12 @@ import { getLeaderboardData, normalizeRoomId } from "../../lib/leaderboardStorag
 
 export const prerender = false;
 
-export const GET: APIRoute = async ({ url, locals }) => {
+export const GET: APIRoute = async ({ url }) => {
     try {
         const rawRoom = url.searchParams.get("room") || "default";
         const room = normalizeRoomId(rawRoom);
 
-        const rawData = await getLeaderboardData(room, locals);
+        const rawData = await getLeaderboardData(room);
         const data = Array.isArray(rawData)
             ? rawData.map((row: Record<string, any>) => ({
                 NAME: row["NAME"] || "Unknown",

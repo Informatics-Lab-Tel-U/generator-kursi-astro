@@ -6,10 +6,20 @@ export function normalizeRoomId(room?: string | null): string {
     return cleaned || "DEFAULT";
 }
 
+async function getKV(): Promise<any | null> {
+    try {
+        const { env } = await import("cloudflare:workers");
+        const kv = (env as any)?.LEADERBOARD_KV;
+        if (kv && typeof kv.put === "function") return kv;
+    } catch {
+        // Not a Cloudflare Workers environment (e.g. local dev)
+    }
+    return null;
+}
+
 export async function saveLeaderboardData(
     room: string,
     data: any[],
-    locals?: any
 ): Promise<{ kvSaved: boolean }> {
     const normalizedRoom = normalizeRoomId(room);
     const key = `leaderboard:${normalizedRoom}`;
@@ -17,9 +27,8 @@ export async function saveLeaderboardData(
     leaderboardStore.set(normalizedRoom, data);
 
     try {
-        const cfEnv = locals?.runtime?.env;
-        const kv = cfEnv?.LEADERBOARD_KV;
-        if (kv && typeof kv.put === "function") {
+        const kv = await getKV();
+        if (kv) {
             await kv.put(key, JSON.stringify(data), {
                 expirationTtl: 60 * 60 * 6, // 6 jam
             });
@@ -34,15 +43,13 @@ export async function saveLeaderboardData(
 
 export async function getLeaderboardData(
     room: string,
-    locals?: any
 ): Promise<any[]> {
     const normalizedRoom = normalizeRoomId(room);
     const key = `leaderboard:${normalizedRoom}`;
 
     try {
-        const cfEnv = locals?.runtime?.env;
-        const kv = cfEnv?.LEADERBOARD_KV;
-        if (kv && typeof kv.get === "function") {
+        const kv = await getKV();
+        if (kv) {
             const raw = await kv.get(key);
             if (raw) {
                 const parsed = JSON.parse(raw);

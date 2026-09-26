@@ -33,7 +33,7 @@ export const ALL: APIRoute = async ({ request }) => {
     return new Response(null, { status: 405 });
 };
 
-export const POST: APIRoute = async ({ request, url, locals }) => {
+export const POST: APIRoute = async ({ request, url }) => {
     try {
         const rawRoom = url.searchParams.get("room") || "default";
         const room = normalizeRoomId(rawRoom);
@@ -185,7 +185,7 @@ export const POST: APIRoute = async ({ request, url, locals }) => {
             }
         }
 
-        const { kvSaved } = await saveLeaderboardData(room, data, locals);
+        const { kvSaved } = await saveLeaderboardData(room, data);
 
         return new Response(JSON.stringify({ 
             success: true, 
