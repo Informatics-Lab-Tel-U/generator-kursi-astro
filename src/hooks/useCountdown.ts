@@ -242,7 +242,7 @@ export function useScheduleAutoAdvance({
             return endD;
         };
 
-        // Lakukan advance ke blok berikutnya
+        // Lakukan advance ke blok berikutnya, skip blok yang jamnya sudah lewat
         const tryAdvance = () => {
             const remainMs = Math.max(0, getEndDate().getTime() - Date.now());
             if (remainMs > 0) {
@@ -253,20 +253,37 @@ export function useScheduleAutoAdvance({
             if (hasAutoAdvancedRef.current) return;
 
             const activeBlockIdx = schedule.blocks.findIndex((b) => b.id === schedule.activeBlockId);
-            const nextBlock =
-                activeBlockIdx >= 0 && activeBlockIdx < schedule.blocks.length - 1
-                    ? schedule.blocks[activeBlockIdx + 1]
-                    : null;
 
-            if (!nextBlock) return;
+            // Cari block berikutnya yang belum expired (endTime-nya masih di masa depan)
+            let targetBlock: typeof schedule.blocks[0] | null = null;
+            for (let i = activeBlockIdx + 1; i < schedule.blocks.length; i++) {
+                const candidate = schedule.blocks[i];
+                const endD = new Date();
+                const [eh, em] = candidate.endTime.split(":").map(Number);
+                endD.setHours(eh || 0, em || 0, 0, 0);
+                const startD = new Date();
+                const [sh, sm] = candidate.startTime.split(":").map(Number);
+                startD.setHours(sh || 0, sm || 0, 0, 0);
+                if (endD.getTime() < startD.getTime()) endD.setDate(endD.getDate() + 1);
+                if (endD.getTime() > Date.now()) {
+                    targetBlock = candidate;
+                    break;
+                }
+                // Block ini sudah expired — skip, lanjut cari berikutnya
+            }
+
+            if (!targetBlock) {
+                // Semua block berikutnya sudah expired atau tidak ada — hentikan timer
+                return;
+            }
 
             hasAutoAdvancedRef.current = true;
             setTimeout(() => {
-                setSchedule((s) => ({ ...s, activeBlockId: nextBlock.id }));
+                setSchedule((s) => ({ ...s, activeBlockId: targetBlock!.id }));
                 setTimer((p) => ({
                     ...p,
-                    startTime: nextBlock.startTime,
-                    endTime: nextBlock.endTime,
+                    startTime: targetBlock!.startTime,
+                    endTime: targetBlock!.endTime,
                     isRunning: true,
                     startedAt: Date.now(),
                 }));

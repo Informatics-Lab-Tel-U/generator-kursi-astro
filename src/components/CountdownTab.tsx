@@ -7,6 +7,8 @@ import ScheduleFlow from "./ScheduleFlow";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { SpriteAnimation, getSpriteForRacer } from "./SpriteAnimation";
+import PixelRoadBg from "./PixelRoadBg";
 
 interface CountdownTabProps {
     timer: TimerState;
@@ -36,7 +38,22 @@ export default function CountdownTab({
     activeBlockColor,
 }: CountdownTabProps) {
     const [now, setNow] = useState(new Date());
+    const [trackWidth, setTrackWidth] = useState(1200);
+    const trackRef = useRef<HTMLDivElement>(null);
     const jitterMapRef = useRef<Record<string, RacerJitter>>({});
+
+    // Observe race-track container width for accurate car layout
+    useEffect(() => {
+        const el = trackRef.current;
+        if (!el) return;
+        const update = () => {
+            if (el.clientWidth > 0) setTrackWidth(el.clientWidth);
+        };
+        update();
+        const ro = new ResizeObserver(update);
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, []);
 
     // Tick setiap 50ms saat timer berjalan (untuk animasi countdown dan racer)
     useEffect(() => {
@@ -57,7 +74,7 @@ export default function CountdownTab({
     }, [timer.isRunning]);
 
     // Hooks untuk logika yang sudah diekstrak
-    const { remainMs, timerRatio, endD, isWarning, isDanger, isFinished } =
+    const { remainMs, timerRatio, totalSecs, endD, isWarning, isDanger, isFinished } =
         useCountdownTimer(timer, now);
 
     const warningForcedOff = useBlinkEffect(isWarning);
@@ -77,6 +94,7 @@ export default function CountdownTab({
     const actuallyFinished = showGreenFinish && (!timer.isRunning || remainMs === 0);
     const actuallyDanger = isDanger && !dangerForcedOff && !actuallyFinished;
     const actuallyWarning = isWarning && !warningForcedOff && !actuallyDanger && !actuallyFinished;
+
 
     const activeBlock = schedule?.blocks.find((b) => b.id === schedule.activeBlockId);
     const activeBlockIdx = schedule
@@ -134,6 +152,210 @@ export default function CountdownTab({
             : timer.isRunning
             ? "running"
             : "idle";
+
+    const isProjectorWithRace = Boolean(readOnly && racers && racers.length > 0);
+
+    // Pastikan jitterMapRef terisi untuk semua pembalap (termasuk di mode proyektor)
+    useEffect(() => {
+        racers.forEach((r) => {
+            if (!jitterMapRef.current[r.id]) {
+                jitterMapRef.current[r.id] = {
+                    currentOffset: 0,
+                    targetOffset: Math.random() * 30 - 15,
+                    speed: 0.02 + Math.random() * 0.04,
+                    finalOffset: (Math.random() - 0.5) * 2,
+                };
+            }
+        });
+    }, [racers]);
+
+    // Observe race-track container width for accurate car layout
+    useEffect(() => {
+        const el = trackRef.current;
+        if (!el) return;
+        const update = () => {
+            if (el.clientWidth > 0) setTrackWidth(el.clientWidth);
+        };
+        update();
+        const ro = new ResizeObserver(update);
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, [isProjectorWithRace]);
+
+    const renderTimeContent = (horizontal = false) => (
+        <>
+            {/* Mode proyektor: Sesi selesai dan ada sesi berikutnya */}
+            {readOnly && projectorState === "finished-next" && (
+                <div className={`text-center ${horizontal ? "flex items-center justify-center gap-4 flex-wrap py-1 px-2" : "py-6 px-4"}`}>
+                    <div className="session-title-pill flex-shrink-0">
+                        <span>{activeBlock?.label || "Sesi"} selesai</span>
+                    </div>
+
+                    {nextBlock && (
+                        <div className="flex items-center gap-3 flex-wrap justify-center">
+                            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest whitespace-nowrap">
+                                Selanjutnya
+                            </span>
+                            <div className="countdown-time finished" style={{ fontSize: horizontal ? "36px" : "clamp(36px, 7vw, 68px)", lineHeight: 1 }}>
+                                <span>{nextBlock.label}</span>
+                            </div>
+                            <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+                                ({nextBlock.startTime} - {nextBlock.endTime})
+                            </span>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Mode proyektor: Semua sesi selesai */}
+            {readOnly && projectorState === "finished-final" && (
+                <div className={`text-center ${horizontal ? "flex items-center justify-center gap-4 py-1 px-2" : "py-6 px-4"}`}>
+                    <div className={`countdown-time ${actuallyFinished ? "finished" : ""}`} style={{ fontSize: horizontal ? "40px" : undefined, lineHeight: 1 }}>
+                        <span>HANDS UP !</span>
+                    </div>
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">
+                        Semua sesi telah selesai
+                    </span>
+                </div>
+            )}
+
+            {/* Tampilan normal (running/idle) */}
+            {(!readOnly || (projectorState === "running" || projectorState === "idle")) && (
+                <div className={horizontal ? "flex items-center justify-center gap-4 flex-wrap" : "text-center"}>
+                    {(activeBlockLabel || (schedule && activeBlock)) && (
+                        <div className="session-title-pill flex-shrink-0">
+                            <span>{activeBlockLabel || activeBlock?.label}</span>
+                        </div>
+                    )}
+
+                    <div className={`flex items-center gap-3 ${horizontal ? "" : "flex-col justify-center mb-2"}`}>
+                        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest whitespace-nowrap">
+                            Waktu Tersisa
+                        </div>
+                        <div
+                            className={`countdown-time ${readOnly ? (actuallyFinished ? "finished" : actuallyDanger ? "danger" : actuallyWarning ? "warning" : "") : ""}`}
+                            style={{ fontSize: horizontal ? "42px" : undefined, lineHeight: 1 }}
+                        >
+                            {remainMs === 0 && timer.isRunning && readOnly && !nextBlock ? (
+                                <span>HANDS UP !</span>
+                            ) : (() => {
+                                const { main, centi } = formatTimeWithMs(remainMs);
+                                return <>{main}<span style={{ fontSize: "0.65em", opacity: 0.5 }}>.{centi}</span></>;
+                            })()}
+                        </div>
+                    </div>
+
+                    {readOnly && nextBlock && (
+                        <div className={`session-title-pill flex-shrink-0 ${horizontal ? "" : "mt-4"}`}>
+                            <span>
+                                Berikutnya: <strong>{nextBlock.label}</strong>
+                                <span className="ml-1.5 opacity-70">({nextBlock.startTime} - {nextBlock.endTime})</span>
+                            </span>
+                        </div>
+                    )}
+                </div>
+            )}
+        </>
+    );
+
+    const renderTrackContent = () => (
+        <>
+            {/* Continuous track canvas: Start -> Normal Road x N -> Finish */}
+            <PixelRoadBg
+                mode="race"
+                progress={1 - timerRatio}
+                totalSecs={totalSecs}
+                isRunning={timer.isRunning}
+                isFinished={isFinished}
+                speedPxPerSec={160}
+            />
+
+            {racers.length === 0 ? (
+                <div className="py-24 text-center text-muted-foreground text-sm" style={{ position: "relative", zIndex: 2 }}>
+                    Belum ada pembalap. Tambahkan pembalap di tab Leaderboard.
+                </div>
+            ) : (
+                <div className="race-asphalt-lanes">
+                    {[0, 1, 2, 3].map((laneIdx) => {
+                        const laneRacers = racers
+                            .map((racer, originalIdx) => ({ racer, originalIdx }))
+                            .filter(({ originalIdx }) => originalIdx % 4 === laneIdx);
+
+                        return (
+                            <div key={laneIdx} className="race-lane">
+                                {laneRacers.map(({ racer, originalIdx }) => {
+                                    const slotIdx = Math.floor(originalIdx / 4);
+                                    const j = jitterMapRef.current[racer.id] || { currentOffset: 0, finalOffset: 0 };
+                                    const p = 1 - timerRatio;
+
+                                    // Kinematika Posisi Mobil (World-Space Camera-Compensated Kinematics)
+                                    const _trackH = 432;
+                                    const _tileW = Math.round(_trackH * 3);
+                                    const _xStartInTile = Math.round(255 * (_trackH / 724));
+                                    const _xFinishInTile = Math.round(255 * (_trackH / 725));
+                                    const _nRoadTiles = Math.max(1, Math.round((160 * totalSecs - _tileW) / _tileW));
+                                    const _xFinishWorld = (_nRoadTiles + 1) * _tileW + _xFinishInTile;
+                                    const _xStartScreen = 280;
+                                    const _xFinishScreen2 = Math.min(trackWidth - 260, Math.max(280, trackWidth * 0.75));
+                                    const _camStart = _xStartInTile - _xStartScreen;
+                                    const _camEnd   = _xFinishWorld - _xFinishScreen2;
+                                    const _L = 0.15, _M = 1 / (1 - _L / 2), _a = _M / (2 * _L);
+                                    const _camP = p <= _L ? _a * p * p : _M * (p - _L / 2);
+                                    const _camX = _camStart + Math.min(1, Math.max(0, _camP)) * (_camEnd - _camStart);
+                                    const _camDisp = _camX - _camStart;
+
+                                    const _gridScreen0 = (slotIdx === 0 ? 130 : 15) + (3 - laneIdx) * 6;
+                                    const gridBase = _gridScreen0 - _camDisp;
+
+                                    const xFinishScreen = Math.min(trackWidth - 260, Math.max(280, trackWidth * 0.72));
+                                    const finishBase = xFinishScreen + 30 + (j.finalOffset * 10);
+
+                                    const midBase = trackWidth * 0.40;
+                                    const blendedOffset = j.currentOffset * (1 - p) + j.finalOffset * p;
+                                    const raceBase = midBase + blendedOffset * 14;
+
+                                    const gT = Math.max(0, Math.min(1, (0.25 - p) / 0.25));
+                                    const wGrid = gT * gT * (3 - 2 * gT);
+
+                                    const fT = Math.max(0, Math.min(1, (p - 0.75) / 0.25));
+                                    const wFinish = fT * fT * (3 - 2 * fT);
+
+                                    const wRace = Math.max(0, 1 - wGrid - wFinish);
+
+                                    let carLeftPx = gridBase * wGrid + raceBase * wRace + finishBase * wFinish;
+                                    carLeftPx = Math.max(10, Math.min(carLeftPx, trackWidth - 170));
+
+                                    const spriteUrl = getSpriteForRacer(originalIdx);
+
+                                    return (
+                                        <div
+                                            key={racer.id}
+                                            className="racer-vehicle"
+                                            style={{
+                                                transform: `translate3d(${Math.round(carLeftPx)}px, -50%, 0)`,
+                                                zIndex: 10 + slotIdx,
+                                            }}
+                                        >
+                                            <SpriteAnimation
+                                                src={spriteUrl}
+                                                frameWidth={160}
+                                                frameHeight={50}
+                                                totalFrames={6}
+                                                frameRate={9}
+                                                paused={!timer.isRunning && !isFinished}
+                                                flipX={true}
+                                            />
+                                            <div className="racer-name-tag">{racer.name}</div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+        </>
+    );
 
     return (
         <div className="countdown-tab" style={{ width: "100%" }}>
@@ -197,115 +419,62 @@ export default function CountdownTab({
             )}
 
             {/* Area hitung mundur dan race track */}
-            <div className="race-track-container">
-
-                {/* ======================================================
-                    MODE PROYEKTOR: tampilan khusus per-state sesi
-                    ====================================================== */}
-                {readOnly && projectorState === "finished-next" && (
-                    <div className="text-center py-10 px-6">
-                        <div className="session-title-pill" style={{ marginBottom: "16px" }}>
-                            <span>{activeBlock?.label || "Sesi"} selesai</span>
-                        </div>
-
-                        {nextBlock && (
-                            <>
-                                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">
-                                    Selanjutnya
-                                </div>
-                                <div className="countdown-time finished" style={{ fontSize: "clamp(48px, 10vw, 96px)" }}>
-                                    <span>{nextBlock.label}</span>
-                                </div>
-                                <div className="text-sm font-medium text-muted-foreground mt-3">
-                                    {nextBlock.startTime} – {nextBlock.endTime}
-                                </div>
-                            </>
-                        )}
+            {isProjectorWithRace ? (
+                /* Mode proyektor dengan balapan asprak sebagai background card waktu */
+                <div
+                    ref={trackRef}
+                    className="race-track-container projector-race-card"
+                    style={{
+                        position: "relative",
+                        height: "432px",
+                        padding: "16px 20px",
+                        overflow: "hidden",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "flex-start",
+                    }}
+                >
+                    <div
+                        className="race-track projector-track-inner"
+                        style={{
+                            position: "absolute",
+                            inset: 0,
+                            width: "100%",
+                            height: "100%",
+                            border: "none",
+                            borderRadius: "inherit",
+                            overflow: "hidden",
+                            zIndex: 0,
+                        }}
+                    >
+                        {renderTrackContent()}
                     </div>
-                )}
-
-                {readOnly && projectorState === "finished-final" && (
-                    <div className="text-center py-10 px-6">
-                        <div className={`countdown-time ${actuallyFinished ? "finished" : ""}`}>
-                            <span>HANDS UP !</span>
-                        </div>
-                        <div className="text-sm text-muted-foreground mt-4">
-                            Semua sesi telah selesai
-                        </div>
+                    <div
+                        className="projector-time-hud"
+                        style={{
+                            position: "relative",
+                            zIndex: 10,
+                            pointerEvents: "none",
+                        }}
+                    >
+                        {renderTimeContent(true)}
                     </div>
-                )}
-
-                {/* Tampilan normal (running/idle) di mode proyektor untuk SEMUA sesi */}
-                {(!readOnly || (projectorState === "running" || projectorState === "idle")) && (
-                    <div className={`text-center ${readOnly ? "" : "mb-6"}`}>
-                        {(activeBlockLabel || (schedule && activeBlock)) && (
-                            <div className="mb-3">
-                                <div className="session-title-pill">
-                                    <span>{activeBlockLabel || activeBlock?.label}</span>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">
-                            Waktu Tersisa
-                        </div>
-                        <div className={`countdown-time ${readOnly ? (actuallyFinished ? "finished" : actuallyDanger ? "danger" : actuallyWarning ? "warning" : "") : ""}`}>
-                            {remainMs === 0 && timer.isRunning && readOnly && !nextBlock ? (
-                                <span>HANDS UP !</span>
-                            ) : (() => {
-                                const { main, centi } = formatTimeWithMs(remainMs);
-                                return <>{main}<span style={{ fontSize: "0.65em", opacity: 0.5 }}>.{centi}</span></>;
-                            })()}
-                        </div>
-
-                        {readOnly && nextBlock && (
-                            <div className="session-title-pill mt-6">
-                                <span>
-                                    Berikutnya: <strong>{nextBlock.label}</strong>
-                                    <span className="ml-2 opacity-70">({nextBlock.startTime} - {nextBlock.endTime})</span>
-                                </span>
-                            </div>
-                        )}
+                </div>
+            ) : (
+                /* Mode standar: proyektor tanpa pembalap atau tampilan generator */
+                <div className="race-track-container">
+                    <div className={!readOnly ? "mb-6" : ""}>
+                        {renderTimeContent()}
                     </div>
-                )}
 
-                {/* Race track (hanya di mode non-readOnly) */}
-                {!readOnly && (
-                    <div className="race-track">
-                        {racers.length === 0 ? (
-                            <div className="py-10 text-center text-muted-foreground text-sm">
-                                Belum ada pembalap. Tambahkan pembalap di tab Leaderboard.
-                            </div>
-                        ) : (
-                            racers.map((racer) => {
-                                const j = jitterMapRef.current[racer.id];
-                                const progressFraction = 1 - timerRatio;
-                                let racerProgress = progressFraction * 100;
-                                if (j) {
-                                    const blendedOffset = j.currentOffset * (1 - progressFraction) + j.finalOffset * progressFraction;
-                                    racerProgress += blendedOffset;
-                                }
-                                racerProgress = timerRatio > 0
-                                    ? Math.max(0, Math.min(racerProgress, 99.5))
-                                    : (j ? 100 + j.finalOffset : 100);
-
-                                return (
-                                    <div key={racer.id} className="race-lane">
-                                        <div className="racer-vehicle" style={{ left: `calc(${racerProgress}% - ${(racerProgress / 100) * 88}px)` }}>
-                                            <div className="racer-avatar">
-                                                {racer.imageBase64
-                                                    ? <img src={racer.imageBase64} alt={racer.name} />
-                                                    : <span>{racer.name}</span>}
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })
-                        )}
-                        <div className="finish-line"></div>
-                    </div>
-                )}
-            </div>
+                    {!readOnly && (
+                        <div ref={trackRef} className="race-track">
+                            {renderTrackContent()}
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

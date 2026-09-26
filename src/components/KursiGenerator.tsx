@@ -12,6 +12,7 @@ import { useStudentData } from "../hooks/useStudentData";
 import { useSeats } from "../hooks/useSeats";
 import { useProjectorSync } from "../hooks/useProjectorSync";
 import { useScheduleAutoAdvance } from "../hooks/useCountdown";
+import { useRacersGlobal } from "../hooks/useRacersGlobal";
 
 import Sidebar from "./Sidebar";
 import SeatsTab from "./SeatsTab";
@@ -41,7 +42,7 @@ function KursiGeneratorInner() {
     const [showSidebar, setShowSidebar] = useState(true);
     const [countdownMode, setCountdownMode] = useState<"simple" | "advanced">("simple");
     const [notes, setNotes] = useState("<h2>Modul 13</h2><hr><p>Password: abcd123</p>");
-    const [racers, setRacers] = useState<Racer[]>([]);
+    const { racers, setRacers } = useRacersGlobal();
     const [timer, setTimer] = useState<TimerState>(() => {
         const defaultSession = getDefaultTimerSession();
         return {

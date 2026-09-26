@@ -720,6 +720,82 @@
     margin: 0;
 }
 
+/* Mode proyektor dengan background lintasan balap asprak */
+.race-track-container.projector-race-card {
+    position: relative;
+    height: 432px;
+    padding: 16px 20px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    border: 2px solid var(--border);
+    background: transparent;
+}
+
+.race-track-container.projector-race-card .projector-track-inner {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: none !important;
+    border-radius: inherit !important;
+    overflow: hidden !important;
+    z-index: 0 !important;
+}
+
+.projector-time-hud {
+    position: relative;
+    z-index: 10;
+    pointer-events: none;
+    border-radius: var(--radius-lg);
+    padding: 8px 24px;
+    text-align: center;
+    max-width: 95%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    background: oklch(var(--card) / 90%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid oklch(var(--border) / 80%);
+    box-shadow: 0 12px 32px oklch(0 0 0 / 25%), 0 0 0 1px oklch(1 0 0 / 10%) inset;
+}
+
+.projector-time-hud .countdown-time {
+    font-size: 42px;
+    line-height: 1;
+}
+
+[data-theme='dark'] .projector-time-hud {
+    background: oklch(0.16 0.02 260 / 88%);
+    border-color: oklch(1 0 0 / 15%);
+    box-shadow: 0 20px 48px oklch(0 0 0 / 50%), 0 0 0 1px oklch(1 0 0 / 12%) inset;
+}
+
+[data-theme='light'] .projector-time-hud {
+    background: oklch(1 0 0 / 92%);
+    border-color: oklch(0 0 0 / 12%);
+    box-shadow: 0 16px 36px oklch(0 0 0 / 15%), 0 0 0 1px oklch(1 0 0 / 80%) inset;
+}
+
+body.time-warning .race-track-container.projector-race-card,
+body.time-danger .race-track-container.projector-race-card,
+body.time-transition .race-track-container.projector-race-card,
+body.time-finished .race-track-container.projector-race-card {
+    background: transparent !important;
+}
+
+body.time-warning .projector-time-hud,
+body.time-danger .projector-time-hud,
+body.time-transition .projector-time-hud,
+body.time-finished .projector-time-hud {
+    background: rgba(0, 0, 0, 0.65) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+}
+
 .countdown-time {
     font-family: "Google Sans", "Poppins", sans-serif;
     font-variant-numeric: tabular-nums;
@@ -731,74 +807,125 @@
     line-height: 1.2;
 }
 
+
+/* ===== Race Track ===== */
 .race-track {
     position: relative;
     width: 100%;
-    border: 4px solid var(--border);
+    height: 432px;
+    min-height: 432px;
+    border: 2px solid var(--border);
     border-radius: var(--radius-lg);
-    background: var(--success-surface);
     overflow: hidden;
     padding: 0;
+    background: #c8e6b0; /* fallback hijau jika road tidak load */
+}
+
+/* Continuous pixel road background canvas */
+.race-road-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    image-rendering: pixelated;
+}
+
+[data-theme='dark'] .race-road-bg {
+    opacity: 0.7;
+    filter: brightness(0.75);
+}
+
+.projector-race-card .race-road-bg,
+[data-theme='dark'] .projector-race-card .race-road-bg {
+    opacity: 1 !important;
+    filter: none !important;
+}
+
+@keyframes race-road-scroll {
+    from {
+        background-position-x: 0px;
+    }
+    to {
+        background-position-x: calc(-1 * var(--road-tile-width, 1296px));
+    }
+}
+
+@keyframes sprite-step-anim {
+    from { background-position-x: 0px; }
+    to   { background-position-x: var(--sprite-end-pos, -960px); }
+}
+
+.sprite-car-animation {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.race-asphalt-lanes {
+    position: absolute;
+    top: 72px;
+    left: 0;
+    right: 0;
+    height: 288px;
+    z-index: 2;
+    pointer-events: none;
 }
 
 .race-lane {
     position: relative;
-    height: 64px;
-    border-bottom: 2px dashed var(--border);
+    height: 72px;
     display: flex;
     align-items: center;
-}
-
-.race-lane:last-child {
-    border-bottom: none;
+    z-index: 1;
 }
 
 .racer-vehicle {
     position: absolute;
     top: 50%;
+    left: 0;
     transform: translateY(-50%);
-    width: 50px;
-    height: 50px;
     z-index: 2;
-    margin-left: 10px;
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
-}
-
-.racer-avatar {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background: var(--primary);
-    border: 3px solid var(--bg-elevated);
-    color: white;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: 800;
-    overflow: hidden;
+    gap: 2px;
+    filter: drop-shadow(0 3px 8px oklch(0 0 0 / 45%));
+    will-change: transform;
 }
 
-.racer-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+.racer-name-tag {
+    font-size: 10px;
+    font-weight: 700;
+    font-family: monospace;
+    color: #fff;
+    background: oklch(0.15 0 0 / 75%);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border-radius: 4px;
+    padding: 1px 6px;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    line-height: 1.4;
+    text-align: center;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .finish-line {
     position: absolute;
     top: 0;
-    right: 16px;
-    width: 24px;
+    right: 14px;
+    width: 20px;
     height: 100%;
-    background: repeating-linear-gradient(45deg,
-            var(--danger) 0,
-            var(--danger) 12px,
-            var(--bg-elevated) 12px,
-            var(--bg-elevated) 24px);
-    z-index: 1;
+    background: repeating-linear-gradient(
+        45deg,
+        #111 0,   #111 10px,
+        #fff 10px, #fff 20px
+    );
+    z-index: 3;
     opacity: 0.8;
-    border-left: 3px solid var(--bg-elevated);
 }
 
 @keyframes finished-pulse {
@@ -809,6 +936,22 @@
     to {
         opacity: 0.4;
     }
+}
+
+/* Pre-compiled F1 sprite slide keyframes for common frame widths */
+@keyframes sprite-slide-90 {
+    from { background-position: 0 0; }
+    to   { background-position: -540px 0; }
+}
+
+@keyframes sprite-slide-160 {
+    from { background-position: 0 0; }
+    to   { background-position: -960px 0; }
+}
+
+@keyframes sprite-slide-240 {
+    from { background-position: 0 0; }
+    to   { background-position: -1440px 0; }
 }
 
 /* ===== Theme Toggle ===== */
@@ -1049,8 +1192,55 @@ body.time-finished .notes-natural .tiptap {
     color: #1f1f1f !important;
 }
 
-/* Mini timer label in Projector View: high contrast white against yellow/red/blue/green */
-body.time-warning .mini-timer-label,
+/* Mini timer in Projector View: warna teks disesuaikan agar selalu kontras di latar putih maupun gelap */
+.mini-timer-time {
+    color: var(--foreground);
+    transition: color 0.3s ease;
+}
+
+[data-theme='light'] .mini-timer-time {
+    color: #09090b;
+}
+
+.mini-timer-time.warning {
+    color: #d97706;
+}
+
+[data-theme='dark'] .mini-timer-time.warning {
+    color: #fbbf24;
+}
+
+.mini-timer-time.danger {
+    color: #dc2626;
+}
+
+[data-theme='dark'] .mini-timer-time.danger {
+    color: #f87171;
+}
+
+.mini-timer-time.finished {
+    color: #059669;
+}
+
+[data-theme='dark'] .mini-timer-time.finished {
+    color: #34d399;
+}
+
+/* Saat layar penuh berubah warna (body.time-*) */
+body.time-warning .mini-timer-time {
+    color: #1f1f1f !important;
+}
+
+body.time-warning .mini-timer-label {
+    color: rgba(0, 0, 0, 0.7) !important;
+}
+
+body.time-danger .mini-timer-time,
+body.time-transition .mini-timer-time,
+body.time-finished .mini-timer-time {
+    color: #ffffff !important;
+}
+
 body.time-danger .mini-timer-label,
 body.time-transition .mini-timer-label,
 body.time-finished .mini-timer-label {
@@ -1191,4 +1381,115 @@ body.time-finished {
     font-size: 110px;
     color: #ffffff !important;
 }
+
+/* ===== Leaderboard Race Track (Pixel Road) ===== */
+.lb-race-track-wrapper {
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+}
+
+.lb-race-track-header {
+    padding: 8px 16px;
+    background: var(--muted);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+}
+
+.lb-race-track-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted-foreground);
+}
+
+.lb-race-track {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* Pixel road scrolling background — menggunakan pixel-road.png */
+.lb-pixel-road {
+    position: absolute;
+    inset: 0;
+    background-image: url('/image/roads/pixel-road.png');
+    background-repeat: repeat-x;
+    background-size: auto 100%;
+    background-position: 0 0;
+    animation: race-road-scroll var(--road-scroll-duration, 8s) linear infinite;
+    opacity: 0.55;
+    pointer-events: none;
+    z-index: 0;
+    will-change: background-position;
+    image-rendering: pixelated;
+}
+
+/* Darkmode: road sedikit lebih gelap agar sprite kontras */
+[data-theme='dark'] .lb-pixel-road {
+    opacity: 0.38;
+}
+
+.lb-race-lane {
+    position: relative;
+    height: 68px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px dashed oklch(0.5 0 0 / 20%);
+    z-index: 1;
+}
+
+.lb-race-lane:last-child {
+    border-bottom: none;
+}
+
+.lb-racer-label {
+    position: relative;
+    z-index: 3;
+    min-width: 52px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: monospace;
+    color: white;
+    background: oklch(0.2 0 0 / 70%);
+    border-radius: 0 6px 6px 0;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    flex-shrink: 0;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    height: 24px;
+}
+
+.lb-racer-car {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    /* drop shadow agar mobil terlihat di atas road */
+    filter: drop-shadow(0 3px 6px oklch(0 0 0 / 50%));
+    transition: left 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Garis finish di sisi kanan */
+.lb-finish-line {
+    position: absolute;
+    top: 0;
+    right: 14px;
+    width: 20px;
+    height: 100%;
+    background: repeating-linear-gradient(
+        45deg,
+        #111 0,   #111 10px,
+        #fff 10px, #fff 20px
+    );
+    z-index: 3;
+    opacity: 0.75;
+}
+
 

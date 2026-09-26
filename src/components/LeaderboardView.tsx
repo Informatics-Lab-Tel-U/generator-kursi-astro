@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import type { Student } from './types';
-import { LuSettings, LuFileText, LuBan } from 'react-icons/lu';
+import { LuSettings, LuFileText, LuBan, LuCopy, LuCheck } from 'react-icons/lu';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
+import { useMoodleScript } from '../hooks/useCountdown';
 import { cn } from 'cn';
 import {
   Table,
@@ -49,6 +50,7 @@ function parseTimeTaken(timeStr: string): number {
 }
 
 export default function LeaderboardView({ room, students }: LeaderboardViewProps) {
+    const { isCopied, copyScript } = useMoodleScript(room);
     const [realtimeData, setRealtimeData] = useState<any[]>([]);
     const [lastUpdated, setLastUpdated] = useState<string | null>(null);
     const [lastUpdateDate, setLastUpdateDate] = useState<Date | null>(null);
@@ -181,7 +183,7 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
                         <span>{isConnected ? 'Connected' : 'Disconnected'}</span>
                     </Badge>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                     <Button
                         variant="outline"
                         size="sm"
@@ -190,6 +192,26 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
                     >
                         <LuSettings className="size-3.5" />
                         <span>{sortMode === 'in-progress' ? 'Urutkan: In Progress' : 'Urutkan: Normal'}</span>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={copyScript}
+                        className="gap-1.5"
+                        title="Salin script Moodle"
+                        aria-label="Salin script Moodle"
+                    >
+                        {isCopied ? (
+                            <>
+                                <LuCheck className="size-3.5 text-primary" />
+                                <span>Copied</span>
+                            </>
+                        ) : (
+                            <>
+                                <LuCopy className="size-3.5" />
+                                <span>Copy</span>
+                            </>
+                        )}
                     </Button>
                 </div>
             </div>
@@ -236,7 +258,7 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
 
                                         let timeValue = row['TIME TAKEN'] || '-';
                                         if (typeof timeValue === 'string') {
-                                            const m = timeValue.match(/(\d{1,2}[:.]\d{2})/);
+                                            const m = timeValue.match(/(\d{1,2}[:.]?\d{2})/);
                                             if (m) timeValue = m[1].replace('.', ':');
                                         }
 

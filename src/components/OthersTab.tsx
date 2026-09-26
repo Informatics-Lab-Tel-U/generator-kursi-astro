@@ -34,9 +34,6 @@ export default function OthersTab({
         <h2 className="text-sm font-semibold tracking-tight text-foreground">
           Riwayat Generate
         </h2>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Versi susunan tempat duduk yang tersimpan dalam 2 jam terakhir.
-        </p>
       </div>
 
       <div className="rounded-lg border border-border overflow-hidden bg-card">

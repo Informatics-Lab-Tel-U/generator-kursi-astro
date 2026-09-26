@@ -10,6 +10,7 @@ import LeaderboardView from './LeaderboardView';
 import { LuLayoutGrid, LuMonitor, LuTimer } from 'react-icons/lu';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 import { useCountdownTimer, useBlinkEffect } from '../hooks/useCountdown';
+import { getStoredRacers } from '../hooks/useRacersGlobal';
 
 import './KursiGenerator.css';
 
@@ -32,7 +33,7 @@ export default function ProjectorView() {
   const [disabledSeats, setDisabledSeats] = useState<Set<number>>(new Set());
   const [timer, setTimer] = useState<TimerState>({ startTime: "08:00", endTime: "10:00", isRunning: false, startedAt: null });
   const [now, setNow] = useState(new Date());
-  const [racers, setRacers] = useState<Racer[]>([]);
+  const [racers, setRacers] = useState<Racer[]>(getStoredRacers);
   const [notes, setNotes] = useState<string>("");
   const [projectorConfig, setProjectorConfig] = useState<ProjectorConfig>({
     showSeats: true,
@@ -334,8 +335,14 @@ export default function ProjectorView() {
                 {currentBlockLabel || "Waktu Tersisa"}
               </div>
               <div
-                className={`countdown-time leading-none ${
-                  isDanger ? "danger" : isWarning ? "warning" : ""
+                className={`mini-timer-time leading-none ${
+                  actuallyFinished
+                    ? "finished"
+                    : isDanger
+                    ? "danger"
+                    : isWarning
+                    ? "warning"
+                    : ""
                 }`}
                 style={{ fontSize: "28px", fontWeight: 700 }}
               >
