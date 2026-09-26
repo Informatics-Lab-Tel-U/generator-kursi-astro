@@ -17,6 +17,10 @@ async function getKV(): Promise<any | null> {
     return null;
 }
 
+// L1 in-memory read cache: skip KV read jika data masih fresh (< 6 detik)
+const readCache = new Map<string, { data: any[]; expiry: number }>();
+const READ_CACHE_TTL_MS = 6_000;
+
 export async function saveLeaderboardData(
     room: string,
     data: any[],
@@ -25,6 +29,8 @@ export async function saveLeaderboardData(
     const key = `leaderboard:${normalizedRoom}`;
 
     leaderboardStore.set(normalizedRoom, data);
+    // Invalidate read cache so next GET langsung ambil dari KV
+    readCache.delete(normalizedRoom);
 
     try {
         const kv = await getKV();
@@ -46,6 +52,13 @@ export async function getLeaderboardData(
 ): Promise<any[]> {
     const normalizedRoom = normalizeRoomId(room);
     const key = `leaderboard:${normalizedRoom}`;
+    const now = Date.now();
+
+    // L1 hit: kembalikan cache tanpa sentuh KV
+    const cached = readCache.get(normalizedRoom);
+    if (cached && now < cached.expiry) {
+        return cached.data;
+    }
 
     try {
         const kv = await getKV();
@@ -55,6 +68,7 @@ export async function getLeaderboardData(
                 const parsed = JSON.parse(raw);
                 if (Array.isArray(parsed)) {
                     leaderboardStore.set(normalizedRoom, parsed);
+                    readCache.set(normalizedRoom, { data: parsed, expiry: now + READ_CACHE_TTL_MS });
                     return parsed;
                 }
             }
