@@ -458,7 +458,7 @@
     transition: all var(--transition-fast);
 }
 
-/* Asprak Badges — Light Theme (Kontras Tinggi & Jelas) */
+/* Asprak Badges - Light Theme (Kontras Tinggi & Jelas) */
 .asprak-badge-blue {
     background: #ebf5ff;
     color: #1e40af;
@@ -498,6 +498,56 @@
     background: #f0fdfa;
     color: #115e59;
     border: 1px solid #99f6e4;
+}
+
+/* Asprak Badges - Dark Theme (Harmonis, Elegan, dan Memenuhi Standar Kontras) */
+[data-theme='dark'] .asprak-badge-blue,
+.dark .asprak-badge-blue {
+    background: rgba(30, 64, 175, 0.22);
+    color: #93c5fd;
+    border: 1px solid rgba(147, 197, 253, 0.3);
+}
+[data-theme='dark'] .asprak-badge-green,
+.dark .asprak-badge-green {
+    background: rgba(22, 101, 52, 0.25);
+    color: #86efac;
+    border: 1px solid rgba(134, 239, 172, 0.3);
+}
+[data-theme='dark'] .asprak-badge-amber,
+.dark .asprak-badge-amber {
+    background: rgba(180, 83, 9, 0.22);
+    color: #fcd34d;
+    border: 1px solid rgba(252, 211, 77, 0.3);
+}
+[data-theme='dark'] .asprak-badge-purple,
+.dark .asprak-badge-purple {
+    background: rgba(107, 33, 168, 0.24);
+    color: #d8b4fe;
+    border: 1px solid rgba(216, 180, 254, 0.3);
+}
+[data-theme='dark'] .asprak-badge-rose,
+.dark .asprak-badge-rose {
+    background: rgba(159, 18, 57, 0.22);
+    color: #fda4af;
+    border: 1px solid rgba(253, 164, 175, 0.3);
+}
+[data-theme='dark'] .asprak-badge-cyan,
+.dark .asprak-badge-cyan {
+    background: rgba(21, 94, 117, 0.25);
+    color: #67e8f9;
+    border: 1px solid rgba(103, 232, 249, 0.3);
+}
+[data-theme='dark'] .asprak-badge-indigo,
+.dark .asprak-badge-indigo {
+    background: rgba(55, 48, 163, 0.25);
+    color: #a5b4fc;
+    border: 1px solid rgba(165, 180, 252, 0.3);
+}
+[data-theme='dark'] .asprak-badge-teal,
+.dark .asprak-badge-teal {
+    background: rgba(17, 94, 89, 0.25);
+    color: #5eead4;
+    border: 1px solid rgba(94, 234, 212, 0.3);
 }
 
 
