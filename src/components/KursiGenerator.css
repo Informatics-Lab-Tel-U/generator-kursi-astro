@@ -403,11 +403,32 @@
 
 .seat-row.disabled {
     background: repeating-linear-gradient(-45deg,
-            var(--bg-page),
-            var(--bg-page) 3px,
-            var(--bg-row-even) 3px,
-            var(--bg-row-even) 6px) !important;
-    opacity: 0.4;
+            transparent,
+            transparent 4px,
+            rgba(0, 0, 0, 0.05) 4px,
+            rgba(0, 0, 0, 0.05) 8px) !important;
+    opacity: 0.55;
+}
+
+.seat-row.disabled .cell-no {
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
+[data-theme='dark'] .seat-row.disabled,
+.dark .seat-row.disabled {
+    background: repeating-linear-gradient(-45deg,
+            transparent,
+            transparent 4px,
+            rgba(255, 255, 255, 0.06) 4px,
+            rgba(255, 255, 255, 0.06) 8px) !important;
+    opacity: 0.55;
+}
+
+[data-theme='dark'] .seat-row.disabled .cell-no,
+.dark .seat-row.disabled .cell-no {
+    color: var(--text-muted);
+    opacity: 0.5;
 }
 
 .cell-no {

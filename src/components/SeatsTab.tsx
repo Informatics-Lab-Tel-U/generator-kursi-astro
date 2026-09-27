@@ -104,7 +104,7 @@ export default function SeatsTab({
                     {isLoading ? (
                       <Skeleton className="h-4 w-3/4 rounded-sm" />
                     ) : isDisabled ? (
-                      <span className="text-muted-foreground/50 text-xs italic">Nonaktif</span>
+                      ""
                     ) : seat.student ? (
                       <>
                         <span className="name-default">{formatName(seat.student.name).defaultName}</span>
@@ -118,7 +118,7 @@ export default function SeatsTab({
                     {isLoading ? (
                       <Skeleton className="h-4 w-10 rounded-sm" />
                     ) : isDisabled ? (
-                      <span className="text-muted-foreground/50 text-xs">-</span>
+                      ""
                     ) : seat.student?.asprak ? (
                       <Badge
                         variant="secondary"
