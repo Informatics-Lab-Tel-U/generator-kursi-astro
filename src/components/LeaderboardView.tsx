@@ -171,7 +171,7 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
     const notCompletedStudentsCount = totalStudents - completedStudentsCount;
 
     return (
-        <div className="leaderboard-natural w-full flex flex-col rounded-lg border border-border bg-card overflow-hidden">
+        <div className="leaderboard-natural w-full flex flex-col rounded-lg border border-border bg-card overflow-hidden" style={{ flex: 1, minHeight: 0 }}>
             <div className="p-4 border-b border-border flex justify-between items-center bg-muted/20">
                 <div className="flex items-center gap-3">
                     <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 m-0">
@@ -216,7 +216,7 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
                 </div>
             </div>
 
-            <div className="p-4 overflow-y-auto flex-1 max-h-[600px]">
+            <div className="p-4 overflow-y-auto flex-1" style={{ minHeight: 0 }}>
                 {!hasData ? (
                     <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
                         <LuFileText className="size-12 mb-3 opacity-40" />

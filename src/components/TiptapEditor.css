@@ -167,3 +167,8 @@
   pointer-events: none;
   height: 0;
 }
+
+/* Mode readOnly: jangan paksa tinggi minimum — ikut tinggi konten */
+.tiptap-wrapper.readonly .tiptap {
+  min-height: unset;
+}

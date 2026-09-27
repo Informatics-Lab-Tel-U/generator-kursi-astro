@@ -247,9 +247,11 @@ export default function ProjectorView() {
         <div style={{
           flex: '1 1 0',
           minWidth: 0,
-          display: 'flex', flexDirection: 'column', overflow: 'hidden'
+          minHeight: 0,
+          display: 'flex', flexDirection: 'column', overflowY: 'auto',
+          gap: '16px',
         }}>
-          <div style={{ flex: '0 0 auto', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column' }}>
             <CountdownTab
               timer={timer}
               racers={racers}
@@ -265,7 +267,7 @@ export default function ProjectorView() {
           {kelas && (
             <div
               className="leaderboard-natural"
-              style={{ marginTop: '16px', flexShrink: 0 }}
+              style={{ flex: '1 1 0', minHeight: '200px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
             >
               <LeaderboardView room={kelas} students={eligibleStudents} />
             </div>
