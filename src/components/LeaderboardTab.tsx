@@ -29,7 +29,7 @@ export default function LeaderboardTab({
     } = useRacers(racers, setRacers);
 
     return (
-        <div className="leaderboard-tab w-full flex flex-col gap-5">
+        <div className="leaderboard-tab mt-5 w-full flex flex-col gap-5">
             {/* Pengaturan pembalap asprak */}
             <div className="rounded-lg border border-border bg-card p-4">
                 <div className="flex justify-between items-center mb-3">

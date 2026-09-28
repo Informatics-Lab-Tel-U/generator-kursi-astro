@@ -19,6 +19,10 @@ export interface PixelRoadBgProps {
     imageSrc?: string;
     /** Pause animation */
     paused?: boolean;
+    /** Whether to draw the start line tile at k=0 (default true) */
+    showStartLine?: boolean;
+    /** Whether to draw the finish line tile at k=nRoadTiles+1 (default true) */
+    showFinishLine?: boolean;
 }
 
 // Module-level image cache so images decode once and stay in memory
@@ -71,6 +75,8 @@ export function PixelRoadBg({
     isFinished = false,
     imageSrc,
     paused = false,
+    showStartLine = true,
+    showFinishLine = true,
 }: PixelRoadBgProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const loopOffsetRef = useRef(0);
@@ -87,6 +93,8 @@ export function PixelRoadBg({
         fixedDuration,
         imageSrc,
         paused,
+        showStartLine,
+        showFinishLine,
     });
     propsRef.current = {
         mode,
@@ -98,6 +106,8 @@ export function PixelRoadBg({
         fixedDuration,
         imageSrc,
         paused,
+        showStartLine,
+        showFinishLine,
     };
 
     useEffect(() => {
@@ -165,9 +175,10 @@ export function PixelRoadBg({
 
                 const curProgress = Math.max(0, Math.min(1, p.progress));
 
-                // Smooth camera launch curve: accelerates smoothly from rest (v=0 at p=0)
-                // matching the cars' natural acceleration curve up to cruising speed
-                const L = 0.15;
+                // Smooth camera launch curve: accelerates smoothly from rest in ~3.5 seconds,
+                // matching the cars' grid launch duration regardless of overall timer duration
+                const tLaunch = Math.min(3.5, duration * 0.25);
+                const L = Math.max(0.0001, tLaunch / duration);
                 const M = 1 / (1 - L / 2);
                 const a = M / (2 * L);
                 const camProgress = curProgress <= L
@@ -182,9 +193,9 @@ export function PixelRoadBg({
 
                 for (let k = kMin; k <= kMax; k++) {
                     let imgToDraw = road;
-                    if (k === 0) {
+                    if (k === 0 && (p.showStartLine !== false)) {
                         imgToDraw = start;
-                    } else if (k === nRoadTiles + 1) {
+                    } else if (k === nRoadTiles + 1 && (p.showFinishLine !== false)) {
                         imgToDraw = finish;
                     } else {
                         imgToDraw = road;

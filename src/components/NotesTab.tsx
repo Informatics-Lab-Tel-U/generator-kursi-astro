@@ -9,7 +9,7 @@ interface NotesTabProps {
 
 export default function NotesTab({ notes, setNotes, readOnly = false }: NotesTabProps) {
   return (
-    <div className="notes-tab">
+    <div className="notes-tab mt-5">
       <TiptapEditor content={notes} onUpdate={setNotes} readOnly={readOnly} />
     </div>
   );

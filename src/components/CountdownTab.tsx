@@ -65,8 +65,8 @@ export default function CountdownTab({
                 const j = jMap[id];
                 j.currentOffset += (j.targetOffset - j.currentOffset) * j.speed;
                 if (Math.abs(j.targetOffset - j.currentOffset) < 1) {
-                    j.targetOffset = Math.random() * 30 - 15;
-                    j.speed = 0.02 + Math.random() * 0.04;
+                    j.targetOffset = Math.random() * 16 - 8;
+                    j.speed = 0.03 + Math.random() * 0.04;
                 }
             });
         }, 50);
@@ -104,6 +104,11 @@ export default function CountdownTab({
         ? schedule.blocks[activeBlockIdx + 1]
         : null;
     const isLastBlock = schedule && activeBlockIdx === schedule.blocks.length - 1 && schedule.blocks.length > 0;
+    const isMultiBlockSchedule = Boolean(schedule && schedule.blocks.length > 1);
+    // On a multi-block schedule, suppress grid launch after the first node and
+    // suppress the finish sprint until the last node (HANDS UP moment).
+    const isFirstBlock = !isMultiBlockSchedule || activeBlockIdx <= 0;
+    const isFinalRaceBlock = !isMultiBlockSchedule || Boolean(isLastBlock);
 
     // Sync body class untuk tampilan proyektor fullscreen
     // time-transition = sesi selesai, ada sesi berikutnya (biru)
@@ -157,16 +162,26 @@ export default function CountdownTab({
 
     const isProjectorWithRace = Boolean(readOnly && racers && racers.length > 0);
 
-    // Pastikan jitterMapRef terisi untuk semua pembalap (termasuk di mode proyektor)
+    // Pastikan jitterMapRef terisi untuk semua pembalap dengan profil balapan dinamis
     useEffect(() => {
         racers.forEach((r, idx) => {
             if (!jitterMapRef.current[r.id]) {
-                // Fallback dengan spread bermakna (bukan ±1) agar tidak sejajar
+                const n = Math.max(1, racers.length);
+                const normalizedIdx = n > 1 ? idx / (n - 1) : 0.5;
+                const baseRatio = 0.52 - (normalizedIdx * 0.18);
                 jitterMapRef.current[r.id] = {
                     currentOffset: 0,
-                    targetOffset: Math.random() * 30 - 15,
-                    speed: 0.02 + Math.random() * 0.04,
-                    finalOffset: idx === 0 ? 0 : -(idx * 3) - Math.random() * 3,
+                    targetOffset: Math.random() * 16 - 8,
+                    speed: 0.03 + Math.random() * 0.04,
+                    finalOffset: idx === 0 ? 0 : -(idx * 3) - 2,
+                    finalRank: idx,
+                    baseOffsetRatio: Math.max(0.30, Math.min(0.58, baseRatio)),
+                    waveFreq1: 0.18 + ((idx * 0.05) % 0.12),
+                    wavePhase1: (idx * 1.7) % (Math.PI * 2),
+                    waveAmp1: 35 + ((idx % 3) * 10),
+                    waveFreq2: 0.45 + ((idx * 0.09) % 0.25),
+                    wavePhase2: (idx * 2.3) % (Math.PI * 2),
+                    waveAmp2: 12 + ((idx % 2) * 5),
                 };
             }
         });
@@ -276,72 +291,99 @@ export default function CountdownTab({
         </>
     );
 
-    const renderTrackContent = () => (
-        <>
-            {/* Continuous track canvas: Start -> Normal Road x N -> Finish */}
-            <PixelRoadBg
-                mode="race"
-                progress={1 - timerRatio}
-                totalSecs={totalSecs}
-                isRunning={timer.isRunning}
-                isFinished={isFinished}
-                speedPxPerSec={160}
-            />
+    const renderTrackContent = () => {
+        const totalSecsSafe = Math.max(1, totalSecs);
 
-            {racers.length === 0 ? (
-                <div className="py-24 text-center text-muted-foreground text-sm" style={{ position: "relative", zIndex: 2 }}>
-                    Belum ada pembalap. Tambahkan pembalap di tab Leaderboard.
-                </div>
-            ) : (
-                <div className="race-asphalt-lanes">
-                    {[0, 1, 2, 3].map((laneIdx) => {
-                        const laneRacers = racers
-                            .map((racer, originalIdx) => ({ racer, originalIdx }))
-                            .filter(({ originalIdx }) => originalIdx % 4 === laneIdx);
+        // Derived from remainMs so this clock matches isFinished exactly.
+        // elapsedSecs reaches totalSecsSafe only when remainMs hits 0.
+        const elapsedSecs = Math.max(0, Math.min(totalSecsSafe, totalSecsSafe - remainMs / 1000));
 
-                        return (
-                            <div key={laneIdx} className="race-lane">
-                                {laneRacers.map(({ racer, originalIdx }) => {
-                                    const slotIdx = Math.floor(originalIdx / 4);
-                                    const j = jitterMapRef.current[racer.id] || { currentOffset: 0, finalOffset: 0 };
-                                    const p = 1 - timerRatio;
+        // Progres terpadu balapan (0.0 -> 1.0) untuk kanvas jalan dan seluruh mobil
+        const raceProgress = elapsedSecs / totalSecsSafe;
 
-                                    // Kinematika Posisi Mobil (World-Space Camera-Compensated Kinematics)
-                                    const _trackH = 432;
-                                    const _tileW = Math.round(_trackH * 3);
-                                    const _xStartInTile = Math.round(255 * (_trackH / 724));
-                                    const _xFinishInTile = Math.round(255 * (_trackH / 725));
-                                    const _nRoadTiles = Math.max(1, Math.round((160 * totalSecs - _tileW) / _tileW));
-                                    const _xFinishWorld = (_nRoadTiles + 1) * _tileW + _xFinishInTile;
-                                    const _xStartScreen = 280;
-                                    const _xFinishScreen2 = Math.min(trackWidth - 260, Math.max(280, trackWidth * 0.75));
-                                    const _camStart = _xStartInTile - _xStartScreen;
-                                    const _camEnd   = _xFinishWorld - _xFinishScreen2;
-                                    const _L = 0.15, _M = 1 / (1 - _L / 2), _a = _M / (2 * _L);
-                                    const _camP = p <= _L ? _a * p * p : _M * (p - _L / 2);
-                                    const _camX = _camStart + Math.min(1, Math.max(0, _camP)) * (_camEnd - _camStart);
-                                    const _camDisp = _camX - _camStart;
+        // Grid launch: 3.5s real-time, suppressed on intermediate nodes
+        const tLaunch = Math.min(3.5, totalSecsSafe * 0.25);
+        let wGrid = 0;
+        if (isFirstBlock && elapsedSecs < tLaunch) {
+            const uLaunch = elapsedSecs / tLaunch;
+            wGrid = 1 - (uLaunch * uLaunch * (3 - 2 * uLaunch));
+        }
 
-                                    const _gridScreen0 = (slotIdx === 0 ? 130 : 15) + (3 - laneIdx) * 6;
-                                    const gridBase = _gridScreen0 - _camDisp;
+        // Finish sprint: 12s real-time, only on the final node
+        const tFinish = Math.min(12.0, totalSecsSafe * 0.25);
+        let wFinish = 0;
+        const finishStartTime = totalSecsSafe - tFinish;
+        if (isFinalRaceBlock && elapsedSecs >= finishStartTime) {
+            const uFinish = Math.min(1, (elapsedSecs - finishStartTime) / tFinish);
+            wFinish = uFinish * uFinish * (3 - 2 * uFinish);
+        }
 
-                                    const xFinishScreen = Math.min(trackWidth - 260, Math.max(280, trackWidth * 0.72));
-                                    const finishBase = xFinishScreen + 30 + (j.finalOffset * 18);
+        // 3. Cruising & battles phase
+        const wRace = Math.max(0, 1 - wGrid - wFinish);
 
-                                    const midBase = trackWidth * 0.40;
-                                    const blendedOffset = j.currentOffset * (1 - p) + j.finalOffset * p;
-                                    const raceBase = midBase + blendedOffset * 14;
+        return (
+            <>
+                {/* Continuous track canvas: Start -> Normal Road x N -> Finish */}
+                <PixelRoadBg
+                    mode="race"
+                    progress={raceProgress}
+                    totalSecs={totalSecsSafe}
+                    isRunning={timer.isRunning}
+                    isFinished={isFinished && isFinalRaceBlock}
+                    speedPxPerSec={160}
+                    showStartLine={isFirstBlock}
+                    showFinishLine={isFinalRaceBlock}
+                />
 
-                                    const gT = Math.max(0, Math.min(1, (0.25 - p) / 0.25));
-                                    const wGrid = gT * gT * (3 - 2 * gT);
+                {racers.length === 0 ? (
+                    <div className="py-24 text-center text-muted-foreground text-sm" style={{ position: "relative", zIndex: 2 }}>
+                        Belum ada pembalap. Tambahkan pembalap di tab Leaderboard.
+                    </div>
+                ) : (
+                    <div className="race-asphalt-lanes">
+                        {[0, 1, 2, 3].map((laneIdx) => {
+                            const laneRacers = racers
+                                .map((racer, originalIdx) => ({ racer, originalIdx }))
+                                .filter(({ originalIdx }) => originalIdx % 4 === laneIdx);
 
-                                    const fT = Math.max(0, Math.min(1, (p - 0.75) / 0.25));
-                                    const wFinish = fT * fT * (3 - 2 * fT);
+                            return (
+                                <div key={laneIdx} className="race-lane">
+                                    {laneRacers.map(({ racer, originalIdx }) => {
+                                        const slotIdx = Math.floor(originalIdx / 4);
+                                        const j = jitterMapRef.current[racer.id] || {
+                                            currentOffset: 0,
+                                            targetOffset: 0,
+                                            speed: 0.03,
+                                            finalOffset: 0,
+                                            finalRank: originalIdx,
+                                            baseOffsetRatio: 0.40,
+                                            waveFreq1: 0.22,
+                                            wavePhase1: originalIdx * 1.5,
+                                            waveAmp1: 40,
+                                            waveFreq2: 0.60,
+                                            wavePhase2: originalIdx * 2.0,
+                                            waveAmp2: 15,
+                                        };
 
-                                    const wRace = Math.max(0, 1 - wGrid - wFinish);
+                                        // Posisi start grid: Di belakang garis start (~280px)
+                                        const gridBase = 150 - (slotIdx * 85) + ((3 - laneIdx) * 14);
 
-                                    let carLeftPx = gridBase * wGrid + raceBase * wRace + finishBase * wFinish;
-                                    carLeftPx = Math.max(10, Math.min(carLeftPx, trackWidth - 170));
+                                        // Posisi cruising: Dinamis, tidak sejajar, bervariasi antar pembalap
+                                        const baseRatio = j.baseOffsetRatio ?? (0.35 + ((originalIdx % 4) * 0.06));
+                                        const baseMid = trackWidth * baseRatio;
+                                        const wave1 = Math.sin(elapsedSecs * (j.waveFreq1 ?? 0.22) + (j.wavePhase1 ?? (originalIdx * 1.5))) * (j.waveAmp1 ?? 40);
+                                        const wave2 = Math.cos(elapsedSecs * (j.waveFreq2 ?? 0.60) + (j.wavePhase2 ?? (originalIdx * 2.0))) * (j.waveAmp2 ?? 15);
+                                        const slotPenalty = slotIdx * 85;
+                                        const raceBase = baseMid + wave1 + wave2 + (j.currentOffset * 0.8) - slotPenalty;
+
+                                        // Posisi finish: Urutan pemenang melintasi garis finish (~74% lebar layar)
+                                        const xFinishScreen = Math.min(trackWidth - 260, Math.max(280, trackWidth * 0.74));
+                                        const rank = j.finalRank ?? originalIdx;
+                                        const finishOffset = 45 - (rank * 34);
+                                        const finishBase = xFinishScreen + finishOffset;
+
+                                        let carLeftPx = gridBase * wGrid + raceBase * wRace + finishBase * wFinish;
+                                        carLeftPx = Math.max(16, Math.min(carLeftPx, trackWidth - 175));
 
                                     const spriteUrl = getSpriteForRacer(originalIdx);
 
@@ -363,7 +405,7 @@ export default function CountdownTab({
                                                 paused={!timer.isRunning && !isFinished}
                                                 flipX={true}
                                             />
-                                            <div className="racer-name-tag">{racer.name}</div>
+                                            <div className={`racer-name-tag${isFinished && isFinalRaceBlock && rank <= 2 ? ` rank-${rank + 1}` : ""}`}>{racer.name}</div>
                                         </div>
                                     );
                                 })}
@@ -374,6 +416,7 @@ export default function CountdownTab({
             )}
         </>
     );
+};
 
     return (
         <div className="countdown-tab" style={{ width: "100%" }}>

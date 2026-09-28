@@ -28,6 +28,14 @@ export interface RacerJitter {
   targetOffset: number;
   speed: number;
   finalOffset: number;
+  finalRank?: number;
+  baseOffsetRatio?: number;
+  waveFreq1?: number;
+  wavePhase1?: number;
+  waveAmp1?: number;
+  waveFreq2?: number;
+  wavePhase2?: number;
+  waveAmp2?: number;
 }
 
 export interface ProjectorConfig {

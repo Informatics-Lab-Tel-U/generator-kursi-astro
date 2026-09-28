@@ -115,12 +115,25 @@ export function useRacersGlobal(initialRacers?: Racer[]) {
         (setTimer?: React.Dispatch<React.SetStateAction<TimerState>>) => {
             const shuffled = [...racers].sort(() => Math.random() - 0.5);
             const jitter: Record<string, any> = {};
-            shuffled.forEach((r, idx) => {
+            const n = Math.max(1, racers.length);
+
+            shuffled.forEach((r, rankIdx) => {
+                const normalizedRank = n > 1 ? rankIdx / (n - 1) : 0.5;
+                const baseRatio = 0.52 - (normalizedRank * 0.18) + ((Math.random() - 0.5) * 0.04);
+
                 jitter[r.id] = {
                     currentOffset: 0,
-                    targetOffset: Math.random() * 20 - 10,
-                    speed: 0.02 + Math.random() * 0.05,
-                    finalOffset: idx === 0 ? 0 : -(idx * 3) - Math.random() * 3,
+                    targetOffset: Math.random() * 16 - 8,
+                    speed: 0.03 + Math.random() * 0.04,
+                    finalOffset: rankIdx === 0 ? 0 : -(rankIdx * 3) - Math.random() * 2,
+                    finalRank: rankIdx,
+                    baseOffsetRatio: Math.max(0.30, Math.min(0.58, baseRatio)),
+                    waveFreq1: 0.18 + Math.random() * 0.14,
+                    wavePhase1: (rankIdx * 1.7 + Math.random() * 1.5) % (Math.PI * 2),
+                    waveAmp1: 35 + Math.random() * 25,
+                    waveFreq2: 0.45 + Math.random() * 0.35,
+                    wavePhase2: (rankIdx * 2.3 + Math.random() * 2.0) % (Math.PI * 2),
+                    waveAmp2: 12 + Math.random() * 12,
                 };
             });
             return {
