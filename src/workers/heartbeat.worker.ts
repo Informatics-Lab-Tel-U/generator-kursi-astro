@@ -38,16 +38,18 @@ const postHeartbeat = async (
             headers,
             body: payloadBody,
             keepalive,
+            signal: AbortSignal.timeout(5000), // Timeout 5 detik
         });
 
         // Catat latensi HANYA untuk siklus online reguler
-        if (status === 'online') {
+        if (status === 'online' && res.ok) {
             lastResponseTimeMs = Math.round(performance.now() - startTime);
         }
-    } catch (error) {
+    } catch (error: any) {
         lastResponseTimeMs = null;
         if (!silentError) {
-            console.error("[Worker Monitoring] Gagal mengirim heartbeat:", error);
+            // Log error tapi jangan crash
+            console.error("[Worker Monitoring] Gagal mengirim heartbeat:", error?.message || error);
         }
     }
 };

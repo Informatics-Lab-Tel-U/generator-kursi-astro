@@ -17,14 +17,23 @@ async function checkMaintenanceMode(): Promise<boolean> {
     return maintenanceCache.isMaintenance
   }
   try {
-    const res = await fetch(`${BACKEND_URL}/api/system/maintenance?app=generator_kursi`)
-    if (!res.ok) return false
-    const data: any = await res.json()
-    const isMaintenance = !!(data?.active ?? data?.maintenance)
-    maintenanceCache = { isMaintenance, expiry: now + CACHE_TTL_MS }
-    return isMaintenance
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 2_500)
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/system/maintenance?app=generator_kursi`, {
+        signal: controller.signal,
+      })
+      clearTimeout(timeoutId)
+      if (!res.ok) return false
+      const data: any = await res.json()
+      const isMaintenance = !!(data?.active ?? data?.maintenance)
+      maintenanceCache = { isMaintenance, expiry: now + CACHE_TTL_MS }
+      return isMaintenance
+    } finally {
+      clearTimeout(timeoutId)
+    }
   } catch {
-    // Graceful fallback: if backend unreachable, assume not in maintenance
+    // Graceful fallback: backend unreachable / timeout → lanjutkan tanpa maintenance
     return false
   }
 }
@@ -86,6 +95,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
 
     const response = await next();
+    
+    // WebSocket upgrade responses (status 101) cannot be recreated with new Response()
+    // Return them directly without modification
+    if (response.status === 101) {
+      return response;
+    }
+    
     const headers = new Headers(response.headers);
     if (corsOrigin) {
       headers.set("Access-Control-Allow-Origin", corsOrigin);

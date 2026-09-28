@@ -1,7 +1,8 @@
 import type { APIRoute } from "astro";
 import { parse } from "node-html-parser";
-import { leaderboardStore, lastHtmlStore } from "../../lib/store";
-import { saveLeaderboardData, normalizeRoomId } from "../../lib/leaderboardStorage";
+import { lastHtmlStore, leaderboardStore } from "../../lib/store";
+import { normalizeRoomId } from "../../lib/leaderboardStorage";
+import { env } from "cloudflare:workers";
 
 
 export const prerender = false;
@@ -185,12 +186,27 @@ export const POST: APIRoute = async ({ request, url }) => {
             }
         }
 
-        const { kvSaved } = await saveLeaderboardData(room, data);
+        let doPushed = false;
+        const do_ = env.LEADERBOARD_DO;
+        if (do_) {
+            try {
+                const doId = do_.idFromName(room);
+                const stub = do_.get(doId);
+                await stub.fetch(new Request("https://do/", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ data }),
+                }));
+                doPushed = true;
+            } catch (e) {
+                console.warn("[LeaderboardDO] push error:", e);
+            }
+        }
 
-        return new Response(JSON.stringify({ 
-            success: true, 
-            count: data.length, 
-            kvSaved 
+        return new Response(JSON.stringify({
+            success: true,
+            count: data.length,
+            doPushed,
         }), {
             status: 200,
             headers: {
@@ -201,7 +217,7 @@ export const POST: APIRoute = async ({ request, url }) => {
     } catch (e) {
         return new Response(JSON.stringify({ error: "Server Error", details: String(e) }), {
             status: 500,
-            headers: { 
+            headers: {
                 "Content-Type": "application/json",
                 "Access-Control-Allow-Origin": "*"
             }

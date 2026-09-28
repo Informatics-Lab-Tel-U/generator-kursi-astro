@@ -1,11 +1,10 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "generator-kursi-v2",
-  "main": "@astrojs/cloudflare/entrypoints/server",
+  "main": "src/worker.ts",
   "compatibility_date": "2025-01-01",
   "compatibility_flags": [
-    "nodejs_compat",
-    "global_fetch_strictly_public"
+    "nodejs_compat"
   ],
   "assets": {
     "directory": "./dist/client"
@@ -13,6 +12,20 @@
   "observability": {
     "enabled": true
   },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "LEADERBOARD_DO",
+        "class_name": "LeaderboardDO"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_classes": ["LeaderboardDO"]
+    }
+  ],
   "kv_namespaces": [
     {
       "binding": "LEADERBOARD_KV",

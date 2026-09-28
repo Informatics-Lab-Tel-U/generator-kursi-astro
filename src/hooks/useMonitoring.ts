@@ -53,6 +53,13 @@ export function useMonitoring(matkul: string, kelas: string) {
     useEffect(() => {
         if (!labId || !workerRef.current) return;
 
+        // Skip monitoring in dev mode if backend is not running
+        const isDev = import.meta.env.DEV;
+        if (isDev) {
+            console.warn("[Monitoring] Heartbeat disabled in dev mode. Backend must be running on port 8787.");
+            // Optionally, you can still try to send heartbeat but fail silently
+        }
+
         // Heartbeat dikirim via internal server proxy Astro — tanpa API Key di browser
         // Gabungkan matkul + kelas → "Kalkulus | IK-01-01", atau hanya kelas jika matkul kosong
         const kelasLabel = matkul && kelas

@@ -14,7 +14,7 @@ if (isDockerBuild) {
 } else {
   const { default: cloudflare } = await import('@astrojs/cloudflare');
   adapter = cloudflare({
-    sessionKVBindingName: 'LEADERBOARD_KV',
+    // Do not use sessionKVBindingName - LEADERBOARD_KV is for leaderboard data, not sessions
   });
 }
 

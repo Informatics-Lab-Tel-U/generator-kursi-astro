@@ -65,70 +65,80 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
         setLastUpdated(null);
         setIsConnected(false);
 
-        // Jangan polling jika room tidak valid atau strip
-        if (!room || room === "-") {
+        if (!room || room === "-") return;
+
+        // Skip WebSocket in dev mode - Durable Objects tidak tersedia di Miniflare
+        const isDev = import.meta.env.DEV;
+        if (isDev) {
+            console.warn("[LeaderboardView] WebSocket disabled in dev mode. Use 'npm run preview:cf' to test Durable Objects.");
             return;
         }
 
-        let consecutiveErrors = 0;
-        const MAX_ERRORS = 3; // Berhenti polling setelah 3x gagal berturut-turut
-        let intervalId: ReturnType<typeof setInterval> | null = null;
+        let ws: WebSocket | null = null;
+        let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+        let unmounted = false;
 
-        const fetchData = async () => {
-            // Jangan fetch saat tab tidak aktif — hemat resource & cegah request menumpuk
-            if (document.visibilityState === "hidden") return;
+        const connect = () => {
+            if (unmounted) return;
 
-            try {
-                const response = await fetch(`/api/leaderboard?room=${encodeURIComponent(activeRoom)}`);
-                if (response.ok) {
-                    const incomingData = await response.json();
-                    if (Array.isArray(incomingData)) {
-                        setRealtimeData(incomingData);
+            const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+            const wsUrl = `${protocol}//${location.host}/api/leaderboard?room=${encodeURIComponent(activeRoom)}`;
+            console.log(`[LeaderboardView] 🔌 Connecting WebSocket to: ${wsUrl}`);
+            
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log(`[LeaderboardView] ✅ WebSocket connected successfully to room: ${activeRoom}`);
+                setIsConnected(true);
+                try {
+                    ws?.send(JSON.stringify({ type: "GET" }));
+                    console.log(`[LeaderboardView] 📤 Sent initial GET request for leaderboard data`);
+                } catch (e) {
+                    console.error(`[LeaderboardView] ❌ Failed to send initial GET:`, e);
+                }
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const msg = JSON.parse(event.data as string) as { type: string; data: any[] };
+                    if ((msg.type === "INIT" || msg.type === "UPDATE") && Array.isArray(msg.data)) {
+                        console.log(`[LeaderboardView] 📥 Received ${msg.type} with ${msg.data.length} entries`);
+                        setRealtimeData(msg.data);
                         const now = new Date();
                         setLastUpdated(now.toLocaleTimeString());
                         setLastUpdateDate(now);
                         setIsDataStale(false);
-                        setIsConnected(true);
-                        consecutiveErrors = 0; // Reset error counter saat berhasil
                     }
-                } else {
-                    consecutiveErrors++;
-                    setIsConnected(false);
-                    // Setelah MAX_ERRORS kali gagal, hentikan polling & tampilkan status
-                    if (consecutiveErrors >= MAX_ERRORS && intervalId) {
-                        clearInterval(intervalId);
-                        intervalId = null;
-                    }
+                } catch (e) {
+                    console.error(`[LeaderboardView] ❌ Failed to parse message:`, e);
                 }
-            } catch (error) {
-                console.error("Failed fetching leaderboard data:", error);
-                consecutiveErrors++;
+            };
+
+            ws.onclose = () => {
+                console.log(`[LeaderboardView] 🔌 WebSocket disconnected from room: ${activeRoom}`);
                 setIsConnected(false);
-                if (consecutiveErrors >= MAX_ERRORS && intervalId) {
-                    clearInterval(intervalId);
-                    intervalId = null;
+                if (!unmounted) {
+                    console.log(`[LeaderboardView] 🔄 Attempting to reconnect in 3 seconds...`);
+                    reconnectTimer = setTimeout(connect, 3000);
                 }
-            }
+            };
+
+            ws.onerror = (error) => {
+                console.error(`[LeaderboardView] ❌ WebSocket error:`, error);
+                setIsConnected(false);
+                ws?.close();
+            };
         };
 
-        fetchData();
-        // Polling setiap 5 detik — selaras dengan interval script Moodle (5s),
-        // sehingga setiap push Moodle akan terdeteksi pada polling berikutnya.
-        intervalId = setInterval(fetchData, 5000);
-
-        // Ketika tab kembali aktif setelah diminimize/background, langsung fetch seketika
-        const onVisibilityChange = () => {
-            if (document.visibilityState === "visible") {
-                fetchData();
-            }
-        };
-        document.addEventListener("visibilitychange", onVisibilityChange);
+        connect();
 
         return () => {
-            if (intervalId) clearInterval(intervalId);
-            document.removeEventListener("visibilitychange", onVisibilityChange);
+            unmounted = true;
+            if (reconnectTimer) clearTimeout(reconnectTimer);
+            if (ws) ws.close();
         };
     }, [activeRoom]);
+
 
 
     useEffect(() => {
