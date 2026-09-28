@@ -53,6 +53,27 @@
   display: inline-block;
 }
 
+.tiptap-toolbar .tiptap-fontsize-btn {
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.tiptap-fontsize-input {
+  -moz-appearance: textfield;
+}
+
+.tiptap-fontsize-input::-webkit-outer-spin-button,
+.tiptap-fontsize-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 /* ── Editor Content ── */
 .tiptap {
   padding: 20px 24px;
