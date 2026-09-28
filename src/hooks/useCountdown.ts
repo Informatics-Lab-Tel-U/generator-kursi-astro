@@ -144,60 +144,119 @@ export function useMoodleScript(kelas: string) {
         return `(async function () {
   const API_BASE = "${origin}";
   const ROOM = "${kelas || "default"}";
+  const INTERVAL_MS = 5000;
 
-  let lastHtml = "";
+  let lastFingerprint = null;
+  let isSyncing = false;
+
+  function normalizeText(text) {
+    return (text || "")
+      .replace(/\\s+/g, " ")
+      .trim();
+  }
 
   async function getAttemptsElement() {
     try {
-      const res = await fetch(window.location.href, { cache: "no-cache" });
-      if (res.ok) {
-        const text = await res.text();
-        const doc = new DOMParser().parseFromString(text, "text/html");
-        const el = doc.getElementById("attempts") || doc.querySelector("#tablecontainer") || doc.querySelector("table.generaltable");
-        if (el) return { el, isFresh: true };
+      const res = await fetch(window.location.href, {
+        cache: "no-cache",
+        credentials: "same-origin"
+      });
+      if (!res.ok) {
+        throw new Error(\`Moodle HTTP \${res.status}\`);
       }
-    } catch (e) {
-      console.warn("[Leaderboard Sync] Gagal background fetch Moodle, fallback ke DOM:", e);
+      const text = await res.text();
+      const doc = new DOMParser().parseFromString(text, "text/html");
+      const table =
+        doc.getElementById("attempts") ||
+        doc.querySelector("#tablecontainer") ||
+        doc.querySelector("table.generaltable");
+      if (table) return table;
+    } catch (error) {
+      console.warn(
+        "[Leaderboard Sync] Fetch Moodle gagal, memakai DOM aktif.",
+        error
+      );
     }
-    const liveEl = document.getElementById("attempts") || document.querySelector("#tablecontainer") || document.querySelector("table.generaltable");
-    return { el: liveEl, isFresh: false };
+    return (
+      document.getElementById("attempts") ||
+      document.querySelector("#tablecontainer") ||
+      document.querySelector("table.generaltable")
+    );
+  }
+
+  function makeFingerprintData(table) {
+    return [...table.querySelectorAll("tbody tr")]
+      .map((row) =>
+        [...row.querySelectorAll("th, td")]
+          .map((cell) => normalizeText(cell.textContent))
+      )
+      .filter((cells) => cells.length > 0 && cells.some(Boolean));
+  }
+
+  async function hash(value) {
+    const bytes = new TextEncoder().encode(JSON.stringify(value));
+    const digest = await crypto.subtle.digest("SHA-256", bytes);
+    return Array.from(new Uint8Array(digest))
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("");
   }
 
   async function sendAttemptsHTML() {
+    if (isSyncing) {
+      console.log("[Leaderboard Sync] Sinkronisasi sebelumnya masih berjalan, skip.");
+      return;
+    }
+
     try {
-      const { el: attemptsElement, isFresh } = await getAttemptsElement();
+      isSyncing = true;
+      const attemptsElement = await getAttemptsElement();
       if (!attemptsElement) {
-        console.warn("[Leaderboard] Tabel kuis belum ditemukan di halaman.");
+        console.warn("[Leaderboard Sync] Tabel kuis tidak ditemukan.");
         return;
       }
 
-      const currentHtml = attemptsElement.outerHTML;
-      if (currentHtml === lastHtml) {
-        console.log("[Leaderboard Sync] HTML tidak berubah (belum ada nilai baru), skip kirim.");
+      const fingerprintData = makeFingerprintData(attemptsElement);
+      const currentFingerprint = await hash(fingerprintData);
+
+      if (currentFingerprint === lastFingerprint) {
+        console.log("[Leaderboard Sync] Data nilai tidak berubah, skip kirim.");
         return;
       }
 
-      console.log("[Leaderboard Sync] Terdeteksi data baru! Mengirim ke server...");
-      const res = await fetch(\`\${API_BASE}/api/process-html?room=\${ROOM}\`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ html: currentHtml })
-      });
-      const data = await res.json();
-      lastHtml = currentHtml;
-
-      if (isFresh) {
-        const liveContainer = document.getElementById("attempts") || document.querySelector("#tablecontainer") || document.querySelector("table.generaltable");
-        if (liveContainer && liveContainer.parentElement) {
-          liveContainer.replaceWith(attemptsElement);
+      console.log("[Leaderboard Sync] Data nilai berubah, mengirim ke server...");
+      const res = await fetch(
+        \`\${API_BASE}/api/process-html?room=\${encodeURIComponent(ROOM)}\`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            html: attemptsElement.outerHTML
+          })
         }
+      );
+
+      if (!res.ok) {
+        throw new Error(\`Leaderboard API HTTP \${res.status}\`);
       }
 
-      console.log(\`%c[Leaderboard Sync]%c Berhasil kirim \${data.count ?? 0} data ke \${ROOM}\`, "color: #22c55e; font-weight: bold", "color: auto");
-    } catch (err) { console.error("[Leaderboard Sync Error]", err); }
+      const data = await res.json();
+      lastFingerprint = currentFingerprint;
+      console.log(
+        \`%c[Leaderboard Sync]%c Berhasil kirim \${data.count ?? 0} data ke \${ROOM}\`,
+        "color: #22c55e; font-weight: bold",
+        "color: auto"
+      );
+    } catch (error) {
+      console.error("[Leaderboard Sync Error]", error);
+    } finally {
+      isSyncing = false;
+    }
   }
-  sendAttemptsHTML();
-  setInterval(sendAttemptsHTML, 5000);
+
+  await sendAttemptsHTML();
+  setInterval(sendAttemptsHTML, INTERVAL_MS);
 })();`;
     }, [kelas]);
 
