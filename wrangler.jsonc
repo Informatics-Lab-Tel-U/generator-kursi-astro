@@ -16,14 +16,15 @@
     "bindings": [
       {
         "name": "LEADERBOARD_DO",
-        "class_name": "LeaderboardDO"
+        "class_name": "LeaderboardDO",
+        "script_name": "generator-kursi-v2"
       }
     ]
   },
   "migrations": [
     {
       "tag": "v1",
-      "new_classes": ["LeaderboardDO"]
+      "new_sqlite_classes": ["LeaderboardDO"]
     }
   ],
   "kv_namespaces": [
