@@ -1,0 +1,11 @@
+# Cloudflare Pages ignore
+node_modules/
+.git/
+.vscode/
+.astro/
+dist/
+.env*
+!.env.example
+*.log
+.wrangler/
+.DS_Store

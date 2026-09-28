@@ -6,31 +6,39 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
+
   "assets": {
     "directory": "./dist/client"
   },
+
   "observability": {
     "enabled": true
   },
+
   "durable_objects": {
     "bindings": [
       {
         "name": "LEADERBOARD_DO",
-        "class_name": "LeaderboardDO",
-        "script_name": "generator-kursi-v2"
+        "class_name": "LeaderboardDO"
       }
     ]
   },
+
   "migrations": [
     {
       "tag": "v1",
       "new_sqlite_classes": ["LeaderboardDO"]
     }
   ],
+
   "kv_namespaces": [
     {
       "binding": "LEADERBOARD_KV",
       "id": "0ee4fb854bc7423f9a8d8f037e47e115"
+    },
+    {
+      "binding": "SESSION",
+      "id": "0c933bce6ad14656847c09fa5264f644"
     }
   ]
 }

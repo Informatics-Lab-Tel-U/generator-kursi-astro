@@ -14,7 +14,8 @@ if (isDockerBuild) {
 } else {
   const { default: cloudflare } = await import('@astrojs/cloudflare');
   adapter = cloudflare({
-    // Do not use sessionKVBindingName - LEADERBOARD_KV is for leaderboard data, not sessions
+    // Explicitly disable sessions - we don't use Astro sessions
+    mode: 'directory',
   });
 }
 
