@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { TextStyle, Color } from '@tiptap/extension-text-style';
 import './TiptapEditor.css';
 import { Toggle } from './ui/toggle';
 import { Button } from './ui/button';
@@ -9,6 +10,8 @@ import {
   LuBold,
   LuItalic,
   LuStrikethrough,
+  LuBaseline,
+  LuRemoveFormatting,
   LuHeading1,
   LuHeading2,
   LuHeading3,
@@ -29,7 +32,7 @@ interface Props {
 
 export default function TiptapEditor({ content, onUpdate, readOnly = false }: Props) {
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [StarterKit, TextStyle, Color],
     content,
     editable: !readOnly,
     onUpdate: ({ editor }) => {
@@ -44,6 +47,8 @@ export default function TiptapEditor({ content, onUpdate, readOnly = false }: Pr
   }, [content, editor]);
 
   if (!editor) return null;
+
+  const activeColor = (editor.getAttributes('textStyle').color as string) || '';
 
   return (
     <div className={`tiptap-wrapper rounded-lg border border-border bg-card overflow-hidden ${readOnly ? 'readonly' : ''}`}>
@@ -76,6 +81,41 @@ export default function TiptapEditor({ content, onUpdate, readOnly = false }: Pr
           >
             <LuStrikethrough className="size-3.5" />
           </Toggle>
+
+          <div className="relative inline-flex items-center">
+            <label
+              className="relative inline-flex items-center justify-center h-7 w-7 rounded-md cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
+              title="Warna Teks"
+              aria-label="Warna Teks"
+            >
+              <div className="flex flex-col items-center justify-center pointer-events-none">
+                <LuBaseline className="size-3.5" />
+                <span
+                  className="w-3.5 h-[2px] mt-0.5 rounded-full"
+                  style={{ backgroundColor: activeColor || 'currentColor' }}
+                />
+              </div>
+              <input
+                type="color"
+                value={activeColor || '#000000'}
+                onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
+                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+              />
+            </label>
+            {activeColor ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                onClick={() => editor.chain().focus().unsetColor().run()}
+                title="Hapus Warna"
+                aria-label="Hapus Warna"
+              >
+                <LuRemoveFormatting className="size-3.5" />
+              </Button>
+            ) : null}
+          </div>
 
           <Separator orientation="vertical" className="h-5 mx-1" />
 
