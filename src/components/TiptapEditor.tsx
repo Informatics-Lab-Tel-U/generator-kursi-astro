@@ -90,7 +90,7 @@ export default function TiptapEditor({ content, onUpdate, readOnly = false }: Pr
   };
 
   return (
-    <div className={`tiptap-wrapper rounded-lg border border-border bg-card overflow-hidden ${readOnly ? 'readonly' : ''}`}>
+    <div className={`tiptap-wrapper rounded-lg border border-border h-full bg-card ${readOnly ? 'readonly' : ''}`}>
       {!readOnly && (
         <div className="tiptap-toolbar flex items-center flex-wrap gap-1 p-1.5 border-b border-border bg-muted/30">
           <Toggle
@@ -328,7 +328,7 @@ export default function TiptapEditor({ content, onUpdate, readOnly = false }: Pr
           </Button>
         </div>
       )}
-      <EditorContent editor={editor} className="p-3 min-h-[200px]" />
+      <EditorContent editor={editor} className="h-full" />
     </div>
   );
 }

@@ -37,8 +37,8 @@ export default function ProjectorView() {
   const [notes, setNotes] = useState<string>("");
   const [projectorConfig, setProjectorConfig] = useState<ProjectorConfig>({
     showSeats: true,
-    showNotes: false,
-    showCountdown: false,
+    showNotes: true,
+    showCountdown: true,
   });
   const [kelas, setKelas] = useState<string>("");
   const [eligibleStudents, setEligibleStudents] = useState<Student[]>([]);
@@ -46,7 +46,7 @@ export default function ProjectorView() {
   const [activeBlockColor, setActiveBlockColor] = useState<string>("");
   const [schedule, setSchedule] = useState<ScheduleState | undefined>(undefined);
   const [activeTab, setActiveTab] = useState<'generator' | 'info'>('generator');
-  const [notesWidth, setNotesWidth] = useState(350);
+  const [notesWidth, setNotesWidth] = useState(500);
 
   useEffect(() => {
     if (!timer.isRunning) return;
@@ -161,7 +161,7 @@ export default function ProjectorView() {
     }
   }
 
-  const showInfoTab = projectorConfig.showNotes || projectorConfig.showCountdown;
+  const showInfoTab = kelas || projectorConfig.showCountdown;
 
   // Auto-switch tab if the current one gets disabled via config
   useEffect(() => {
@@ -209,7 +209,7 @@ export default function ProjectorView() {
 
   const renderInfo = () => (
     <div style={{ display: 'flex', gap: '16px', flex: 1, overflow: 'hidden' }}>
-      {projectorConfig.showNotes && (
+      {kelas && (
         <div
           className="notes-natural"
           style={{
@@ -219,12 +219,12 @@ export default function ProjectorView() {
           }}
         >
           <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-            <NotesTab notes={notes} readOnly={true} />
+            <LeaderboardView room={kelas} students={eligibleStudents} />
           </div>
         </div>
       )}
 
-      {projectorConfig.showNotes && projectorConfig.showCountdown && (
+      {kelas && projectorConfig.showCountdown && (
         <div
           onMouseDown={startDrag}
           style={{
@@ -248,36 +248,42 @@ export default function ProjectorView() {
           flex: '1 1 0',
           minWidth: 0,
           minHeight: 0,
-          display: 'flex', flexDirection: 'column', overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          overflowY: 'auto',
           gap: '16px',
         }}>
-          <div style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column' }}>
-            <CountdownTab
-              timer={timer}
-              racers={racers}
-              readOnly={true}
-              kelas={kelas}
-              eligibleStudents={eligibleStudents}
-              activeBlockLabel={activeBlockLabel}
-              activeBlockColor={activeBlockColor}
-              schedule={schedule}
-            />
-          </div>
-          {/* Leaderboard table di bawah countdown */}
-          {kelas && (
+
+          {projectorConfig.showNotes && (
             <div
               className="leaderboard-natural"
-              style={{ flex: '1 1 0', minHeight: '200px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+              style={{
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column'
+              }}
             >
-              <LeaderboardView room={kelas} students={eligibleStudents} />
+              <NotesTab notes={notes} readOnly={true} />
             </div>
           )}
+
+          <CountdownTab
+            timer={timer}
+            racers={racers}
+            readOnly={true}
+            kelas={kelas}
+            eligibleStudents={eligibleStudents}
+            activeBlockLabel={activeBlockLabel}
+            activeBlockColor={activeBlockColor}
+            schedule={schedule}
+          />
+
         </div>
       )}
     </div>
   );
 
-  if (!projectorConfig.showSeats && !projectorConfig.showNotes && !projectorConfig.showCountdown) {
+  if (!projectorConfig.showSeats && !kelas && !projectorConfig.showCountdown) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg-page)', color: 'var(--text-muted)' }}>
         <div style={{ textAlign: 'center' }}>
@@ -337,15 +343,14 @@ export default function ProjectorView() {
                 {currentBlockLabel || "Waktu Tersisa"}
               </div>
               <div
-                className={`mini-timer-time leading-none ${
-                  actuallyFinished
-                    ? "finished"
-                    : isDanger
+                className={`mini-timer-time leading-none ${actuallyFinished
+                  ? "finished"
+                  : isDanger
                     ? "danger"
                     : isWarning
-                    ? "warning"
-                    : ""
-                }`}
+                      ? "warning"
+                      : ""
+                  }`}
                 style={{ fontSize: "28px", fontWeight: 700 }}
               >
                 {isFinished ? (

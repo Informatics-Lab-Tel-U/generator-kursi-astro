@@ -54,8 +54,8 @@ function KursiGeneratorInner() {
     });
     const [projectorConfig, setProjectorConfig] = useState<ProjectorConfig>({
         showSeats: true,
-        showNotes: false,
-        showCountdown: false,
+        showNotes: true,
+        showCountdown: true,
     });
 
     const [schedule, setSchedule] = useState<ScheduleState>({

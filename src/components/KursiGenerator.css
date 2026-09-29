@@ -329,8 +329,7 @@
     transition: all var(--transition-fast);
 }
 
-.seat-column:hover {
-}
+.seat-column:hover {}
 
 .seat-column-header {
     display: grid;
@@ -485,36 +484,43 @@
     color: #1e40af;
     border: 1px solid #bfdbfe;
 }
+
 .asprak-badge-green {
     background: #f0fdf4;
     color: #166534;
     border: 1px solid #bbf7d0;
 }
+
 .asprak-badge-amber {
     background: #fffbeb;
     color: #92400e;
     border: 1px solid #fde68a;
 }
+
 .asprak-badge-purple {
     background: #faf5ff;
     color: #6b21a8;
     border: 1px solid #e9d5ff;
 }
+
 .asprak-badge-rose {
     background: #fff1f2;
     color: #9f1239;
     border: 1px solid #fecdd3;
 }
+
 .asprak-badge-cyan {
     background: #ecfeff;
     color: #155e75;
     border: 1px solid #a5f3fc;
 }
+
 .asprak-badge-indigo {
     background: #eef2ff;
     color: #3730a3;
     border: 1px solid #c7d2fe;
 }
+
 .asprak-badge-teal {
     background: #f0fdfa;
     color: #115e59;
@@ -528,42 +534,49 @@
     color: #93c5fd;
     border: 1px solid rgba(147, 197, 253, 0.3);
 }
+
 [data-theme='dark'] .asprak-badge-green,
 .dark .asprak-badge-green {
     background: rgba(22, 101, 52, 0.25);
     color: #86efac;
     border: 1px solid rgba(134, 239, 172, 0.3);
 }
+
 [data-theme='dark'] .asprak-badge-amber,
 .dark .asprak-badge-amber {
     background: rgba(180, 83, 9, 0.22);
     color: #fcd34d;
     border: 1px solid rgba(252, 211, 77, 0.3);
 }
+
 [data-theme='dark'] .asprak-badge-purple,
 .dark .asprak-badge-purple {
     background: rgba(107, 33, 168, 0.24);
     color: #d8b4fe;
     border: 1px solid rgba(216, 180, 254, 0.3);
 }
+
 [data-theme='dark'] .asprak-badge-rose,
 .dark .asprak-badge-rose {
     background: rgba(159, 18, 57, 0.22);
     color: #fda4af;
     border: 1px solid rgba(253, 164, 175, 0.3);
 }
+
 [data-theme='dark'] .asprak-badge-cyan,
 .dark .asprak-badge-cyan {
     background: rgba(21, 94, 117, 0.25);
     color: #67e8f9;
     border: 1px solid rgba(103, 232, 249, 0.3);
 }
+
 [data-theme='dark'] .asprak-badge-indigo,
 .dark .asprak-badge-indigo {
     background: rgba(55, 48, 163, 0.25);
     color: #a5b4fc;
     border: 1px solid rgba(165, 180, 252, 0.3);
 }
+
 [data-theme='dark'] .asprak-badge-teal,
 .dark .asprak-badge-teal {
     background: rgba(17, 94, 89, 0.25);
@@ -617,6 +630,11 @@
 
 .name-default {
     display: inline;
+}
+
+.ProseMirror p {
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 /* ===== Notes Tab ===== */
@@ -849,7 +867,8 @@ body.time-finished .projector-time-hud {
     border-radius: var(--radius-lg);
     overflow: hidden;
     padding: 0;
-    background: #c8e6b0; /* fallback hijau jika road tidak load */
+    background: #c8e6b0;
+    /* fallback hijau jika road tidak load */
 }
 
 /* Continuous pixel road background canvas */
@@ -869,14 +888,20 @@ body.time-finished .projector-time-hud {
     from {
         background-position-x: 0px;
     }
+
     to {
         background-position-x: calc(-1 * var(--road-tile-width, 1296px));
     }
 }
 
 @keyframes sprite-step-anim {
-    from { background-position-x: 0px; }
-    to   { background-position-x: var(--sprite-end-pos, -960px); }
+    from {
+        background-position-x: 0px;
+    }
+
+    to {
+        background-position-x: var(--sprite-end-pos, -960px);
+    }
 }
 
 .sprite-car-animation {
@@ -958,11 +983,9 @@ body.time-finished .projector-time-hud {
     right: 14px;
     width: 20px;
     height: 100%;
-    background: repeating-linear-gradient(
-        45deg,
-        #111 0,   #111 10px,
-        #fff 10px, #fff 20px
-    );
+    background: repeating-linear-gradient(45deg,
+            #111 0, #111 10px,
+            #fff 10px, #fff 20px);
     z-index: 3;
     opacity: 0.8;
 }
@@ -979,18 +1002,33 @@ body.time-finished .projector-time-hud {
 
 /* Pre-compiled F1 sprite slide keyframes for common frame widths */
 @keyframes sprite-slide-90 {
-    from { background-position: 0 0; }
-    to   { background-position: -540px 0; }
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: -540px 0;
+    }
 }
 
 @keyframes sprite-slide-160 {
-    from { background-position: 0 0; }
-    to   { background-position: -960px 0; }
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: -960px 0;
+    }
 }
 
 @keyframes sprite-slide-240 {
-    from { background-position: 0 0; }
-    to   { background-position: -1440px 0; }
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: -1440px 0;
+    }
 }
 
 /* ===== Theme Toggle ===== */
@@ -1062,9 +1100,11 @@ body.time-transition {
     --shadow-md: none !important;
     --shadow-lg: none !important;
 }
+
 body.time-transition {
     background-color: #1a73e8;
-    --bg-page: #1a73e8 !important; /* Biru primary dark mode */
+    --bg-page: #1a73e8 !important;
+    /* Biru primary dark mode */
     --bg-card: #1765cc !important;
     --bg-header: #1558b0 !important;
     --bg-row-even: rgba(255, 255, 255, 0.1) !important;
@@ -1072,9 +1112,11 @@ body.time-transition {
     --text-secondary: rgba(255, 255, 255, 0.85) !important;
     --text-muted: rgba(255, 255, 255, 0.65) !important;
 }
+
 [data-theme='light'] body.time-transition {
     background-color: #1a73e8 !important;
-    --bg-page: #1a73e8 !important; /* Biru primary light mode */
+    --bg-page: #1a73e8 !important;
+    /* Biru primary light mode */
     --bg-card: #1765cc !important;
     --bg-header: #1558b0 !important;
     --bg-row-even: rgba(0, 0, 0, 0.08) !important;
@@ -1092,9 +1134,11 @@ body.time-warning {
     --shadow-md: none !important;
     --shadow-lg: none !important;
 }
+
 body.time-warning {
     background-color: #ffaa00;
-    --bg-page: #ffaa00 !important; /* Kuning terang menyala */
+    --bg-page: #ffaa00 !important;
+    /* Kuning terang menyala */
     --bg-card: #f59e0b !important;
     --bg-header: #d97706 !important;
     --bg-row-even: rgba(255, 255, 255, 0.1) !important;
@@ -1104,14 +1148,16 @@ body.time-warning {
 }
 
 [data-theme='light'] body.time-warning {
-    --bg-page: #ffcc00 !important; /* Kuning sangat terang untuk light mode */
+    --bg-page: #ffcc00 !important;
+    /* Kuning sangat terang untuk light mode */
     --bg-card: #ffb300 !important;
     --bg-header: #ff9800 !important;
     --bg-row-even: rgba(0, 0, 0, 0.05) !important;
     --text-primary: #ffffff !important;
     --text-secondary: rgba(255, 255, 255, 0.9) !important;
     --text-muted: rgba(255, 255, 255, 0.7) !important;
-    --glass-bg: rgba(0, 0, 0, 0.15) !important; /* Menghapus efek putih susu pada kontainer */
+    --glass-bg: rgba(0, 0, 0, 0.15) !important;
+    /* Menghapus efek putih susu pada kontainer */
 }
 
 .countdown-time {
@@ -1167,6 +1213,7 @@ body.time-finished .seats-natural .seat-column {
     background-color: var(--card) !important;
     border-color: oklch(1 0 0 / 12%) !important;
 }
+
 body.time-warning .notes-natural .tiptap-toolbar,
 body.time-danger .notes-natural .tiptap-toolbar,
 body.time-transition .notes-natural .tiptap-toolbar,
@@ -1174,6 +1221,7 @@ body.time-finished .notes-natural .tiptap-toolbar {
     background-color: oklch(0.2 0 0) !important;
     border-color: oklch(1 0 0 / 12%) !important;
 }
+
 body.time-warning .notes-natural .tiptap,
 body.time-danger .notes-natural .tiptap,
 body.time-transition .notes-natural .tiptap,
@@ -1217,6 +1265,7 @@ body.time-finished .notes-natural .tiptap {
     background-color: #ffffff !important;
     border-color: rgba(0, 0, 0, 0.08) !important;
 }
+
 [data-theme='light'] body.time-warning .notes-natural .tiptap-toolbar,
 [data-theme='light'] body.time-danger .notes-natural .tiptap-toolbar,
 [data-theme='light'] body.time-transition .notes-natural .tiptap-toolbar,
@@ -1224,6 +1273,7 @@ body.time-finished .notes-natural .tiptap {
     background-color: #f8f9fa !important;
     border-color: rgba(0, 0, 0, 0.06) !important;
 }
+
 [data-theme='light'] body.time-warning .notes-natural .tiptap,
 [data-theme='light'] body.time-danger .notes-natural .tiptap,
 [data-theme='light'] body.time-transition .notes-natural .tiptap,
@@ -1367,17 +1417,21 @@ body.time-danger {
     --shadow-md: none !important;
     --shadow-lg: none !important;
 }
+
 body.time-danger {
     background-color: #ef4444;
-    --bg-page: #ef4444 !important; /* Merah menyala */
-    --bg-card: #dc2626 !important; 
-    --bg-header: #b91c1c !important; 
+    --bg-page: #ef4444 !important;
+    /* Merah menyala */
+    --bg-card: #dc2626 !important;
+    --bg-header: #b91c1c !important;
     --bg-row-even: rgba(255, 255, 255, 0.1) !important;
 }
+
 [data-theme='light'] body.time-danger {
-    --bg-page: #ff1a1a !important; /* Merah sangat silau untuk light mode */
-    --bg-card: #ff4d4d !important; 
-    --bg-header: #ff6666 !important; 
+    --bg-page: #ff1a1a !important;
+    /* Merah sangat silau untuk light mode */
+    --bg-card: #ff4d4d !important;
+    --bg-header: #ff6666 !important;
     --bg-row-even: rgba(0, 0, 0, 0.05) !important;
     --text-primary: #ffffff !important;
     --text-secondary: rgba(255, 255, 255, 0.9) !important;
@@ -1398,17 +1452,21 @@ body.time-finished {
     --shadow-md: none !important;
     --shadow-lg: none !important;
 }
+
 body.time-finished {
     background-color: #00cc44;
-    --bg-page: #00cc44 !important; /* Hijau terang menyala */
-    --bg-card: #00b33c !important; 
-    --bg-header: #009933 !important; 
+    --bg-page: #00cc44 !important;
+    /* Hijau terang menyala */
+    --bg-card: #00b33c !important;
+    --bg-header: #009933 !important;
     --bg-row-even: rgba(255, 255, 255, 0.1) !important;
 }
+
 [data-theme='light'] body.time-finished {
-    --bg-page: #00e64d !important; /* Hijau sangat terang (neon) */
-    --bg-card: #33ff77 !important; 
-    --bg-header: #66ff99 !important; 
+    --bg-page: #00e64d !important;
+    /* Hijau sangat terang (neon) */
+    --bg-card: #33ff77 !important;
+    --bg-header: #66ff99 !important;
     --bg-row-even: rgba(0, 0, 0, 0.05) !important;
     --text-primary: #ffffff !important;
     --text-secondary: rgba(255, 255, 255, 0.9) !important;
@@ -1522,13 +1580,9 @@ body.time-finished {
     right: 14px;
     width: 20px;
     height: 100%;
-    background: repeating-linear-gradient(
-        45deg,
-        #111 0,   #111 10px,
-        #fff 10px, #fff 20px
-    );
+    background: repeating-linear-gradient(45deg,
+            #111 0, #111 10px,
+            #fff 10px, #fff 20px);
     z-index: 3;
     opacity: 0.75;
 }
-
-

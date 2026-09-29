@@ -141,7 +141,7 @@ export default function CountdownTab({
         const { jitter, startTimer } = startRace(setTimer);
         jitterMapRef.current = jitter;
         // Sync jitter ke proyektor via localStorage (BroadcastChannel tidak membawa jitter)
-        try { localStorage.setItem("asprak_race_jitter", JSON.stringify(jitter)); } catch {}
+        try { localStorage.setItem("asprak_race_jitter", JSON.stringify(jitter)); } catch { }
         startTimer();
     };
 
@@ -155,10 +155,10 @@ export default function CountdownTab({
         isFinished && isLastBlock
             ? "finished-final"
             : isFinished && nextBlock
-            ? "finished-next"
-            : timer.isRunning
-            ? "running"
-            : "idle";
+                ? "finished-next"
+                : timer.isRunning
+                    ? "running"
+                    : "idle";
 
     const isProjectorWithRace = Boolean(readOnly && racers && racers.length > 0);
 
@@ -199,7 +199,7 @@ export default function CountdownTab({
             if (hasAllRacers) {
                 jitterMapRef.current = { ...stored };
             }
-        } catch {}
+        } catch { }
     }, [timer.startedAt, timer.isRunning, racers]);
 
     // Observe race-track container width for accurate car layout
@@ -385,38 +385,38 @@ export default function CountdownTab({
                                         let carLeftPx = gridBase * wGrid + raceBase * wRace + finishBase * wFinish;
                                         carLeftPx = Math.max(16, Math.min(carLeftPx, trackWidth - 175));
 
-                                    const spriteUrl = getSpriteForRacer(originalIdx);
+                                        const spriteUrl = getSpriteForRacer(originalIdx);
 
-                                    return (
-                                        <div
-                                            key={racer.id}
-                                            className="racer-vehicle"
-                                            style={{
-                                                transform: `translate3d(${Math.round(carLeftPx)}px, -50%, 0)`,
-                                                zIndex: 10 + slotIdx,
-                                            }}
-                                        >
-                                            <SpriteAnimation
-                                                src={spriteUrl}
-                                                frameWidth={160}
-                                                frameHeight={50}
-                                                totalFrames={6}
-                                                frameRate={9}
-                                                paused={!timer.isRunning && !isFinished}
-                                                flipX={true}
-                                            />
-                                            <div className={`racer-name-tag${isFinished && isFinalRaceBlock && rank <= 2 ? ` rank-${rank + 1}` : ""}`}>{racer.name}</div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
-        </>
-    );
-};
+                                        return (
+                                            <div
+                                                key={racer.id}
+                                                className="racer-vehicle"
+                                                style={{
+                                                    transform: `translate3d(${Math.round(carLeftPx)}px, -50%, 0)`,
+                                                    zIndex: 10 + slotIdx,
+                                                }}
+                                            >
+                                                <SpriteAnimation
+                                                    src={spriteUrl}
+                                                    frameWidth={160}
+                                                    frameHeight={50}
+                                                    totalFrames={6}
+                                                    frameRate={9}
+                                                    paused={!timer.isRunning && !isFinished}
+                                                    flipX={true}
+                                                />
+                                                <div className={`racer-name-tag${isFinished && isFinalRaceBlock && rank <= 2 ? ` rank-${rank + 1}` : ""}`}>{racer.name}</div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </>
+        );
+    };
 
     return (
         <div className="countdown-tab" style={{ width: "100%" }}>
