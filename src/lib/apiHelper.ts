@@ -1,4 +1,4 @@
-const FETCH_TIMEOUT_MS = 10_000; // 10 detik
+const FETCH_TIMEOUT_MS = 10_000; 
 
 export async function fetchBackendApi(
     pathAndQuery: string,

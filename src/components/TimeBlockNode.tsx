@@ -35,22 +35,22 @@ function calcDuration(start: string, end: string): string {
 function TimeBlockNode({ id, data }: NodeProps) {
     const d = data as unknown as TimeBlockNodeData;
 
-    // Refs untuk input agar sepenuhnya uncontrolled selama pengguna mengetik keyboard
+    
     const labelRef = useRef<HTMLInputElement>(null);
     const startRef = useRef<HTMLInputElement>(null);
     const endRef = useRef<HTMLInputElement>(null);
 
-    // Track apakah input sedang difokuskan pengguna
+    
     const isFocusedLabel = useRef(false);
     const isFocusedStart = useRef(false);
     const isFocusedEnd = useRef(false);
 
-    // State durasi dan label preview lokal untuk tampilan badge & header
+    
     const [duration, setDuration] = useState(() => calcDuration(d.startTime, d.endTime));
     const [displayLabel, setDisplayLabel] = useState(d.label);
 
-    // Sinkronisasi data dari luar (misal saat template diterapkan atau jadwal di-reset)
-    // HANYA jika input sedang TIDAK aktif difokuskan pengguna
+    
+    
     useEffect(() => {
         if (labelRef.current && !isFocusedLabel.current) {
             labelRef.current.value = d.label;
@@ -68,12 +68,12 @@ function TimeBlockNode({ id, data }: NodeProps) {
         setDuration(calcDuration(d.startTime, d.endTime));
     }, [d.startTime, d.endTime]);
 
-    // Menghentikan event bubbling ke React Flow canvas
+    
     const stopPropagation = useCallback((e: React.SyntheticEvent) => {
         e.stopPropagation();
     }, []);
 
-    // Handlers untuk input label
+    
     const handleLabelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setDisplayLabel(e.target.value);
     };
@@ -86,7 +86,7 @@ function TimeBlockNode({ id, data }: NodeProps) {
         }
     };
 
-    // Handlers untuk input waktu Mulai
+    
     const handleStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const currentEnd = endRef.current?.value || d.endTime;
         setDuration(calcDuration(e.target.value, currentEnd));
@@ -103,7 +103,7 @@ function TimeBlockNode({ id, data }: NodeProps) {
         }
     };
 
-    // Handlers untuk input waktu Selesai
+    
     const handleEndChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const currentStart = startRef.current?.value || d.startTime;
         setDuration(calcDuration(currentStart, e.target.value));
@@ -144,7 +144,7 @@ function TimeBlockNode({ id, data }: NodeProps) {
         >
             <Handle type="target" position={Position.Left} />
 
-            {/* Header dengan nama blok */}
+            {}
             <div className="time-block-node__header">
                 <input
                     ref={labelRef}
@@ -176,7 +176,7 @@ function TimeBlockNode({ id, data }: NodeProps) {
                 </Button>
             </div>
 
-            {/* Time inputs */}
+            {}
             <div className="time-block-node__times">
                 <div className="time-block-node__time-field">
                     <span className="time-block-node__time-label">Mulai</span>
@@ -211,7 +211,7 @@ function TimeBlockNode({ id, data }: NodeProps) {
                 </div>
             </div>
 
-            {/* Duration badge */}
+            {}
             <div className="time-block-node__footer">
                 <LuClock className="size-3 opacity-70" />
                 <span>{duration}</span>

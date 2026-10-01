@@ -85,7 +85,6 @@ export default function ProjectorView() {
   const actuallyDanger = isDanger && !dangerForcedOff && !actuallyFinished;
   const actuallyWarning = isWarning && !warningForcedOff && !actuallyDanger && !actuallyFinished;
 
-  // Sync background body class untuk tampilan proyektor fullscreen di SEMUA tab (termasuk Posisi Duduk)
   useEffect(() => {
     const allStates = ["time-finished", "time-transition", "time-danger", "time-warning"];
     const remove = (...cls: string[]) => cls.forEach((c) => document.body.classList.remove(c));
@@ -169,7 +168,6 @@ export default function ProjectorView() {
   const activeTabsCount = [showSeatsTab, showInfoTab, showNotesTab].filter(Boolean).length;
   const hasTabs = activeTabsCount > 1;
 
-  // Auto-switch tab if the current one gets disabled via config
   useEffect(() => {
     if (activeTab === 'generator' && !showSeatsTab) {
       setActiveTab(showInfoTab ? 'info' : (showNotesTab ? 'notes' : 'generator'));
@@ -218,7 +216,7 @@ export default function ProjectorView() {
   const hasRightColumn = Boolean(projectorConfig.showNotes || projectorConfig.showCountdown);
 
   const renderInfo = () => (
-    <div style={{ display: 'flex', gap: '16px', flex: 1, overflow: 'hidden' }}>
+    <div style={{ display: 'flex', gap: '4px', flex: 1, overflow: 'hidden' }}>
       {kelas && (
         <div
           className="leaderboard-natural"
@@ -230,10 +228,14 @@ export default function ProjectorView() {
             height: '100%',
             maxHeight: '100%',
             minHeight: 0,
-            overflow: 'hidden'
+            overflow: 'hidden',
+            borderRadius: '12px',
+            border: '1px solid var(--border)',
+            boxSizing: 'border-box',
+            marginRight: '2px'
           }}
         >
-          <LeaderboardView room={kelas} students={eligibleStudents} />
+          <LeaderboardView room={kelas} students={eligibleStudents} showBorder={false} />
         </div>
       )}
 
@@ -241,18 +243,19 @@ export default function ProjectorView() {
         <div
           onMouseDown={startDrag}
           style={{
-            width: '12px',
+            width: '6px',
             cursor: 'col-resize',
             background: 'transparent',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0,
-            margin: '0 -6px',
-            zIndex: 10
+            margin: '0 0 0 1px',
+            zIndex: 10,
+            padding: '0'
           }}
         >
-          <div style={{ width: '4px', height: '32px', background: 'var(--border)', borderRadius: '2px' }}></div>
+          <div style={{ width: '1px', height: '28px', background: 'var(--border)', borderRadius: '999px' }}></div>
         </div>
       )}
 
@@ -322,7 +325,6 @@ export default function ProjectorView() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '16px 16px', boxSizing: 'border-box', background: 'var(--bg-page)', position: 'relative' }}>
-      {/* Top bar untuk Tabs switcher dan Mini Timer */}
       {hasTopBar && (
         <div style={{
           position: 'relative',
@@ -392,7 +394,6 @@ export default function ProjectorView() {
         </div>
       )}
 
-      {/* Kontainer tab: ketiganya tetap di-mount untuk menjaga koneksi WebSocket dan state */}
       <div style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden' }}>
         {showSeatsTab && (
           <div

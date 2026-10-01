@@ -2,10 +2,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import type { TimerState, Racer, ScheduleState } from "../components/types";
 import { TIMER_WARNING_MS, TIMER_DANGER_MS, AUTO_ADVANCE_DELAY_MS } from "../components/scheduleConfig";
 
-/**
- * Logika blink effect yang reusable untuk warning dan danger states.
- * Saat `active` berubah dari false → true, memicu 5 kali toggle dalam 2.5 detik.
- */
 export function useBlinkEffect(active: boolean): boolean {
     const prevRef = useRef(active);
     const [forcedOff, setForcedOff] = useState(false);
@@ -30,9 +26,6 @@ export function useBlinkEffect(active: boolean): boolean {
     return forcedOff;
 }
 
-/**
- * Menghitung state countdown timer: remainMs, timerRatio, isWarning, isDanger, isFinished.
- */
 export function useCountdownTimer(timer: TimerState, now: Date) {
     const startD = new Date();
     const [sh, sm] = timer.startTime.split(":").map(Number);
@@ -58,9 +51,6 @@ export function useCountdownTimer(timer: TimerState, now: Date) {
     return { remainMs, timerRatio, totalSecs, endD, isWarning, isDanger, isFinished };
 }
 
-/**
- * Mengelola state racer: tambah, hapus, upload gambar.
- */
 export function useRacers(
     racers: Racer[],
     setRacers?: React.Dispatch<React.SetStateAction<Racer[]>>
@@ -131,9 +121,6 @@ export function useRacers(
     return { newRacerName, setNewRacerName, addRacer, removeRacer, startRace, handleRacerImageUpload };
 }
 
-/**
- * Menghasilkan script Moodle Leaderboard dan menangani copy ke clipboard.
- */
 export function useMoodleScript(kelas: string) {
     const [isCopied, setIsCopied] = useState(false);
     const [showScript, setShowScript] = useState(false);
@@ -269,17 +256,6 @@ export function useMoodleScript(kelas: string) {
     return { isCopied, showScript, setShowScript, generateScript, copyScript };
 }
 
-/**
- * Hook background auto-advance untuk schedule timeline.
- * Berjalan terus di root component (KursiGenerator), sehingga tetap memicu
- * perpindahan sesi otomatis meskipun user berpindah ke tab lain (Seats, Notes, dll).
- *
- * Implementasi: setTimeout presisi + visibilitychange listener.
- * Alasan: setInterval repeating (500ms) menyebabkan Chrome "Intensive Throttling"
- * saat tab hidden >5 menit → delay hingga 1 menit. setTimeout one-shot hanya kena
- * "Throttling" biasa (1 detik), dan visibilitychange memastikan advance langsung
- * saat tab diklik kembali. (Ref: MDN Page Visibility API, Window.setTimeout)
- */
 export function useScheduleAutoAdvance({
     schedule,
     setSchedule,
@@ -301,7 +277,6 @@ export function useScheduleAutoAdvance({
             return;
         }
 
-        // Hitung endTime sesi saat ini sebagai Date object
         const getEndDate = () => {
             const endD = new Date();
             const [eh, em] = timer.endTime.split(":").map(Number);
@@ -309,16 +284,13 @@ export function useScheduleAutoAdvance({
             const startD = new Date();
             const [sh, sm] = timer.startTime.split(":").map(Number);
             startD.setHours(sh || 0, sm || 0, 0, 0);
-            // Handle midnight crossing
             if (endD.getTime() < startD.getTime()) endD.setDate(endD.getDate() + 1);
             return endD;
         };
 
-        // Lakukan advance ke blok berikutnya, skip blok yang jamnya sudah lewat
         const tryAdvance = () => {
             const remainMs = Math.max(0, getEndDate().getTime() - Date.now());
             if (remainMs > 0) {
-                // Belum waktunya — reset guard agar bisa di-cek ulang nanti
                 hasAutoAdvancedRef.current = false;
                 return;
             }
@@ -326,7 +298,6 @@ export function useScheduleAutoAdvance({
 
             const activeBlockIdx = schedule.blocks.findIndex((b) => b.id === schedule.activeBlockId);
 
-            // Cari block berikutnya yang belum expired (endTime-nya masih di masa depan)
             let targetBlock: typeof schedule.blocks[0] | null = null;
             for (let i = activeBlockIdx + 1; i < schedule.blocks.length; i++) {
                 const candidate = schedule.blocks[i];
@@ -341,11 +312,9 @@ export function useScheduleAutoAdvance({
                     targetBlock = candidate;
                     break;
                 }
-                // Block ini sudah expired — skip, lanjut cari berikutnya
             }
 
             if (!targetBlock) {
-                // Semua block berikutnya sudah expired atau tidak ada — hentikan timer
                 return;
             }
 
@@ -362,16 +331,12 @@ export function useScheduleAutoAdvance({
             }, AUTO_ADVANCE_DELAY_MS);
         };
 
-        // Cek langsung saat mount (menangkap kasus tab baru dibuka setelah sesi lewat)
         tryAdvance();
         if (hasAutoAdvancedRef.current) return;
 
-        // Set setTimeout presisi ke saat sesi berakhir
         const remainMs = Math.max(0, getEndDate().getTime() - Date.now());
         const timeoutId = setTimeout(tryAdvance, remainMs);
 
-        // visibilitychange safety net: saat tab aktif kembali, langsung cek
-        // (menangkap kasus tab throttled saat background dan tryAdvance terlambat)
         const handleVisibilityChange = () => {
             if (document.visibilityState === "visible") {
                 tryAdvance();

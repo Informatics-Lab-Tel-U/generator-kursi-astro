@@ -49,7 +49,7 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Light theme — Google Blue accent */
+
 :root {
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
@@ -57,7 +57,7 @@
     --card-foreground: oklch(0.145 0 0);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
-    /* Google Blue #1a73e8 */
+    
     --primary: oklch(0.52 0.105 223.128);
     --primary-foreground: oklch(0.984 0.019 200.873);
     --secondary: oklch(0.967 0.001 286.375);
@@ -85,7 +85,7 @@
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.708 0 0);
 
-    /* ===== Legacy CSS var aliases (KursiGenerator.css compat) ===== */
+    
     --text-primary: var(--foreground);
     --text-secondary: var(--muted-foreground);
     --text-muted: var(--muted-foreground);
@@ -120,11 +120,11 @@
     --transition-fast: 150ms ease;
     --transition-normal: 250ms cubic-bezier(0.2, 0, 0, 1);
     --transition-slow: 400ms cubic-bezier(0.2, 0, 0, 1);
-    /* Browser-native UI (time input picker, scrollbar, select) default light mode */
+    
     color-scheme: light;
 }
 
-/* Dark theme — Google Blue adapted (#8ab4f8) */
+
 [data-theme="dark"] {
     --background: oklch(0.13 0 0);
     --foreground: oklch(0.9 0 0);
@@ -132,7 +132,7 @@
     --card-foreground: oklch(0.9 0 0);
     --popover: oklch(0.17 0 0);
     --popover-foreground: oklch(0.9 0 0);
-    /* Google Blue dark #8ab4f8 */
+    
     --primary: oklch(0.74 0.13 255.4);
     --primary-foreground: oklch(0.13 0 0);
     --secondary: oklch(0.22 0 0);
@@ -159,7 +159,7 @@
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.74 0.13 255.4);
 
-    /* ===== Legacy CSS var aliases (KursiGenerator.css compat) — dark ===== */
+    
     --text-primary: var(--foreground);
     --text-secondary: var(--muted-foreground);
     --text-muted: var(--muted-foreground);
@@ -192,7 +192,7 @@
     --shadow-md: 0 4px 12px oklch(0 0 0 / 40%);
     --shadow-lg: 0 8px 24px oklch(0 0 0 / 50%);
     --transition-fast: 150ms ease;
-    /* Browser-native UI (time input picker, scrollbar, select) ikut dark mode */
+    
     color-scheme: dark;
 }
 
@@ -242,9 +242,7 @@
     --sidebar-ring: oklch(0.556 0 0);
 }
 
-/* ═══════════════════════════════════════════
-   Global Resets & Base
-   ═══════════════════════════════════════════ */
+
 *, *::before, *::after {
     box-sizing: border-box;
 }
@@ -262,7 +260,7 @@ html, body {
     transition: background var(--transition-normal), background-color 0.6s cubic-bezier(0.4, 0, 0.2, 1), color var(--transition-normal);
 }
 
-/* Custom scrollbar */
+
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -282,7 +280,7 @@ html, body {
     background-clip: padding-box;
 }
 
-/* Smooth theme transition for all themed elements */
+
 .theme-transition,
 .theme-transition *,
 .theme-transition *::before,

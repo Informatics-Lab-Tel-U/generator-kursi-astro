@@ -39,7 +39,7 @@ export const POST: APIRoute = async ({ request, url }) => {
         const rawRoom = url.searchParams.get("room") || "default";
         const room = normalizeRoomId(rawRoom);
         
-        // Security: Prevent DoS from excessively large HTML payloads (max 3 MB)
+        
         const MAX_PAYLOAD_BYTES = 3 * 1024 * 1024;
         let body: any;
         try {
@@ -63,7 +63,7 @@ export const POST: APIRoute = async ({ request, url }) => {
             });
         }
 
-        // Optimasi Cloudflare Workers: Jika HTML identik dengan sebelumnya, skip CPU-heavy parsing
+        
         if (lastHtmlStore.get(room) === html) {
             const cachedData = leaderboardStore.get(room) || [];
             return new Response(JSON.stringify({ success: true, count: cachedData.length, unchanged: true }), {
@@ -78,7 +78,7 @@ export const POST: APIRoute = async ({ request, url }) => {
 
         const root = parse(html);
         
-        // Clean up noise elements that mess up textContent extraction
+        
         root.querySelectorAll('.accesshide, .reviewlink, .commands').forEach(el => el.remove());
 
         const rows = root.querySelectorAll("tbody tr");
@@ -87,7 +87,7 @@ export const POST: APIRoute = async ({ request, url }) => {
         const data = [];
 
         for (const row of rows) {
-            // Skip empty rows and divider rows
+            
             if (row.classList.contains("emptyrow") || row.querySelector(".tabledivider")) continue;
 
             const cells = row.querySelectorAll("td");
@@ -98,7 +98,7 @@ export const POST: APIRoute = async ({ request, url }) => {
 
             cells.forEach((cell, index) => {
                 const header = headers[index] || `Column ${index}`;
-                // Some nodes like icons might still be there, but textContent will ignore them
+                
                 let text = cell.textContent.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
                 
                 rowData[header] = text;
@@ -107,7 +107,7 @@ export const POST: APIRoute = async ({ request, url }) => {
                 }
             });
 
-            // Helper to get value case-insensitively
+            
             const getValue = (...keys: string[]) => {
                 for (const k of keys) {
                     const foundKey = Object.keys(rowData).find(
@@ -118,7 +118,7 @@ export const POST: APIRoute = async ({ request, url }) => {
                 return "";
             };
 
-            // Handle standard Moodle columns across English and Indonesian LMS
+            
             const firstName = getValue("First name", "Nama depan");
             const surname = getValue("Surname", "Last name", "Nama akhir", "Nama belakang");
             if (firstName || surname) {
@@ -140,12 +140,12 @@ export const POST: APIRoute = async ({ request, url }) => {
                 if (combinedName) rowData["NAME"] = combinedName;
             }
 
-            // Exclude summary rows such as 'Overall average' or 'Rata-rata keseluruhan'
+            
             if (!rowData["NAME"] || /overall average|rata-rata/i.test(rowData["NAME"])) {
                 continue;
             }
 
-            // Translate state/status for consistency (supports English & Indonesian LMS)
+            
             const rawState = getValue("Status", "State", "Keadaan");
             if (rawState) {
                 const lower = rawState.toLowerCase();
@@ -158,20 +158,20 @@ export const POST: APIRoute = async ({ request, url }) => {
                 }
             }
 
-            // Duration / Time taken
+            
             const rawDuration = getValue("Duration", "Time taken", "Durasi", "Waktu yang diperlukan");
             if (rawDuration) {
                 rowData["TIME TAKEN"] = rawDuration;
             }
 
-            // ID number / NIM
+            
             const rawNim = getValue("ID number", "Nomor ID", "NIM");
             if (rawNim) {
                 rowData["NIM"] = rawNim;
                 rowData["ID NUMBER"] = rawNim;
             }
 
-            // Grade
+            
             const gradeKey = Object.keys(rowData).find(k => /^(grade|nilai)/i.test(k));
             if (gradeKey && rowData[gradeKey]) {
                 rowData["GRADE"] = rowData[gradeKey];

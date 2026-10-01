@@ -16,7 +16,6 @@ const postHeartbeat = async (
             lab_id: labId,
             kelas: kelas,
             status: status,
-            // Saat offline, laporkan null — tidak ada data latensi yang valid
             response_time_ms: status === 'online' ? lastResponseTimeMs : null,
             client_timestamp: Date.now(),
         });
@@ -28,7 +27,6 @@ const postHeartbeat = async (
             headers["x-praktikan-api-key"] = apiKey;
         }
 
-        // Jika apiUrl tidak diset atau string kosong, gunakan endpoint proxy lokal Astro /api/monitoring/heartbeat
         const targetUrl = apiUrl && apiUrl.startsWith('http')
             ? `${apiUrl}/api/monitoring/heartbeat`
             : "/api/monitoring/heartbeat";
@@ -38,17 +36,15 @@ const postHeartbeat = async (
             headers,
             body: payloadBody,
             keepalive,
-            signal: AbortSignal.timeout(5000), // Timeout 5 detik
+            signal: AbortSignal.timeout(5000),
         });
 
-        // Catat latensi HANYA untuk siklus online reguler
         if (status === 'online' && res.ok) {
             lastResponseTimeMs = Math.round(performance.now() - startTime);
         }
     } catch (error: any) {
         lastResponseTimeMs = null;
         if (!silentError) {
-            // Log error tapi jangan crash
             console.error("[Worker Monitoring] Gagal mengirim heartbeat:", error?.message || error);
         }
     }
@@ -58,28 +54,22 @@ self.onmessage = (e: MessageEvent) => {
     const { action, payload } = e.data;
 
     if (action === 'start' || action === 'update') {
-        // Bersihkan interval lama agar tidak ada dobel-tick
         if (intervalId) {
             clearInterval(intervalId as number);
             intervalId = null;
         }
 
         const { labId, kelas, apiUrl, apiKey } = payload;
-        if (!labId) return; // kelas boleh kosong/"-", labId wajib
+        if (!labId) return;
 
         const sendHeartbeat = () => postHeartbeat(apiUrl, apiKey, labId, kelas);
-
-        // Kirim segera saat start/update
         sendHeartbeat();
-
-        // Kirim setiap 30 detik
         intervalId = setInterval(sendHeartbeat, 30_000);
 
     } else if (action === 'immediate') {
         const { labId, kelas, apiUrl, apiKey, status = 'online', keepalive = false } = payload;
         if (!labId) return;
 
-        // Kirim sekali seketika (misal: tab baru aktif atau sinyal offline saat ditutup)
         postHeartbeat(apiUrl, apiKey, labId, kelas, status, keepalive, true);
 
     } else if (action === 'stop') {
@@ -91,5 +81,4 @@ self.onmessage = (e: MessageEvent) => {
     }
 };
 
-// Agar typescript mengenali ini sebagai module worker
 export { };

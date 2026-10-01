@@ -12,13 +12,13 @@ async function getKV(): Promise<any | null> {
         const kv = (env as any)?.LEADERBOARD_KV;
         if (kv && typeof kv.put === "function") return kv;
     } catch {
-        // Not a Cloudflare Workers environment (e.g. local dev)
+        
     }
     return null;
 }
 
-// L1 in-memory read cache: skip KV read jika data masih fresh (< 2.5 detik)
-// TTL harus lebih pendek dari polling interval script Moodle (5s) dan browser (5s)
+
+
 const readCache = new Map<string, { data: any[]; expiry: number }>();
 const READ_CACHE_TTL_MS = 2_500;
 
@@ -30,14 +30,14 @@ export async function saveLeaderboardData(
     const key = `leaderboard:${normalizedRoom}`;
 
     leaderboardStore.set(normalizedRoom, data);
-    // Invalidate read cache so next GET langsung ambil dari KV
+    
     readCache.delete(normalizedRoom);
 
     try {
         const kv = await getKV();
         if (kv) {
             await kv.put(key, JSON.stringify(data), {
-                expirationTtl: 60 * 60 * 6, // 6 jam
+                expirationTtl: 60 * 60 * 6, 
             });
             return { kvSaved: true };
         }
@@ -55,7 +55,7 @@ export async function getLeaderboardData(
     const key = `leaderboard:${normalizedRoom}`;
     const now = Date.now();
 
-    // L1 hit: kembalikan cache tanpa sentuh KV
+    
     const cached = readCache.get(normalizedRoom);
     if (cached && now < cached.expiry) {
         return cached.data;

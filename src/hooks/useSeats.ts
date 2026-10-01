@@ -17,9 +17,7 @@ function getRequiredTotalSeats(studentsCount: number, disabledSeats: Set<number>
     return c;
 }
 
-/**
- * Mengelola state kursi: generasi acak, drag-drop, disabled seats, dan riwayat versi.
- */
+
 export function useSeats(
     eligibleStudents: Student[],
     matkul: string,
@@ -32,11 +30,11 @@ export function useSeats(
     const [dragOverSeat, setDragOverSeat] = useState<number | null>(null);
     const [versions, setVersions] = useState<SeatVersion[]>([]);
 
-    // Ref untuk membaca seats terkini tanpa menyebabkan re-render loop
+    
     const seatsRef = useRef<SeatData[]>(seats);
     useEffect(() => { seatsRef.current = seats; }, [seats]);
 
-    // Muat riwayat versi dari localStorage saat mount
+    
     useEffect(() => {
         try {
             const saved = localStorage.getItem("kursi_versions");
@@ -52,7 +50,7 @@ export function useSeats(
         } catch (_) {}
     }, []);
 
-    // Auto-generate saat data mahasiswa berubah
+    
     useEffect(() => {
         if (!matkul || !kelas || eligibleStudents.length === 0) {
             setSeats((prev) => {
@@ -72,7 +70,7 @@ export function useSeats(
             }
         }
         setSeats(newSeats);
-    }, [eligibleStudents, matkul, kelas]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [eligibleStudents, matkul, kelas]); 
 
     const handleGenerate = useCallback(() => {
         setSeats([]);
@@ -120,7 +118,7 @@ export function useSeats(
         });
     }, []);
 
-    // Regenerasi jika disabled seat yang terisi diubah
+    
     useEffect(() => {
         const needsRegeneration = seatsRef.current.some(
             (seat) => disabledSeats.has(seat.seatNo) && seat.student !== null
@@ -128,11 +126,11 @@ export function useSeats(
         if (needsRegeneration && eligibleStudents.length > 0 && !isLoading) {
             handleGenerate();
         }
-        // seats sengaja tidak di deps — dibaca via ref untuk cegah loop
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        
+        
     }, [disabledSeats, eligibleStudents.length, isLoading, handleGenerate]);
 
-    // Drag-and-drop handlers
+    
     const handleDragStart = useCallback((seatNo: number) => setDragSourceSeat(seatNo), []);
     const handleDragOver = useCallback((e: React.DragEvent, seatNo: number) => {
         e.preventDefault();
@@ -165,7 +163,7 @@ export function useSeats(
         setDragOverSeat(null);
     }, []);
 
-    // Kalkulasi derived values untuk tampilan
+    
     const currentTotalSeats = getRequiredTotalSeats(eligibleStudents.length, disabledSeats);
     let disabledInC = 0;
     for (let d of disabledSeats) if (d <= currentTotalSeats) disabledInC++;

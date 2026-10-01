@@ -28,9 +28,9 @@ export const KELAS_MAP: Record<string, { value: string; label: string }[]> = {
 };
 
 export const STUDENTS: Student[] = [
-  // ═══════════════════════════════════════
-  // ALPRO2 — IF-GABREM
-  // ═══════════════════════════════════════
+  
+  
+  
   { id: 'g01', name: 'ADAM MUHAMMAD ROBBANI', kelas: 'IF-GABREM', asprak: 'AFF' },
   { id: 'g02', name: 'RAHMAT FARHAN', kelas: 'IF-GABREM', asprak: 'AFF' },
   { id: 'g03', name: 'RAFA ANDHARA RIZQI', kelas: 'IF-GABREM', asprak: 'AFF' },
@@ -68,9 +68,9 @@ export const STUDENTS: Student[] = [
   { id: 'g35', name: 'NI PUTU GITALI HRDAYANI RAJAN', kelas: 'IF-GABREM', asprak: 'AFF' },
   { id: 'g36', name: 'SALMA NAIL FAUZIYYAH', kelas: 'IF-GABREM', asprak: 'MNH' },
 
-  // ═══════════════════════════════════════
-  // ALPRO2 — IF-43-01
-  // ═══════════════════════════════════════
+  
+  
+  
   { id: 'a01', name: 'ARKAN FADILLAH ZUBAIDI', kelas: 'IF-43-01', asprak: 'SRP' },
   { id: 'a02', name: 'GALIH PRATAMA PUTRA', kelas: 'IF-43-01', asprak: 'SRP' },
   { id: 'a03', name: 'NAILA ZAHRA KAMILA', kelas: 'IF-43-01', asprak: 'NAH' },
@@ -97,9 +97,9 @@ export const STUDENTS: Student[] = [
   { id: 'a24', name: 'REYHAN DZAKI PRATAMA', kelas: 'IF-43-01', asprak: 'SRP' },
   { id: 'a25', name: 'AURELIA JASMINE HARTONO', kelas: 'IF-43-01', asprak: 'RHF' },
 
-  // ═══════════════════════════════════════
-  // ALPRO2 — IF-43-02
-  // ═══════════════════════════════════════
+  
+  
+  
   { id: 'b01', name: 'AHMAD ZULFIKAR RAMADHAN', kelas: 'IF-43-02', asprak: 'APY' },
   { id: 'b02', name: 'TASYA NABILA HERMAWAN', kelas: 'IF-43-02', asprak: 'APY' },
   { id: 'b03', name: 'FAREL GIBRAN PUTRA', kelas: 'IF-43-02', asprak: 'AAG' },
@@ -121,9 +121,9 @@ export const STUDENTS: Student[] = [
   { id: 'b19', name: 'RAYHAN ATHALLA PRATAMA', kelas: 'IF-43-02', asprak: 'APY' },
   { id: 'b20', name: 'NABILA CITRA DEWANTI', kelas: 'IF-43-02', asprak: 'AAG' },
 
-  // ═══════════════════════════════════════
-  // SISDIG — DS-49-01
-  // ═══════════════════════════════════════
+  
+  
+  
   { id: 'd01', name: 'BINTANG ARIO WICAKSONO', kelas: 'DS-49-01', asprak: 'DWP' },
   { id: 'd02', name: 'MAHARANI INDAH PERTIWI', kelas: 'DS-49-01', asprak: 'DWP' },
   { id: 'd03', name: 'YUSUF HABIBI ISKANDAR', kelas: 'DS-49-01', asprak: 'FRZ' },
@@ -147,9 +147,9 @@ export const STUDENTS: Student[] = [
   { id: 'd21', name: 'RAYENDRA PUTRA MAHARDIKA', kelas: 'DS-49-01', asprak: 'DWP' },
   { id: 'd22', name: 'SARAH NABILA KARTIKA', kelas: 'DS-49-01', asprak: 'FRZ' },
 
-  // ═══════════════════════════════════════
-  // SISDIG — DS-49-02
-  // ═══════════════════════════════════════
+  
+  
+  
   { id: 'e01', name: 'FADHLAN RIZKY MAULANA', kelas: 'DS-49-02', asprak: 'DWP' },
   { id: 'e02', name: 'ALMA SAFIRA WULANDARI', kelas: 'DS-49-02', asprak: 'FRZ' },
   { id: 'e03', name: 'JIHAN FATIMAH ZAHRA', kelas: 'DS-49-02', asprak: 'DWP' },
@@ -169,9 +169,9 @@ export const STUDENTS: Student[] = [
   { id: 'e17', name: 'AULIA RAHMA SALSABILA', kelas: 'DS-49-02', asprak: 'DWP' },
   { id: 'e18', name: 'FARHAN RIZALDI AKBAR', kelas: 'DS-49-02', asprak: 'FRZ' },
 
-  // ═══════════════════════════════════════
-  // JARKOM — TK-44-01
-  // ═══════════════════════════════════════
+  
+  
+  
   { id: 'j01', name: 'ANANDA PUTRA FIRMANSYAH', kelas: 'TK-44-01', asprak: 'HND' },
   { id: 'j02', name: 'BERLIANA OKTAVIANI PUTRI', kelas: 'TK-44-01', asprak: 'HND' },
   { id: 'j03', name: 'CHANDRA WIJAYA KUSUMA', kelas: 'TK-44-01', asprak: 'BYU' },
@@ -189,9 +189,9 @@ export const STUDENTS: Student[] = [
   { id: 'j15', name: 'OSCAR PRADITYA RAMADHAN', kelas: 'TK-44-01', asprak: 'HND' },
   { id: 'j16', name: 'PRISCILLA AMANDA WIJAYA', kelas: 'TK-44-01', asprak: 'BYU' },
 
-  // ═══════════════════════════════════════
-  // JARKOM — TK-44-02
-  // ═══════════════════════════════════════
+  
+  
+  
   { id: 'k01', name: 'QIANDRA HAIKAL PRATAMA', kelas: 'TK-44-02', asprak: 'HND' },
   { id: 'k02', name: 'RACHMANIA AULIA SAFITRI', kelas: 'TK-44-02', asprak: 'BYU' },
   { id: 'k03', name: 'SATRIA BIMA NUGRAHA', kelas: 'TK-44-02', asprak: 'HND' },

@@ -1,6 +1,6 @@
-/// <reference path="../.astro/types.d.ts" />
-/// <reference types="astro/client" />
-/// <reference types="@cloudflare/workers-types" />
+
+
+
 
 type LeaderboardDOInstance = import("./durable-objects/LeaderboardDO").LeaderboardDO;
 

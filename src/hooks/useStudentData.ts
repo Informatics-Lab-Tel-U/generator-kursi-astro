@@ -1,20 +1,28 @@
 import { useQuery } from "@tanstack/react-query";
 
-const EMPTY_OPTIONS: { value: string; label: string }[] = [];
+type Option = { value: string; label: string };
+type ApiEnvelope = {
+    ok?: boolean;
+    data?: unknown;
+};
+type StudentRecord = {
+    id?: string | number;
+    nama?: string;
+    kelas?: string;
+    kode_asprak?: string;
+};
+
+const EMPTY_OPTIONS: Option[] = [];
 const EMPTY_STUDENTS: any[] = [];
 
-/**
- * Hook untuk mengambil opsi mata kuliah, kelas, dan daftar mahasiswa
- * yang eligible via Astro server proxy.
- */
 export function useStudentData(matkul: string, kelas: string) {
     const { data: matkulOptions = EMPTY_OPTIONS, isLoading: isOptionsLoading } = useQuery({
         queryKey: ["matkulOptions"],
         queryFn: async () => {
             const res = await fetch("/api/praktikan/mata-kuliah");
-            const data = await res.json();
+            const data = (await res.json()) as ApiEnvelope;
             if (data && data.ok && Array.isArray(data.data)) {
-                return data.data.map((m: string) => ({ value: m, label: m }));
+                return data.data.map((m: unknown) => ({ value: String(m), label: String(m) }));
             }
             return EMPTY_OPTIONS;
         },
@@ -28,9 +36,9 @@ export function useStudentData(matkul: string, kelas: string) {
             const res = await fetch(
                 `/api/praktikan/kelas?mata_kuliah=${encodeURIComponent(matkul)}`
             );
-            const data = await res.json();
+            const data = (await res.json()) as ApiEnvelope;
             if (data && data.ok && Array.isArray(data.data)) {
-                return data.data.map((k: string) => ({ value: k, label: k }));
+                return data.data.map((k: unknown) => ({ value: String(k), label: String(k) }));
             }
             return EMPTY_OPTIONS;
         },
@@ -44,15 +52,18 @@ export function useStudentData(matkul: string, kelas: string) {
             if (!matkul || !kelas) return EMPTY_STUDENTS;
             const url = `/api/praktikan?mata_kuliah=${encodeURIComponent(matkul)}&kelas=${encodeURIComponent(kelas)}`;
             const res = await fetch(url);
-            const data = await res.json();
-            const payload = data.data || data;
+            const data = (await res.json()) as ApiEnvelope | unknown;
+            const payload = data && typeof data === "object" && "data" in data ? (data as { data?: unknown }).data : data;
             if (Array.isArray(payload)) {
-                return payload.map((s: any, idx: number) => ({
-                    id: s.id ? String(s.id) : `stu-${kelas}-${s.nama || "unk"}-${idx}`,
-                    name: s.nama || "Unknown",
-                    kelas: s.kelas || kelas,
-                    asprak: s.kode_asprak || "N/A",
-                }));
+                return payload.map((s: unknown, idx: number) => {
+                    const student = s as StudentRecord;
+                    return {
+                        id: student.id ? String(student.id) : `stu-${kelas}-${student.nama || "unk"}-${idx}`,
+                        name: student.nama || "Unknown",
+                        kelas: student.kelas || kelas,
+                        asprak: student.kode_asprak || "N/A",
+                    };
+                });
             }
             return EMPTY_STUDENTS;
         },

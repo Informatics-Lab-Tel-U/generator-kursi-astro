@@ -33,7 +33,7 @@ export const GET: APIRoute = async ({ url, request }) => {
         }
     }
 
-    // Fallback: HTTP GET untuk /api/leaderboard?room=... tanpa WebSocket
+    
     console.log(`[Leaderboard API] 📥 HTTP GET request for room: ${room}`);
     const resp = await stub.fetch(new Request(doUrl.toString(), { method: "GET" }));
     const data = await resp.json() as any[];

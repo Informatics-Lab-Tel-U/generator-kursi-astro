@@ -61,8 +61,8 @@ export default function CustomSelect({
           justifyContent: "space-between",
           textAlign: "left",
           color: selectedOption ? "var(--text-primary)" : "var(--text-muted)",
-          backgroundImage: "none", // Override the CSS SVG
-          paddingRight: "12px", // Override the CSS padding
+          backgroundImage: "none", 
+          paddingRight: "12px", 
         }}
       >
         <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

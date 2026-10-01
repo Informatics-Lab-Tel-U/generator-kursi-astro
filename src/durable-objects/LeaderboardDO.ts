@@ -1,10 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 
 export class LeaderboardDO extends DurableObject<Env> {
-  // TTL 3 jam — setelah ini data dianggap kedaluwarsa
   private readonly TTL_MS = 3 * 60 * 60 * 1000;
-
-  // In-memory state: lebih aman di DO karena DO sudah singleton per room
   private leaderboardData: any[] = [];
   private lastUpdatedAt: number = 0;
 
@@ -15,7 +12,6 @@ export class LeaderboardDO extends DurableObject<Env> {
   private getLeaderboardData(): any[] {
     if (this.lastUpdatedAt === 0) return [];
     if (Date.now() - this.lastUpdatedAt > this.TTL_MS) {
-      // Data kedaluwarsa → reset
       this.leaderboardData = [];
       this.lastUpdatedAt = 0;
       return [];
@@ -38,7 +34,6 @@ export class LeaderboardDO extends DurableObject<Env> {
       try {
         ws.send(message);
       } catch {
-        // Socket sudah tidak aktif
       }
     }
   }
@@ -47,7 +42,6 @@ export class LeaderboardDO extends DurableObject<Env> {
     try {
       const upgradeHeader = request.headers.get("Upgrade");
 
-      // 1. WebSocket Upgrade Handler
       if (upgradeHeader === "websocket") {
         console.log("[LeaderboardDO] 🔌 WebSocket upgrade request received");
         const webSocketPair = new WebSocketPair();
@@ -62,7 +56,6 @@ export class LeaderboardDO extends DurableObject<Env> {
         });
       }
 
-      // 2. HTTP POST Handler — push data dari scraping Moodle
       if (request.method === "POST") {
         const body = (await request.json()) as any;
 
@@ -90,7 +83,6 @@ export class LeaderboardDO extends DurableObject<Env> {
         );
       }
 
-      // 3. HTTP GET Handler — fallback tanpa WebSocket
       if (request.method === "GET") {
         return new Response(JSON.stringify(this.getLeaderboardData()), {
           headers: {
@@ -131,7 +123,7 @@ export class LeaderboardDO extends DurableObject<Env> {
 
   async webSocketClose(ws: WebSocket, code: number, reason: string, wasClean: boolean): Promise<void> {
     console.log(`[LeaderboardDO] 👋 WebSocket closed, code: ${code}, reason: ${reason || 'none'}, remaining connections: ${this.ctx.getWebSockets().length - 1}`);
-    // DO akan hibernate otomatis jika tidak ada connections dan tidak ada activity
+    
     if (this.ctx.getWebSockets().length === 1) {
       console.log(`[LeaderboardDO] 💤 Last connection closed, DO will hibernate soon`);
     }
@@ -142,7 +134,7 @@ export class LeaderboardDO extends DurableObject<Env> {
     try {
       ws.close(1011, "WebSocket error");
     } catch {
-      // Abaikan
+      
     }
   }
 }

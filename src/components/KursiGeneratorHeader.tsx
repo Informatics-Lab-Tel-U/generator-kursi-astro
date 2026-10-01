@@ -101,7 +101,7 @@ export default function KursiGeneratorHeader({
             </div>
 
             <div className="flex items-center justify-between gap-4 flex-wrap">
-                {/* Tab bar */}
+                {}
                 <div className="flex items-center gap-3">
                     <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as TabId)}>
                         <TabsList>
@@ -114,7 +114,7 @@ export default function KursiGeneratorHeader({
                         </TabsList>
                     </Tabs>
 
-                    {/* Mode switch untuk tab Hitung Mundur */}
+                    {}
                     {activeTab === "countdown" && (
                         <Tabs
                             value={countdownMode}
@@ -128,7 +128,7 @@ export default function KursiGeneratorHeader({
                     )}
                 </div>
 
-                {/* Kontrol proyektor di sisi kanan */}
+                {}
                 <div className="flex items-center gap-4 flex-wrap ml-auto">
                     <div className="flex items-center gap-3 text-xs text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-md border border-border/60">
                         <span className="font-medium text-foreground/80">Proyektor:</span>

@@ -6,7 +6,7 @@ const BACKEND_URL =
   import.meta.env.PUBLIC_HONO_BACKEND_URL || 
   (import.meta.env.DEV ? "http://localhost:8787" : "");
 
-// Cache maintenance status for 15 seconds to avoid a fresh network roundtrip on every page request
+
 const CACHE_TTL_MS = 15_000;
 let maintenanceCache: { isMaintenance: boolean; expiry: number } | null = null;
 
@@ -41,14 +41,14 @@ function resolveAllowedOrigin(requestOrigin: string, pathname: string, appOrigin
   if (requestOrigin === appOrigin) return requestOrigin;
   if (allowedOriginsList.includes(requestOrigin)) return requestOrigin;
 
-  // Allow local dev origins
+  
   if (import.meta.env.DEV) {
     if (requestOrigin.startsWith("http://localhost:") || requestOrigin.startsWith("http://127.0.0.1:")) {
       return requestOrigin;
     }
   }
 
-  // Allow Moodle LMS origins for process-html
+  
   if (pathname.startsWith("/api/process-html")) {
     try {
       const parsed = new URL(requestOrigin);
@@ -56,7 +56,7 @@ function resolveAllowedOrigin(requestOrigin: string, pathname: string, appOrigin
         return requestOrigin;
       }
     } catch {}
-    return requestOrigin; // Allow cross-origin scrape from Moodle
+    return requestOrigin; 
   }
 
   return null;
@@ -65,7 +65,7 @@ function resolveAllowedOrigin(requestOrigin: string, pathname: string, appOrigin
 export const onRequest = defineMiddleware(async (context, next) => {
   const { pathname } = context.url;
 
-  // Handle CORS for all API routes
+  
   if (pathname.startsWith("/api/")) {
     const requestOrigin = context.request.headers.get("origin") || "";
     const corsOrigin = resolveAllowedOrigin(requestOrigin, pathname, context.url.origin) || (pathname.startsWith("/api/process-html") ? "*" : "");
@@ -88,8 +88,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     const response = await next();
     
-    // WebSocket upgrade responses (status 101) cannot be recreated with new Response()
-    // Return them directly without modification
+    
+    
     if (response.status === 101) {
       return response;
     }
@@ -109,7 +109,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     });
   }
 
-  // Ignore static assets, favicon
+  
   if (
     pathname.startsWith("/_image") ||
     pathname.startsWith("/_astro") ||

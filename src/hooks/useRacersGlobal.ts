@@ -26,17 +26,14 @@ export function saveStoredRacers(racers: Racer[]) {
     if (typeof window === "undefined") return;
     try {
         localStorage.setItem(RACERS_STORAGE_KEY, JSON.stringify(racers));
-        // Dispatch custom event for same-tab subscribers
+        
         window.dispatchEvent(new CustomEvent(RACERS_EVENT, { detail: racers }));
     } catch (e) {
         console.warn("Failed to save racers to localStorage:", e);
     }
 }
 
-/**
- * Hook global untuk mengelola data pembalap (ASPRAK)
- * Tersinkronisasi otomatis dengan localStorage dan event listener global.
- */
+
 export function useRacersGlobal(initialRacers?: Racer[]) {
     const [racers, setRacersState] = useState<Racer[]>(() => {
         if (initialRacers && initialRacers.length > 0) return initialRacers;
@@ -45,7 +42,7 @@ export function useRacersGlobal(initialRacers?: Racer[]) {
 
     const [newRacerName, setNewRacerName] = useState("");
 
-    // Listen to changes from other components / tabs
+    
     useEffect(() => {
         const handleCustomEvent = (e: Event) => {
             const customEvent = e as CustomEvent<Racer[]>;

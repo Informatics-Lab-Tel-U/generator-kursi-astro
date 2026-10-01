@@ -1,6 +1,4 @@
-/* ═══════════════════════════════════════════════
-   TiptapEditor — Clean Minimal (Stitch)
-   ═══════════════════════════════════════════════ */
+
 
 .tiptap-wrapper {
   border: 1px solid var(--border);
@@ -9,7 +7,7 @@
   overflow: hidden;
 }
 
-/* ── Toolbar ── */
+
 .tiptap-toolbar {
   display: flex;
   align-items: center;
@@ -74,7 +72,7 @@
   margin: 0;
 }
 
-/* ── Editor Content ── */
+
 .tiptap {
   padding: 20px 24px;
   min-height: 340px;
@@ -180,7 +178,7 @@
   font-weight: 600;
 }
 
-/* Placeholder */
+
 .tiptap p.is-editor-empty:first-child::before {
   content: 'Tulis catatan di sini...';
   color: var(--text-muted);
@@ -189,7 +187,7 @@
   height: 0;
 }
 
-/* Mode readOnly: jangan paksa tinggi minimum — ikut tinggi konten dan aktifkan scroll */
+
 .tiptap-wrapper.readonly {
   overflow-y: auto;
   scrollbar-width: thin;

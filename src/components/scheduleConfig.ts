@@ -1,12 +1,4 @@
-﻿/**
- * scheduleConfig.ts
- * Satu-satunya sumber kebenaran untuk semua konstanta bisnis.
- * Edit di sini → berlaku di seluruh aplikasi.
- */
-
-// --- Jadwal Sesi Per Hari ---
-// Index = getDay(): 0=Minggu, 1=Senin, ..., 6=Sabtu
-
+﻿
 export const DAY_SESSIONS: Record<number, { start: string; end: string }[]> = {
     1: [
         { start: "06:40", end: "08:20" },
@@ -46,16 +38,12 @@ export const DAY_SESSIONS: Record<number, { start: string; end: string }[]> = {
 
 export const FALLBACK_SESSION = { start: "08:00", end: "10:00" } as const;
 
-// --- Durasi Blok Template ---
-
 export const TEMPLATE_DURATIONS = {
     JURNAL_MENIT: 90,
     GAP_AKHIR_MENIT: 5,
     TES_AKHIR_MENIT: 5,
     TES_AWAL_MENIT: 10,
 } as const;
-
-// --- Warna Blok ---
 
 export const BLOCK_COLOR = {
     JURNAL:  "#6366f1",
@@ -75,19 +63,11 @@ export const BLOCK_COLOR_SEQUENCE = [
     "#8b5cf6",
 ] as const;
 
-// --- Threshold Timer ---
-
 export const TIMER_WARNING_MS = 603_000;
 export const TIMER_DANGER_MS  =  63_000;
 
-// --- Auto-Advance ---
-
 export const AUTO_ADVANCE_DELAY_MS = 1_500;
 
-// --- Deteksi Blok Gap ---
-
 export const GAP_BLOCK_PATTERN = /gap|istirahat|jeda|persiapan|break/i;
-
-// --- Channel Proyektor ---
 
 export const PROJECTOR_CHANNEL_NAME = "kursi-gen-sync";

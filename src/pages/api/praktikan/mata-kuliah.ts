@@ -3,10 +3,17 @@ import { fetchBackendApi } from "../../../lib/apiHelper";
 
 export const prerender = false;
 
+type MataKuliahApiResponse = {
+    ok?: boolean;
+    data?: {
+        mata_kuliah?: unknown[];
+    };
+};
+
 export const GET: APIRoute = async () => {
     try {
         const res = await fetchBackendApi("/api/praktikan?action=options");
-        const json = await res.clone().json().catch(() => null);
+        const json = (await res.clone().json().catch(() => null)) as MataKuliahApiResponse | null;
 
         if (json?.ok && Array.isArray(json?.data?.mata_kuliah)) {
             return new Response(

@@ -1,8 +1,3 @@
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   KursiGenerator â€” Clean Minimal (Stitch)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
-
-/* ===== App Layout ===== */
 .app-container {
     display: flex;
     min-height: 100vh;
@@ -10,7 +5,7 @@
     color: var(--foreground);
 }
 
-/* ===== Sidebar ===== */
+
 .sidebar {
     width: 270px;
     min-width: 270px;
@@ -39,7 +34,7 @@
     pointer-events: none;
 }
 
-/* .sidebar-toggle-btn — replaced by shadcn Button variant=ghost */
+
 
 .sidebar-header {
     font-size: 12px;
@@ -73,9 +68,9 @@
     margin-bottom: 4px;
 }
 
-/* .sidebar-select — replaced by shadcn Select */
 
-/* Custom Select — replaced by shadcn Select */
+
+
 
 .sidebar-input {
     width: 100%;
@@ -124,7 +119,7 @@
     color: var(--text-muted);
 }
 
-/* ===== Seat Toggle Grid (Sidebar) ===== */
+
 .seat-toggle-grid {
     display: grid;
     grid-template-rows: repeat(10, 1fr);
@@ -163,13 +158,13 @@
     text-decoration: line-through;
 }
 
-/* .btn / .btn-primary / .btn-secondary — replaced by shadcn Button */
+
 
 .theme-toggle:active {
     transform: scale(0.95);
 }
 
-/* ===== Projector Config Bar ===== */
+
 .projector-bar {
     display: flex;
     align-items: center;
@@ -239,7 +234,7 @@
     box-shadow: 0 0 0 3px var(--accent-light);
 }
 
-/* .btn-primary / .btn-secondary (duplicate) — replaced by shadcn Button */
+
 
 .btn-timer {
     padding: 6px 12px;
@@ -297,9 +292,9 @@
     gap: 4px;
 }
 
-/* .badge / .badge-danger — replaced by shadcn Badge */
 
-/* ===== Main Content ===== */
+
+
 .main-content {
     flex: 1;
     padding: 24px 24px 16px 24px;
@@ -309,12 +304,12 @@
     min-width: 0;
 }
 
-/* .main-header / .header-top-row / .header-bottom-row — replaced by shadcn/Tailwind layout */
 
-/* .countdown-mode-switch / .countdown-mode-btn — replaced by shadcn ToggleGroup */
-/* .tab-bar / .tab — replaced by shadcn Tabs */
 
-/* ===== Seat Grid ===== */
+
+
+
+
 .seat-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -354,7 +349,7 @@
     text-align: center;
 }
 
-/* ===== Seat Rows ===== */
+
 .seat-row {
     display: grid;
     grid-template-columns: 36px 1fr 84px;
@@ -478,7 +473,7 @@
     transition: all var(--transition-fast);
 }
 
-/* Asprak Badges - Light Theme (Kontras Tinggi & Jelas) */
+
 .asprak-badge-blue {
     background: #ebf5ff;
     color: #1e40af;
@@ -527,7 +522,7 @@
     border: 1px solid #99f6e4;
 }
 
-/* Asprak Badges - Dark Theme (Harmonis, Elegan, dan Memenuhi Standar Kontras) */
+
 [data-theme='dark'] .asprak-badge-blue,
 .dark .asprak-badge-blue {
     background: rgba(30, 64, 175, 0.22);
@@ -590,7 +585,7 @@
     color: var(--text-muted);
 }
 
-/* ===== Skeleton ===== */
+
 .seat-row.skeleton .cell-nim,
 .seat-row.skeleton .cell-asprak {
     color: transparent;
@@ -623,7 +618,7 @@
     }
 }
 
-/* ===== Names Formatting ===== */
+
 .name-small {
     display: none;
 }
@@ -637,12 +632,12 @@
     padding: 0 !important;
 }
 
-/* ===== Notes Tab ===== */
+
 .notes-tab {
     width: 100%;
 }
 
-/* ===== Countdown Tab ===== */
+
 .countdown-tab {
     display: flex;
     flex-direction: column;
@@ -696,7 +691,7 @@
     box-shadow: 0 0 0 3px var(--accent-light);
 }
 
-/* ===== Racer Setup ===== */
+
 .racer-setup {
     background: var(--glass-bg);
     backdrop-filter: blur(var(--glass-blur));
@@ -757,7 +752,7 @@
     color: var(--text-primary);
 }
 
-/* ===== Race Track ===== */
+
 .race-track-container {
     width: 100%;
     background: var(--glass-bg);
@@ -769,7 +764,7 @@
     margin: 0;
 }
 
-/* Mode proyektor dengan background lintasan balap asprak */
+
 .race-track-container.projector-race-card {
     position: relative;
     height: 432px;
@@ -857,7 +852,7 @@ body.time-finished .projector-time-hud {
 }
 
 
-/* ===== Race Track ===== */
+
 .race-track {
     position: relative;
     width: 100%;
@@ -868,10 +863,10 @@ body.time-finished .projector-time-hud {
     overflow: hidden;
     padding: 0;
     background: #c8e6b0;
-    /* fallback hijau jika road tidak load */
+    
 }
 
-/* Continuous pixel road background canvas */
+
 .race-road-bg {
     position: absolute;
     inset: 0;
@@ -961,7 +956,7 @@ body.time-finished .projector-time-hud {
     transition: background 0.6s ease, color 0.6s ease, box-shadow 0.6s ease;
 }
 
-/* Podium medals — only active at race finish */
+
 .racer-name-tag.rank-1 {
     background: hsl(45 90% 38% / 92%);
     color: hsl(45 100% 92%);
@@ -1000,7 +995,7 @@ body.time-finished .projector-time-hud {
     }
 }
 
-/* Pre-compiled F1 sprite slide keyframes for common frame widths */
+
 @keyframes sprite-slide-90 {
     from {
         background-position: 0 0;
@@ -1031,7 +1026,7 @@ body.time-finished .projector-time-hud {
     }
 }
 
-/* ===== Theme Toggle ===== */
+
 .theme-toggle {
     width: 40px;
     height: 40px;
@@ -1053,7 +1048,7 @@ body.time-finished .projector-time-hud {
 }
 
 
-/* ===== Responsive ===== */
+
 @media (max-width: 1100px) {
     .name-default {
         display: none;
@@ -1087,12 +1082,12 @@ body.time-finished .projector-time-hud {
         padding: 16px;
     }
 
-    /* .main-header responsive — removed, replaced by shadcn/Tailwind */
+    
 }
 
-/* @media tab responsive — removed, shadcn Tabs handles this */
 
-/* ===== Time Transition State (pergantian sesi, ada sesi berikutnya) ===== */
+
+
 [data-theme='light'] body.time-transition,
 body.time-transition {
     --shadow-xs: none !important;
@@ -1104,7 +1099,7 @@ body.time-transition {
 body.time-transition {
     background-color: #1a73e8;
     --bg-page: #1a73e8 !important;
-    /* Biru primary dark mode */
+    
     --bg-card: #1765cc !important;
     --bg-header: #1558b0 !important;
     --bg-row-even: rgba(255, 255, 255, 0.1) !important;
@@ -1116,7 +1111,7 @@ body.time-transition {
 [data-theme='light'] body.time-transition {
     background-color: #1a73e8 !important;
     --bg-page: #1a73e8 !important;
-    /* Biru primary light mode */
+    
     --bg-card: #1765cc !important;
     --bg-header: #1558b0 !important;
     --bg-row-even: rgba(0, 0, 0, 0.08) !important;
@@ -1126,7 +1121,7 @@ body.time-transition {
     --glass-bg: rgba(0, 0, 0, 0.15) !important;
 }
 
-/* ===== Time Warning State ===== */
+
 [data-theme='light'] body.time-warning,
 body.time-warning {
     --shadow-xs: none !important;
@@ -1138,7 +1133,7 @@ body.time-warning {
 body.time-warning {
     background-color: #ffaa00;
     --bg-page: #ffaa00 !important;
-    /* Kuning terang menyala */
+    
     --bg-card: #f59e0b !important;
     --bg-header: #d97706 !important;
     --bg-row-even: rgba(255, 255, 255, 0.1) !important;
@@ -1149,7 +1144,7 @@ body.time-warning {
 
 [data-theme='light'] body.time-warning {
     --bg-page: #ffcc00 !important;
-    /* Kuning sangat terang untuk light mode */
+    
     --bg-card: #ffb300 !important;
     --bg-header: #ff9800 !important;
     --bg-row-even: rgba(0, 0, 0, 0.05) !important;
@@ -1157,7 +1152,7 @@ body.time-warning {
     --text-secondary: rgba(255, 255, 255, 0.9) !important;
     --text-muted: rgba(255, 255, 255, 0.7) !important;
     --glass-bg: rgba(0, 0, 0, 0.15) !important;
-    /* Menghapus efek putih susu pada kontainer */
+    
 }
 
 .countdown-time {
@@ -1176,7 +1171,7 @@ body.time-finished .countdown-time {
     color: #ffffff !important;
 }
 
-/* Prevent leaderboard, notes, and seats from changing colors during warnings/danger/finished */
+
 body.time-warning .leaderboard-natural,
 body.time-danger .leaderboard-natural,
 body.time-transition .leaderboard-natural,
@@ -1201,7 +1196,7 @@ body.time-finished .seats-natural {
     --border-light: oklch(1 0 0 / 6%) !important;
 }
 
-/* Force opaque background on tiptap card and seat columns agar konsisten dengan var(--card) */
+
 body.time-warning .notes-natural .tiptap-wrapper,
 body.time-danger .notes-natural .tiptap-wrapper,
 body.time-transition .notes-natural .tiptap-wrapper,
@@ -1281,7 +1276,7 @@ body.time-finished .notes-natural .tiptap {
     color: #1f1f1f !important;
 }
 
-/* Mini timer in Projector View: warna teks disesuaikan agar selalu kontras di latar putih maupun gelap */
+
 .mini-timer-time {
     color: var(--foreground);
     transition: color 0.3s ease;
@@ -1315,7 +1310,7 @@ body.time-finished .notes-natural .tiptap {
     color: #34d399;
 }
 
-/* Saat layar penuh berubah warna (body.time-*) */
+
 body.time-warning .mini-timer-time {
     color: #1f1f1f !important;
 }
@@ -1336,7 +1331,7 @@ body.time-finished .mini-timer-label {
     color: rgba(255, 255, 255, 0.85) !important;
 }
 
-/* Session Title Pill (Projector View) - Always solid neutral, flat no-shadow, immune to dynamic background */
+
 .session-title-pill {
     display: inline-flex;
     align-items: center;
@@ -1381,8 +1376,7 @@ body.time-finished .session-title-pill {
     box-shadow: none !important;
 }
 
-/* Countdown Card (.race-track-container) saat warning/danger/transition/finished:
-   Translucent glass lembut, tidak pitch black, menyatu elegan dengan latar merah, kuning, atau biru */
+
 body.time-warning .race-track-container,
 body.time-danger .race-track-container,
 body.time-transition .race-track-container,
@@ -1409,7 +1403,7 @@ body.time-finished .race-track-container .text-muted-foreground {
 }
 
 
-/* ===== Time Danger State (Last 1 minute) ===== */
+
 [data-theme='light'] body.time-danger,
 body.time-danger {
     --shadow-xs: none !important;
@@ -1421,7 +1415,7 @@ body.time-danger {
 body.time-danger {
     background-color: #ef4444;
     --bg-page: #ef4444 !important;
-    /* Merah menyala */
+    
     --bg-card: #dc2626 !important;
     --bg-header: #b91c1c !important;
     --bg-row-even: rgba(255, 255, 255, 0.1) !important;
@@ -1429,7 +1423,7 @@ body.time-danger {
 
 [data-theme='light'] body.time-danger {
     --bg-page: #ff1a1a !important;
-    /* Merah sangat silau untuk light mode */
+    
     --bg-card: #ff4d4d !important;
     --bg-header: #ff6666 !important;
     --bg-row-even: rgba(0, 0, 0, 0.05) !important;
@@ -1444,7 +1438,7 @@ body.time-danger {
     color: #ffffff !important;
 }
 
-/* ===== Time Finished State (00:00) ===== */
+
 [data-theme='light'] body.time-finished,
 body.time-finished {
     --shadow-xs: none !important;
@@ -1456,7 +1450,7 @@ body.time-finished {
 body.time-finished {
     background-color: #00cc44;
     --bg-page: #00cc44 !important;
-    /* Hijau terang menyala */
+    
     --bg-card: #00b33c !important;
     --bg-header: #009933 !important;
     --bg-row-even: rgba(255, 255, 255, 0.1) !important;
@@ -1464,7 +1458,7 @@ body.time-finished {
 
 [data-theme='light'] body.time-finished {
     --bg-page: #00e64d !important;
-    /* Hijau sangat terang (neon) */
+    
     --bg-card: #33ff77 !important;
     --bg-header: #66ff99 !important;
     --bg-row-even: rgba(0, 0, 0, 0.05) !important;
@@ -1479,7 +1473,7 @@ body.time-finished {
     color: #ffffff !important;
 }
 
-/* ===== Leaderboard Race Track (Pixel Road) ===== */
+
 .lb-race-track-wrapper {
     border-bottom: 1px solid var(--border);
     overflow: hidden;
@@ -1507,7 +1501,7 @@ body.time-finished {
     overflow: hidden;
 }
 
-/* Pixel road scrolling background — menggunakan pixel-road.png */
+
 .lb-pixel-road {
     position: absolute;
     inset: 0;
@@ -1523,7 +1517,7 @@ body.time-finished {
     image-rendering: pixelated;
 }
 
-/* Darkmode: road sedikit lebih gelap agar sprite kontras */
+
 [data-theme='dark'] .lb-pixel-road {
     opacity: 0.38;
 }
@@ -1568,12 +1562,12 @@ body.time-finished {
     top: 50%;
     transform: translateY(-50%);
     z-index: 2;
-    /* drop shadow agar mobil terlihat di atas road */
+    
     filter: drop-shadow(0 3px 6px oklch(0 0 0 / 50%));
     transition: left 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Garis finish di sisi kanan */
+
 .lb-finish-line {
     position: absolute;
     top: 0;

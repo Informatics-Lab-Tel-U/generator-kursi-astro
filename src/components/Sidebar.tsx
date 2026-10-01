@@ -61,7 +61,7 @@ export default function Sidebar({
         <span className="font-semibold text-sm text-foreground">Generator Kursi</span>
       </div>
 
-      {/* Matkul & Kelas */}
+      {}
       <div className="sidebar-section flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
           <Label className="sidebar-label flex items-center gap-1.5 text-xs font-medium text-foreground/80">
@@ -74,7 +74,7 @@ export default function Sidebar({
             onValueChange={(v) => {
               if (v) {
                 setMatkul(v);
-                setKelas(""); // Reset kelas so user must explicitly pick again
+                setKelas(""); 
               }
             }}
             disabled={isOptionsLoading}
@@ -125,7 +125,7 @@ export default function Sidebar({
         </div>
       </div>
 
-      {/* Disabled seats */}
+      {}
       <div className="sidebar-section flex flex-col gap-2 mt-4">
         <div className="flex items-center justify-between">
           <Label className="sidebar-label flex items-center gap-1.5 text-xs font-medium text-foreground/80">
@@ -160,7 +160,7 @@ export default function Sidebar({
         </div>
       </div>
 
-      {/* Generate */}
+      {}
       <div className="sidebar-section flex flex-col gap-2 mt-4">
         <Button
           variant="default"

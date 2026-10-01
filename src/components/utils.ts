@@ -83,7 +83,7 @@ export function getDefaultTimerSession(): { start: string; end: string } {
   return targetSession ?? FALLBACK_SESSION;
 }
 
-/** Tambah menit ke string waktu "HH:MM", kembalikan "HH:MM" */
+
 export function addMinutes(time: string, minutes: number): string {
   const [h, m] = time.split(":").map(Number);
   const total = h * 60 + m + minutes;
@@ -92,10 +92,7 @@ export function addMinutes(time: string, minutes: number): string {
   return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
 }
 
-/**
- * Hasilkan template schedule berdasarkan sesi aktif hari ini.
- * Semua durasi diambil dari TEMPLATE_DURATIONS di scheduleConfig.ts.
- */
+
 export function getDefaultScheduleTemplates() {
   const { start, end } = getDefaultTimerSession();
   const { JURNAL_MENIT, GAP_AKHIR_MENIT, TES_AWAL_MENIT } = TEMPLATE_DURATIONS;

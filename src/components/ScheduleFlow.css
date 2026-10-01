@@ -1,6 +1,6 @@
-/* ScheduleFlow: Timeline Builder Styles */
 
-/* Wrapper */
+
+
 .schedule-flow-wrapper {
     display: flex;
     flex-direction: column;
@@ -30,7 +30,7 @@
     background: var(--bg-hover);
 }
 
-/* Template dropdown di panel kiri bawah */
+
 .schedule-template-dropdown-wrapper {
     position: relative;
     display: inline-block;
@@ -63,7 +63,7 @@
 }
 
 
-/* Canvas container */
+
 .schedule-flow-canvas {
     height: 500px;
     border-radius: var(--radius-lg);
@@ -73,7 +73,7 @@
     position: relative;
 }
 
-/* Panel kanan atas: kontrol sesi & tombol play/pause */
+
 .schedule-flow-top-actions {
     display: flex;
     align-items: center;
@@ -148,7 +148,7 @@
     background: var(--bg-hover);
 }
 
-/* Tombol Mulai (Play) - Solid tanpa gradient dan tanpa shadow */
+
 .schedule-flow-play-btn {
     display: inline-flex;
     align-items: center;
@@ -188,7 +188,7 @@
     opacity: 0.6;
 }
 
-/* Tombol Hentikan (Pause) - Solid tanpa gradient dan tanpa shadow */
+
 .schedule-flow-pause-btn {
     display: inline-flex;
     align-items: center;
@@ -219,7 +219,7 @@
     transform: scale(0.98);
 }
 
-/* Empty state */
+
 .schedule-flow-empty-panel {
     top: 50% !important;
     left: 50% !important;
@@ -239,7 +239,7 @@
     user-select: none;
 }
 
-/* React Flow overrides */
+
 .schedule-flow-canvas .react-flow__background {
     background: var(--background);
 }
@@ -268,9 +268,7 @@
     border-bottom: none;
 }
 
-/* ────────────────────────────────────────────────────────────────
-   TimeBlockNode
-   ──────────────────────────────────────────────────────────────── */
+
 .time-block-node {
     background: var(--bg-elevated);
     border: 2px solid var(--border);
@@ -298,7 +296,7 @@
     box-shadow: none !important;
 }
 
-/* Handles */
+
 .time-block-node .react-flow__handle {
     width: 10px;
     height: 10px;
@@ -320,7 +318,7 @@
     outline-offset: 2px;
 }
 
-/* Node header */
+
 .time-block-node__header {
     display: flex;
     align-items: center;
@@ -366,7 +364,7 @@
     color: var(--danger, #ef4444);
 }
 
-/* Time inputs row */
+
 .time-block-node__times {
     display: flex;
     align-items: center;
@@ -415,7 +413,7 @@
     margin-top: 12px;
 }
 
-/* Node footer (durasi dan badge status) */
+
 .time-block-node__footer {
     display: flex;
     align-items: center;

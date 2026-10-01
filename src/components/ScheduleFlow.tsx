@@ -26,20 +26,16 @@ import { LuPlus, LuLayoutTemplate, LuPlay, LuPause } from "react-icons/lu";
 import { Button } from "./ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "./ui/popover";
 
-
-// Templates sesi praktikum — waktu disesuaikan dengan sesi aktif hari ini
 interface Template {
     id: string;
     label: string;
     blocks: Omit<TimeBlock, "id">[];
 }
 
-// Helper: generate unique id
 function uid() {
     return `block-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
-// Konversi data blocks ke node React Flow
 function blocksToNodes(
     blocks: TimeBlock[],
     activeId: string | null,
@@ -67,7 +63,6 @@ function blocksToNodes(
     }));
 }
 
-// Konversi urutan blocks ke edge koneksi dengan penanda panah
 function blocksToEdges(blocks: TimeBlock[]): Edge[] {
     return blocks.slice(0, -1).map((b, i) => ({
         id: `e-${b.id}-${blocks[i + 1].id}`,
@@ -84,7 +79,6 @@ function blocksToEdges(blocks: TimeBlock[]): Edge[] {
     }));
 }
 
-// nodeTypes di luar komponen untuk referensi objek stabil
 const nodeTypes = { timeBlock: TimeBlockNode };
 
 interface ScheduleFlowProps {
@@ -106,7 +100,6 @@ export default function ScheduleFlow({
 }: ScheduleFlowProps) {
     const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
 
-    // Handlers untuk interaksi node
     const onLabelChange = useCallback((id: string, val: string) => {
         setSchedule((s) => ({
             ...s,
@@ -162,7 +155,6 @@ export default function ScheduleFlow({
         [onLabelChange, onStartChange, onEndChange, onDelete, onActivate]
     );
 
-    // State nodes dan edges diinisialisasi dari blocks saat ini
     const [nodes, setNodes, onNodesChange] = useNodesState<Node>(
         blocksToNodes(schedule.blocks, schedule.activeBlockId, handlers)
     );
@@ -170,11 +162,9 @@ export default function ScheduleFlow({
         blocksToEdges(schedule.blocks)
     );
 
-    // Track jumlah dan ID blok saat ini untuk deteksi tambah/hapus blok atau ganti template
     const prevBlockCountRef = React.useRef(schedule.blocks.length);
     const prevBlockIdsRef = React.useRef(schedule.blocks.map((b) => b.id).join(","));
 
-    // Sinkronisasi data node saat jadwal berubah
     React.useEffect(() => {
         const currentIds = schedule.blocks.map((b) => b.id).join(",");
         const countOrStructureChanged =
@@ -188,7 +178,6 @@ export default function ScheduleFlow({
             const existingMap = new Map(nds.map((n) => [n.id, n]));
             return schedule.blocks.map((b, i) => {
                 const existing = existingMap.get(b.id);
-                // Pertahankan posisi drag pengguna jika node sudah ada
                 const position = existing ? existing.position : { x: i * 280, y: 40 };
                 return {
                     id: b.id,
@@ -207,13 +196,10 @@ export default function ScheduleFlow({
             });
         });
 
-        // Sinkronisasi edges setiap kali struktur atau ID blok berubah (misal template baru atau tambah/hapus blok)
         if (countOrStructureChanged) {
             setEdges(blocksToEdges(schedule.blocks));
         }
 
-        // Hanya jalankan fitView jika jumlah blok bertambah/berkurang atau ganti template,
-        // TIDAK dijalankan saat sekadar mengetik jam atau label agar input tidak kehilangan fokus.
         if (countOrStructureChanged && rfInstance && schedule.blocks.length > 0) {
             setTimeout(() => rfInstance.fitView({ padding: 0.3, duration: 200 }), 50);
         }
@@ -224,14 +210,12 @@ export default function ScheduleFlow({
         [setEdges]
     );
 
-    // Reconnect sambungan garis ke handle lain
     const onReconnect = useCallback(
         (oldEdge: Edge, newConnection: Connection) =>
             setEdges((eds) => reconnectEdge(oldEdge, newConnection, eds)),
         [setEdges]
     );
 
-    // Tambah blok sesi baru
     const addBlock = useCallback(() => {
         const lastBlock = schedule.blocks[schedule.blocks.length - 1];
         const colorIdx = schedule.blocks.length % BLOCK_COLOR_SEQUENCE.length;
@@ -252,7 +236,6 @@ export default function ScheduleFlow({
         });
     }, [schedule.blocks, setSchedule, setTimer]);
 
-    // Terapkan template sesi
     const applyTemplate = useCallback((tpl: Template) => {
         const blocks: TimeBlock[] = tpl.blocks.map((b) => ({ ...b, id: uid() }));
         const firstBlock = blocks[0];
@@ -279,7 +262,7 @@ export default function ScheduleFlow({
 
     return (
         <div className="schedule-flow-wrapper">
-            {/* Canvas React Flow dengan kontrol dan overlay empty state */}
+            {}
             <div className="schedule-flow-canvas">
                 <ReactFlow
                     nodes={nodes}
@@ -300,7 +283,6 @@ export default function ScheduleFlow({
                     edgesFocusable
                     deleteKeyCode="Backspace"
                 >
-                    {/* Blueprint background helps operators align blocks while dragging and keep lane spacing clear. */}
                     <Background
                         variant={BackgroundVariant.Lines}
                         gap={24}
@@ -312,7 +294,6 @@ export default function ScheduleFlow({
                         style={{ bottom: 8, right: 8, top: "auto", left: "auto" }}
                     />
 
-                    {/* Tombol Tambah Blok di pojok kiri atas canvas */}
                     <Panel position="top-left">
                         <Button
                             variant="secondary"
@@ -324,7 +305,6 @@ export default function ScheduleFlow({
                         </Button>
                     </Panel>
 
-                    {/* Tombol Mulai di pojok kanan atas canvas */}
                     <Panel position="top-right">
                         {timer && (!timer.isRunning ? (
                             <Button
@@ -352,7 +332,6 @@ export default function ScheduleFlow({
                         ))}
                     </Panel>
 
-                    {/* Tombol Pilihan Template di pojok kiri bawah canvas */}
                     <Panel position="bottom-left">
                         <Popover open={mainTemplateMenuOpen} onOpenChange={setMainTemplateMenuOpen}>
                             <PopoverTrigger
@@ -387,7 +366,6 @@ export default function ScheduleFlow({
                         </Popover>
                     </Panel>
 
-                    {/* Tampilan saat kanvas kosong */}
                     {!hasBlocks && (
                         <Panel
                             position="top-center"

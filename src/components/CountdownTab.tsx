@@ -42,7 +42,6 @@ export default function CountdownTab({
     const trackRef = useRef<HTMLDivElement>(null);
     const jitterMapRef = useRef<Record<string, RacerJitter>>({});
 
-    // Observe race-track container width for accurate car layout
     useEffect(() => {
         const el = trackRef.current;
         if (!el) return;
@@ -55,7 +54,6 @@ export default function CountdownTab({
         return () => ro.disconnect();
     }, []);
 
-    // Tick setiap 50ms saat timer berjalan (untuk animasi countdown dan racer)
     useEffect(() => {
         if (!timer.isRunning) return;
         const interval = window.setInterval(() => {
@@ -73,7 +71,6 @@ export default function CountdownTab({
         return () => clearInterval(interval);
     }, [timer.isRunning]);
 
-    // Hooks untuk logika yang sudah diekstrak
     const { remainMs, timerRatio, totalSecs, endD, isWarning, isDanger, isFinished } =
         useCountdownTimer(timer, now);
 
@@ -105,14 +102,9 @@ export default function CountdownTab({
         : null;
     const isLastBlock = schedule && activeBlockIdx === schedule.blocks.length - 1 && schedule.blocks.length > 0;
     const isMultiBlockSchedule = Boolean(schedule && schedule.blocks.length > 1);
-    // On a multi-block schedule, suppress grid launch after the first node and
-    // suppress the finish sprint until the last node (HANDS UP moment).
     const isFirstBlock = !isMultiBlockSchedule || activeBlockIdx <= 0;
     const isFinalRaceBlock = !isMultiBlockSchedule || Boolean(isLastBlock);
 
-    // Sync body class untuk tampilan proyektor fullscreen
-    // time-transition = sesi selesai, ada sesi berikutnya (biru)
-    // time-finished   = sesi terakhir selesai, HANDS UP (hijau)
     useEffect(() => {
         const allStates = ["time-finished", "time-transition", "time-danger", "time-warning"];
         const remove = (...cls: string[]) => cls.forEach(c => document.body.classList.remove(c));
@@ -140,17 +132,10 @@ export default function CountdownTab({
     const handleStartRace = () => {
         const { jitter, startTimer } = startRace(setTimer);
         jitterMapRef.current = jitter;
-        // Sync jitter ke proyektor via localStorage (BroadcastChannel tidak membawa jitter)
         try { localStorage.setItem("asprak_race_jitter", JSON.stringify(jitter)); } catch { }
         startTimer();
     };
 
-
-    // State tampilan proyektor berdasarkan kondisi alur sesi:
-    // "finished-final": sesi terakhir selesai (tidak ada next block)
-    // "finished-next": sesi selesai dan ada sesi berikutnya (auto-advance sedang berjalan)
-    // "running": countdown normal berjalan untuk semua jenis node
-    // "idle": timer tidak berjalan
     const projectorState: "finished-final" | "finished-next" | "running" | "idle" =
         isFinished && isLastBlock
             ? "finished-final"
@@ -162,7 +147,6 @@ export default function CountdownTab({
 
     const isProjectorWithRace = Boolean(readOnly && racers && racers.length > 0);
 
-    // Pastikan jitterMapRef terisi untuk semua pembalap dengan profil balapan dinamis
     useEffect(() => {
         racers.forEach((r, idx) => {
             if (!jitterMapRef.current[r.id]) {
@@ -187,8 +171,6 @@ export default function CountdownTab({
         });
     }, [racers]);
 
-    // Sync jitter dari localStorage ke proyektor saat race dimulai
-    // (main window menyimpan jitter via handleStartRace; localStorage shared antar tab)
     useEffect(() => {
         if (!timer.startedAt || !timer.isRunning) return;
         try {
@@ -207,7 +189,6 @@ export default function CountdownTab({
 
     const renderTimeContent = (horizontal = false) => (
         <>
-            {/* Mode proyektor: Sesi selesai dan ada sesi berikutnya */}
             {readOnly && projectorState === "finished-next" && (
                 <div className={`text-center ${horizontal ? "flex items-center justify-center gap-4 flex-wrap py-1 px-2" : "py-6 px-4"}`}>
                     <div className={`session-title-pill flex-shrink-0 ${horizontal ? "" : "mb-3"}`}>
@@ -230,7 +211,6 @@ export default function CountdownTab({
                 </div>
             )}
 
-            {/* Mode proyektor: Semua sesi selesai */}
             {readOnly && projectorState === "finished-final" && (
                 <div className={`text-center ${horizontal ? "flex items-center justify-center gap-4 py-1 px-2" : "py-6 px-4"}`}>
                     <div className={`countdown-time ${actuallyFinished ? "finished" : ""}`} style={{ fontSize: horizontal ? "40px" : undefined, lineHeight: 1 }}>
@@ -242,7 +222,6 @@ export default function CountdownTab({
                 </div>
             )}
 
-            {/* Tampilan normal (running/idle) */}
             {(!readOnly || (projectorState === "running" || projectorState === "idle")) && (
                 <div className={horizontal ? "flex items-center justify-center gap-4 flex-wrap" : "text-center"}>
                     {(activeBlockLabel || (schedule && activeBlock)) && (
@@ -283,15 +262,8 @@ export default function CountdownTab({
 
     const renderTrackContent = () => {
         const totalSecsSafe = Math.max(1, totalSecs);
-
-        // Derived from remainMs so this clock matches isFinished exactly.
-        // elapsedSecs reaches totalSecsSafe only when remainMs hits 0.
         const elapsedSecs = Math.max(0, Math.min(totalSecsSafe, totalSecsSafe - remainMs / 1000));
-
-        // Progres terpadu balapan (0.0 -> 1.0) untuk kanvas jalan dan seluruh mobil
         const raceProgress = elapsedSecs / totalSecsSafe;
-
-        // Grid launch: 3.5s real-time, suppressed on intermediate nodes
         const tLaunch = Math.min(3.5, totalSecsSafe * 0.25);
         let wGrid = 0;
         if (isFirstBlock && elapsedSecs < tLaunch) {
@@ -299,7 +271,6 @@ export default function CountdownTab({
             wGrid = 1 - (uLaunch * uLaunch * (3 - 2 * uLaunch));
         }
 
-        // Finish sprint: 12s real-time, only on the final node
         const tFinish = Math.min(12.0, totalSecsSafe * 0.25);
         let wFinish = 0;
         const finishStartTime = totalSecsSafe - tFinish;
@@ -308,12 +279,10 @@ export default function CountdownTab({
             wFinish = uFinish * uFinish * (3 - 2 * uFinish);
         }
 
-        // 3. Cruising & battles phase
         const wRace = Math.max(0, 1 - wGrid - wFinish);
 
         return (
             <>
-                {/* Continuous track canvas: Start -> Normal Road x N -> Finish */}
                 <PixelRoadBg
                     mode="race"
                     progress={raceProgress}
@@ -355,18 +324,13 @@ export default function CountdownTab({
                                             waveAmp2: 15,
                                         };
 
-                                        // Posisi start grid: Di belakang garis start (~280px)
                                         const gridBase = 150 - (slotIdx * 85) + ((3 - laneIdx) * 14);
-
-                                        // Posisi cruising: Dinamis, tidak sejajar, bervariasi antar pembalap
                                         const baseRatio = j.baseOffsetRatio ?? (0.35 + ((originalIdx % 4) * 0.06));
                                         const baseMid = trackWidth * baseRatio;
                                         const wave1 = Math.sin(elapsedSecs * (j.waveFreq1 ?? 0.22) + (j.wavePhase1 ?? (originalIdx * 1.5))) * (j.waveAmp1 ?? 40);
                                         const wave2 = Math.cos(elapsedSecs * (j.waveFreq2 ?? 0.60) + (j.wavePhase2 ?? (originalIdx * 2.0))) * (j.waveAmp2 ?? 15);
                                         const slotPenalty = slotIdx * 85;
                                         const raceBase = baseMid + wave1 + wave2 + (j.currentOffset * 0.8) - slotPenalty;
-
-                                        // Posisi finish: Urutan pemenang melintasi garis finish (~74% lebar layar)
                                         const xFinishScreen = Math.min(trackWidth - 260, Math.max(280, trackWidth * 0.74));
                                         const rank = j.finalRank ?? originalIdx;
                                         const finishOffset = 45 - (rank * 34);
@@ -410,7 +374,6 @@ export default function CountdownTab({
 
     return (
         <div className="countdown-tab" style={{ width: "100%" }}>
-            {/* Timeline sesi builder (mode advanced) */}
             {!readOnly && schedule && setSchedule && setTimer && (
                 <ScheduleFlow
                     schedule={schedule}
@@ -422,7 +385,6 @@ export default function CountdownTab({
                 />
             )}
 
-            {/* Konfigurasi timer sederhana (mode timer umum) */}
             {!readOnly && !schedule && (
                 <div className="countdown-config-card rounded-lg border border-border bg-card p-4 flex items-end gap-3 flex-wrap">
                     <div className="flex flex-col gap-1.5">
@@ -469,9 +431,7 @@ export default function CountdownTab({
                 </div>
             )}
 
-            {/* Area hitung mundur dan race track */}
             {isProjectorWithRace ? (
-                /* Mode proyektor dengan balapan asprak sebagai background card waktu */
                 <div
                     ref={trackRef}
                     className="race-track-container projector-race-card"
@@ -513,7 +473,6 @@ export default function CountdownTab({
                     </div>
                 </div>
             ) : (
-                /* Mode standar: proyektor tanpa pembalap atau tampilan generator */
                 <div className="race-track-container">
                     <div className={!readOnly ? "mb-6" : ""}>
                         {renderTimeContent()}

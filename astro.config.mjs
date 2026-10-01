@@ -15,7 +15,6 @@ if (isDockerBuild) {
   const { default: cloudflare } = await import('@astrojs/cloudflare');
   adapter = cloudflare({
     // Explicitly disable sessions - we don't use Astro sessions
-    mode: 'directory',
   });
 }
 

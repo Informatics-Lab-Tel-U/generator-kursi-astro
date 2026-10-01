@@ -15,7 +15,7 @@ export const GET: APIRoute = async ({ request }) => {
             });
         }
 
-        // Hono backend exposes kelas-by-mk via ?action=kelas-by-mk on /api/praktikan
+        
         return await fetchBackendApi(`/api/praktikan?action=kelas-by-mk&mata_kuliah=${encodeURIComponent(mataKuliah)}`);
     } catch (e) {
         return new Response(JSON.stringify({ ok: false, error: "Server Error", details: String(e) }), {

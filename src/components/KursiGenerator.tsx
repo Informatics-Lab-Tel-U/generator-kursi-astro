@@ -63,7 +63,6 @@ function KursiGeneratorInner() {
         activeBlockId: null,
     });
 
-    // Custom hooks — masing-masing bertanggung jawab atas satu domain logika
     const { labId } = useMonitoring(matkul, kelas);
 
     const {
@@ -83,7 +82,6 @@ function KursiGeneratorInner() {
         ? schedule.blocks.find((b) => b.id === schedule.activeBlockId)
         : null;
 
-    // Sinkronisasi state ke window Proyektor via BroadcastChannel
     useProjectorSync({
         seats,
         disabledSeats,
@@ -98,12 +96,10 @@ function KursiGeneratorInner() {
         schedule: countdownMode === "advanced" ? schedule : undefined,
     });
 
-    // Auto-advance sesi di root — berjalan di semua tab, tidak bergantung tab countdown aktif
     useScheduleAutoAdvance({ schedule, setSchedule, timer, setTimer, countdownMode });
 
     return (
         <div className="app-container">
-
             <Sidebar
                 showSidebar={showSidebar}
                 matkul={matkul}
@@ -190,9 +186,6 @@ function KursiGeneratorInner() {
                     />
                 )}
 
-                {/* LeaderboardTab selalu di-mount (tidak pakai conditional &&) agar polling
-                    interval di LeaderboardView tidak berhenti saat user pindah ke tab lain.
-                    Hidden via CSS ketika tab tidak aktif. */}
                 <div style={{ display: activeTab === "leaderboard" ? "block" : "none" }}>
                     <LeaderboardTab
                         kelas={kelas}

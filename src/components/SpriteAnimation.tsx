@@ -1,8 +1,8 @@
 import React from 'react';
 
-// Spritesheet specs dari pitmydoro (1440px × 75px, 6 frames)
-// Frame native: 240×75 (rasio 3.2:1)
-// Animasi: background-position steps() CSS trick
+
+
+
 
 export interface SpriteAnimationProps {
     src: string;
@@ -16,7 +16,7 @@ export interface SpriteAnimationProps {
     style?: React.CSSProperties;
 }
 
-// Daftar sprite F1 dari pitmydoro (satu per asprak, round-robin)
+
 export const F1_SPRITES = [
     '/scuderias/sprites/Ferrari-Sheet.png',
     '/scuderias/sprites/Redbull-Sheet.png',

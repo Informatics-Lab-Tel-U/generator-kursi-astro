@@ -1,15 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { detectCurrentLabRoom } from "../lib/fontDetector";
 
-/**
- * Mengelola deteksi labId PC Lab (via font fingerprint / URL param / localStorage)
- * dan mengirim heartbeat monitoring ke backend via server proxy Astro.
- */
+
 export function useMonitoring(matkul: string, kelas: string) {
     const [labId, setLabId] = useState<string | null>(null);
     const workerRef = useRef<Worker | null>(null);
 
-    // Deteksi Lab ID saat mount
+    
     useEffect(() => {
         const searchParams = new URLSearchParams(window.location.search);
         const urlLabId = searchParams.get("labId") || searchParams.get("lab");
@@ -35,7 +32,7 @@ export function useMonitoring(matkul: string, kelas: string) {
         }
     }, []);
 
-    // Inisialisasi Web Worker sekali saat mount
+    
     useEffect(() => {
         if (typeof window !== "undefined") {
             workerRef.current = new Worker(
@@ -49,19 +46,19 @@ export function useMonitoring(matkul: string, kelas: string) {
         };
     }, []);
 
-    // Kirim heartbeat setiap kali labId atau kelas berubah
+    
     useEffect(() => {
         if (!labId || !workerRef.current) return;
 
-        // Skip monitoring in dev mode if backend is not running
+        
         const isDev = import.meta.env.DEV;
         if (isDev) {
             console.warn("[Monitoring] Heartbeat disabled in dev mode. Backend must be running on port 8787.");
-            // Optionally, you can still try to send heartbeat but fail silently
+            
         }
 
-        // Heartbeat dikirim via internal server proxy Astro — tanpa API Key di browser
-        // Gabungkan matkul + kelas → "Kalkulus | IK-01-01", atau hanya kelas jika matkul kosong
+        
+        
         const kelasLabel = matkul && kelas
             ? `${matkul} | ${kelas}`
             : (kelas || "-");
@@ -69,8 +66,8 @@ export function useMonitoring(matkul: string, kelas: string) {
         const payload = {
             labId,
             kelas: kelasLabel,
-            apiUrl: "",   // gunakan relative path /api/monitoring/heartbeat
-            apiKey: "",   // API Key ditangani di sisi server proxy
+            apiUrl: "",   
+            apiKey: "",   
         };
 
         workerRef.current.postMessage({ action: "start", payload });

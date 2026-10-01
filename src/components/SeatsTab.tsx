@@ -16,7 +16,7 @@ interface SeatsTabProps {
   handleDragEnd: () => void;
 }
 
-// Color palette for asprak badges (consistent per-asprak)
+
 const COLOR_VARIANTS = [
   'blue',
   'green',

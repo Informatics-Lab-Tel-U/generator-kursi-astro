@@ -17,6 +17,7 @@ import {
 interface LeaderboardViewProps {
     room: string;
     students: Student[];
+    showBorder?: boolean;
 }
 
 function parseTimeTaken(timeStr: string): number {
@@ -38,7 +39,7 @@ function parseTimeTaken(timeStr: string): number {
 
     if (totalMinutes > 0) return totalMinutes;
 
-    // format waktu: "HH:MM:SS" ato "MM:SS"
+    
     const colonParts = timeStr.split(':').map(Number);
     if (colonParts.length === 3 && !colonParts.some(isNaN)) {
         return colonParts[0] * 60 + colonParts[1] + colonParts[2] / 60;
@@ -68,7 +69,7 @@ function saveLeaderboardToStorage(roomName: string, data: any[]): void {
     } catch {}
 }
 
-export default function LeaderboardView({ room, students }: LeaderboardViewProps) {
+export default function LeaderboardView({ room, students, showBorder = true }: LeaderboardViewProps) {
     const { isCopied, copyScript } = useMoodleScript(room);
     const activeRoom = room || 'default';
     const [realtimeData, setRealtimeData] = useState<any[]>(() => getSavedLeaderboard(activeRoom));
@@ -84,7 +85,7 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
     const [isConnected, setIsConnected] = useState(false);
     const [sortMode, setSortMode] = useState<'finished' | 'in-progress'>('finished');
 
-    // Sinkronisasi data antar-window (tab utama & proyektor) via StorageEvent
+    
     useEffect(() => {
         const handleStorage = (e: StorageEvent) => {
             const key = `asprak_leaderboard_${activeRoom.trim().toUpperCase()}`;
@@ -113,7 +114,7 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
 
         if (!room || room === "-") return;
 
-        // Skip WebSocket in dev mode - fallback to HTTP polling
+        
         const isDev = import.meta.env.DEV;
         if (isDev) {
             console.log("[LeaderboardView] Dev mode: polling HTTP /api/leaderboard...");
@@ -249,8 +250,21 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
     const notCompletedStudentsCount = totalStudents - completedStudentsCount;
 
     return (
-        <div className="leaderboard-natural w-full flex flex-col rounded-lg border border-border bg-card overflow-hidden h-full max-h-full" style={{ flex: 1, minHeight: 0, height: '100%', maxHeight: '100%' }}>
-            <div className="p-4 border-b border-border flex justify-between items-center bg-muted/20 flex-shrink-0">
+        <div
+            className="leaderboard-natural w-full flex flex-col rounded-lg bg-card overflow-hidden h-full max-h-full m-0 p-0"
+            style={{
+                flex: 1,
+                minHeight: 0,
+                height: '100%',
+                maxHeight: '100%',
+                marginLeft: '0',
+                marginRight: '0',
+                borderRadius: '12px',
+                border: showBorder ? '1px solid var(--border)' : 'none',
+                boxSizing: 'border-box'
+            }}
+        >
+            <div className="px-2 py-2 border-b border-border flex justify-between items-center bg-muted/20 flex-shrink-0">
                 <div className="flex items-center gap-3">
                     <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 m-0">
                         Leaderboard - {room || 'No Room'}
@@ -295,17 +309,17 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
             </div>
 
             {hasData && (
-                <div className="px-4 pt-3 pb-3 border-b border-border bg-muted/10 shrink-0">
-                    <div className="grid grid-cols-3 gap-3">
-                        <div className="bg-muted/30 p-2.5 rounded-lg border border-border text-center">
+                <div className="px-2 pt-2 pb-2 border-b border-border bg-muted/10 shrink-0">
+                    <div className="grid grid-cols-3 gap-2">
+                        <div className="bg-muted/30 p-2 rounded-lg border border-border text-center">
                             <div className="text-xs text-muted-foreground font-medium">Total Peserta</div>
                             <div className="text-xl font-bold mt-0.5 text-foreground">{totalStudents}</div>
                         </div>
-                        <div className="bg-muted/30 p-2.5 rounded-lg border border-border text-center">
+                        <div className="bg-muted/30 p-2 rounded-lg border border-border text-center">
                             <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Selesai</div>
                             <div className="text-xl font-bold mt-0.5 text-emerald-600 dark:text-emerald-400">{completedStudentsCount}</div>
                         </div>
-                        <div className="bg-muted/30 p-2.5 rounded-lg border border-border text-center">
+                        <div className="bg-muted/30 p-2 rounded-lg border border-border text-center">
                             <div className="text-xs text-amber-600 dark:text-amber-400 font-medium">Sedang Mengerjakan</div>
                             <div className="text-xl font-bold mt-0.5 text-amber-600 dark:text-amber-400">{notCompletedStudentsCount}</div>
                         </div>
@@ -313,7 +327,7 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
                 </div>
             )}
 
-            <div className="p-4 overflow-y-auto flex-1 min-h-0" style={{ minHeight: 0 }}>
+            <div className="overflow-y-auto flex-1 min-h-0 p-0" style={{ minHeight: 0 }}>
                 {!hasData ? (
                     <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
                         <LuFileText className="size-12 mb-3 opacity-40" />
@@ -323,14 +337,14 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
                         </p>
                     </div>
                 ) : (
-                    <div className="rounded-md border border-border overflow-hidden">
-                        <Table>
+                    <div className="overflow-hidden m-0 p-0">
+                        <Table className="m-0 border-separate border-spacing-0">
                             <TableHeader className="sticky top-0 bg-muted/95 backdrop-blur-xs z-10">
-                                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                                        <TableHead className="w-16 text-center text-xs font-medium text-muted-foreground">Rank</TableHead>
-                                        <TableHead className="text-xs font-medium text-muted-foreground">Nama Peserta</TableHead>
-                                        <TableHead className="w-36 text-xs font-medium text-muted-foreground">Status</TableHead>
-                                        <TableHead className="w-28 text-right text-xs font-medium text-muted-foreground">Waktu</TableHead>
+                                <TableRow className="bg-muted/40 hover:bg-muted/40 m-0 p-0">
+                                        <TableHead className="w-16 text-center text-xs font-medium text-muted-foreground px-2 py-1.5">Rank</TableHead>
+                                        <TableHead className="text-xs font-medium text-muted-foreground px-2 py-1.5">Nama Peserta</TableHead>
+                                        <TableHead className="w-36 text-xs font-medium text-muted-foreground px-2 py-1.5">Status</TableHead>
+                                        <TableHead className="w-28 text-right text-xs font-medium text-muted-foreground px-2 py-1.5">Waktu</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -348,7 +362,7 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
                                                 key={idx}
                                                 className={isFinished ? "bg-emerald-500/5 hover:bg-emerald-500/10" : ""}
                                             >
-                                                <TableCell className="font-bold text-center">
+                                                <TableCell className="font-bold text-center px-2 py-1.5">
                                                     {isFinished && idx < 3 ? (
                                                         <span
                                                             className={`inline-flex items-center justify-center size-6 rounded-full text-xs font-bold text-white ${
@@ -361,10 +375,10 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
                                                         <span className="text-muted-foreground text-xs">{idx + 1}</span>
                                                     )}
                                                 </TableCell>
-                                                <TableCell className={`text-sm ${isFinished ? "font-semibold text-foreground" : "font-normal text-foreground/80"}`}>
+                                                <TableCell className={`text-sm px-2 py-1.5 ${isFinished ? "font-semibold text-foreground" : "font-normal text-foreground/80"}`}>
                                                     {row['NAME'] || '-'}
                                                 </TableCell>
-                                                <TableCell>
+                                                <TableCell className="px-2 py-1.5">
                                                     <Badge
                                                         variant={isFinished ? "secondary" : "outline"}
                                                         className={cn(
@@ -376,7 +390,7 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
                                                         {row['STATE'] || '-'}
                                                     </Badge>
                                                 </TableCell>
-                                                <TableCell className="text-right font-mono text-xs font-medium text-foreground">
+                                                <TableCell className="text-right font-mono text-xs font-medium text-foreground px-2 py-1.5">
                                                     {timeValue}
                                                 </TableCell>
                                             </TableRow>
