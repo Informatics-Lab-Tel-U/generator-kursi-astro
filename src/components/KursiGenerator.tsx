@@ -41,7 +41,7 @@ function KursiGeneratorInner() {
     const [activeTab, setActiveTab] = useState<TabId>("seats");
     const [showSidebar, setShowSidebar] = useState(true);
     const [countdownMode, setCountdownMode] = useState<"simple" | "advanced">("simple");
-    const [notes, setNotes] = useState("<h2>Modul 13</h2><hr><p>Password: abcd123</p>");
+    const [notes, setNotes] = useState('<p><span style="font-size: 22px"><strong>Password: </strong></span></p>');
     const { racers, setRacers } = useRacersGlobal();
     const [timer, setTimer] = useState<TimerState>(() => {
         const defaultSession = getDefaultTimerSession();

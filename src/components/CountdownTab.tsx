@@ -202,18 +202,8 @@ export default function CountdownTab({
         } catch { }
     }, [timer.startedAt, timer.isRunning, racers]);
 
-    // Observe race-track container width for accurate car layout
-    useEffect(() => {
-        const el = trackRef.current;
-        if (!el) return;
-        const update = () => {
-            if (el.clientWidth > 0) setTrackWidth(el.clientWidth);
-        };
-        update();
-        const ro = new ResizeObserver(update);
-        ro.observe(el);
-        return () => ro.disconnect();
-    }, [isProjectorWithRace]);
+
+
 
     const renderTimeContent = (horizontal = false) => (
         <>
@@ -226,7 +216,7 @@ export default function CountdownTab({
 
                     {nextBlock && (
                         <div className="flex items-center gap-3 flex-wrap justify-center">
-                            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest whitespace-nowrap">
+                            <span className="text-xs font-semibold text-muted-foreground tracking-widest whitespace-nowrap">
                                 Selanjutnya
                             </span>
                             <div className="countdown-time finished" style={{ fontSize: horizontal ? "36px" : "clamp(36px, 7vw, 68px)", lineHeight: 1 }}>
@@ -262,7 +252,7 @@ export default function CountdownTab({
                     )}
 
                     <div className={`flex items-center gap-3 ${horizontal ? "" : "flex-col justify-center mb-2"}`}>
-                        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest whitespace-nowrap">
+                        <div className="text-xs font-semibold text-muted-foreground tracking-widest whitespace-nowrap">
                             Waktu Tersisa
                         </div>
                         <div

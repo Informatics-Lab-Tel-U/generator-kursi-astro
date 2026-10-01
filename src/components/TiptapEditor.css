@@ -189,7 +189,13 @@
   height: 0;
 }
 
-/* Mode readOnly: jangan paksa tinggi minimum — ikut tinggi konten */
+/* Mode readOnly: jangan paksa tinggi minimum — ikut tinggi konten dan aktifkan scroll */
+.tiptap-wrapper.readonly {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
 .tiptap-wrapper.readonly .tiptap {
   min-height: unset;
 }

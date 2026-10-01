@@ -6,35 +6,27 @@ const BACKEND_URL =
   import.meta.env.PUBLIC_HONO_BACKEND_URL || 
   (import.meta.env.DEV ? "http://localhost:8787" : "");
 
-// PERF-02 FIX: Cache maintenance status for 15 seconds to avoid a fresh network roundtrip
-// on every single page request. Same strategy used by the Next.js frontend middleware.
-const CACHE_TTL_MS = 15_000
-let maintenanceCache: { isMaintenance: boolean; expiry: number } | null = null
+// Cache maintenance status for 15 seconds to avoid a fresh network roundtrip on every page request
+const CACHE_TTL_MS = 15_000;
+let maintenanceCache: { isMaintenance: boolean; expiry: number } | null = null;
 
 async function checkMaintenanceMode(): Promise<boolean> {
-  const now = Date.now()
+  if (!BACKEND_URL) return false;
+  const now = Date.now();
   if (maintenanceCache && now < maintenanceCache.expiry) {
-    return maintenanceCache.isMaintenance
+    return maintenanceCache.isMaintenance;
   }
   try {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 2_500)
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/system/maintenance?app=generator_kursi`, {
-        signal: controller.signal,
-      })
-      clearTimeout(timeoutId)
-      if (!res.ok) return false
-      const data: any = await res.json()
-      const isMaintenance = !!(data?.active ?? data?.maintenance)
-      maintenanceCache = { isMaintenance, expiry: now + CACHE_TTL_MS }
-      return isMaintenance
-    } finally {
-      clearTimeout(timeoutId)
-    }
+    const res = await fetch(`${BACKEND_URL}/api/system/maintenance?app=generator_kursi`, {
+      signal: AbortSignal.timeout(2500),
+    });
+    if (!res.ok) return false;
+    const data: any = await res.json();
+    const isMaintenance = !!(data?.active ?? data?.maintenance);
+    maintenanceCache = { isMaintenance, expiry: now + CACHE_TTL_MS };
+    return isMaintenance;
   } catch {
-    // Graceful fallback: backend unreachable / timeout → lanjutkan tanpa maintenance
-    return false
+    return false;
   }
 }
 
@@ -126,20 +118,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return next();
   }
 
-  try {
-    const isMaintenance = await checkMaintenanceMode()
-
-    // Redirect to /maintenance if mode is active and not already on /maintenance
-    if (isMaintenance && pathname !== "/maintenance") {
-      return context.redirect("/maintenance", 302);
-    }
-
-    // Redirect away from /maintenance if mode is inactive
-    if (!isMaintenance && pathname === "/maintenance") {
-      return context.redirect("/", 302);
-    }
-  } catch (error) {
-    console.error("Failed to check maintenance mode for generator kursi:", error);
+  const isMaintenance = await checkMaintenanceMode();
+  if (isMaintenance && pathname !== "/maintenance") {
+    return context.redirect("/maintenance", 302);
+  }
+  if (!isMaintenance && pathname === "/maintenance") {
+    return context.redirect("/", 302);
   }
 
   const pageRes = await next();

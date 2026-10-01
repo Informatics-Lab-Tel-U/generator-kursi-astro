@@ -90,7 +90,7 @@ export default function TiptapEditor({ content, onUpdate, readOnly = false }: Pr
   };
 
   return (
-    <div className={`tiptap-wrapper rounded-lg border border-border h-full bg-card ${readOnly ? 'readonly' : ''}`}>
+    <div className={`tiptap-wrapper rounded-lg border border-border h-full bg-card ${readOnly ? 'readonly overflow-y-auto min-h-0 flex flex-col' : ''}`}>
       {!readOnly && (
         <div className="tiptap-toolbar flex items-center flex-wrap gap-1 p-1.5 border-b border-border bg-muted/30">
           <Toggle

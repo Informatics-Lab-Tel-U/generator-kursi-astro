@@ -45,7 +45,7 @@
     font-size: 12px;
     font-weight: 600;
     color: var(--text-secondary);
-    text-transform: uppercase;
+    text-transform: capitalize;
     letter-spacing: 0.08em;
     min-height: 32px;
     padding-bottom: 8px;
@@ -338,7 +338,7 @@
     color: var(--text-header);
     font-size: 12px;
     font-weight: 600;
-    text-transform: uppercase;
+    text-transform: capitalize;
     letter-spacing: 0.06em;
 }
 
@@ -846,7 +846,7 @@ body.time-finished .projector-time-hud {
 }
 
 .countdown-time {
-    font-family: "Google Sans", "Poppins", sans-serif;
+    font-family: var(--font-sans), "Segoe UI", sans-serif;
     font-variant-numeric: tabular-nums;
     font-size: 64px;
     font-weight: 700;
@@ -1343,9 +1343,9 @@ body.time-finished .mini-timer-label {
     justify-content: center;
     padding: 6px 18px;
     border-radius: 20px;
-    background: #1e1e22;
-    color: #e3e3e8;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: var(--card);
+    color: var(--foreground);
+    border: 1px solid var(--border);
     font-size: 13px;
     font-weight: 600;
     letter-spacing: 0.03em;
@@ -1353,9 +1353,9 @@ body.time-finished .mini-timer-label {
 }
 
 [data-theme='light'] .session-title-pill {
-    background: #ffffff;
-    color: #1f1f1f;
-    border: 1px solid rgba(0, 0, 0, 0.12);
+    background: var(--card);
+    color: var(--foreground);
+    border: 1px solid var(--border);
     box-shadow: none !important;
 }
 
@@ -1496,7 +1496,7 @@ body.time-finished {
 .lb-race-track-title {
     font-size: 11px;
     font-weight: 700;
-    text-transform: uppercase;
+    text-transform: capitalize;
     letter-spacing: 0.08em;
     color: var(--muted-foreground);
 }

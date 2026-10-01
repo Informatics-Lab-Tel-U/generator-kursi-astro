@@ -49,29 +49,96 @@ function parseTimeTaken(timeStr: string): number {
     return Infinity;
 }
 
+function getSavedLeaderboard(roomName: string): any[] {
+    if (typeof window === "undefined" || !roomName || roomName === "-") return [];
+    try {
+        const saved = localStorage.getItem(`asprak_leaderboard_${roomName.trim().toUpperCase()}`);
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) return parsed;
+        }
+    } catch {}
+    return [];
+}
+
+function saveLeaderboardToStorage(roomName: string, data: any[]): void {
+    if (typeof window === "undefined" || !roomName || roomName === "-") return;
+    try {
+        localStorage.setItem(`asprak_leaderboard_${roomName.trim().toUpperCase()}`, JSON.stringify(data));
+    } catch {}
+}
+
 export default function LeaderboardView({ room, students }: LeaderboardViewProps) {
     const { isCopied, copyScript } = useMoodleScript(room);
-    const [realtimeData, setRealtimeData] = useState<any[]>([]);
-    const [lastUpdated, setLastUpdated] = useState<string | null>(null);
-    const [lastUpdateDate, setLastUpdateDate] = useState<Date | null>(null);
+    const activeRoom = room || 'default';
+    const [realtimeData, setRealtimeData] = useState<any[]>(() => getSavedLeaderboard(activeRoom));
+    const [lastUpdated, setLastUpdated] = useState<string | null>(() => {
+        const initial = getSavedLeaderboard(activeRoom);
+        return initial.length > 0 ? "Tersimpan lokal" : null;
+    });
+    const [lastUpdateDate, setLastUpdateDate] = useState<Date | null>(() => {
+        const initial = getSavedLeaderboard(activeRoom);
+        return initial.length > 0 ? new Date() : null;
+    });
     const [isDataStale, setIsDataStale] = useState(false);
     const [isConnected, setIsConnected] = useState(false);
     const [sortMode, setSortMode] = useState<'finished' | 'in-progress'>('finished');
 
-    const activeRoom = room || 'default';
+    // Sinkronisasi data antar-window (tab utama & proyektor) via StorageEvent
+    useEffect(() => {
+        const handleStorage = (e: StorageEvent) => {
+            const key = `asprak_leaderboard_${activeRoom.trim().toUpperCase()}`;
+            if (e.key === key && e.newValue) {
+                try {
+                    const parsed = JSON.parse(e.newValue);
+                    if (Array.isArray(parsed)) {
+                        setRealtimeData(parsed);
+                        const now = new Date();
+                        setLastUpdated(now.toLocaleTimeString());
+                        setLastUpdateDate(now);
+                        setIsDataStale(false);
+                    }
+                } catch {}
+            }
+        };
+        window.addEventListener("storage", handleStorage);
+        return () => window.removeEventListener("storage", handleStorage);
+    }, [activeRoom]);
 
     useEffect(() => {
-        setRealtimeData([]);
-        setLastUpdated(null);
+        const cached = getSavedLeaderboard(activeRoom);
+        setRealtimeData(cached);
+        setLastUpdated(cached.length > 0 ? "Tersimpan lokal" : null);
         setIsConnected(false);
 
         if (!room || room === "-") return;
 
-        // Skip WebSocket in dev mode - Durable Objects tidak tersedia di Miniflare
+        // Skip WebSocket in dev mode - fallback to HTTP polling
         const isDev = import.meta.env.DEV;
         if (isDev) {
-            console.warn("[LeaderboardView] WebSocket disabled in dev mode. Use 'npm run preview:cf' to test Durable Objects.");
-            return;
+            console.log("[LeaderboardView] Dev mode: polling HTTP /api/leaderboard...");
+            let devTimer: ReturnType<typeof setInterval> | null = null;
+            const pollDev = async () => {
+                try {
+                    const res = await fetch(`/api/leaderboard?room=${encodeURIComponent(activeRoom)}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (Array.isArray(data) && data.length > 0) {
+                            setRealtimeData(data);
+                            const now = new Date();
+                            setLastUpdated(now.toLocaleTimeString());
+                            setLastUpdateDate(now);
+                            setIsDataStale(false);
+                            saveLeaderboardToStorage(activeRoom, data);
+                        }
+                    }
+                } catch {}
+            };
+            pollDev();
+            devTimer = setInterval(pollDev, 4000);
+            return () => {
+                if (devTimer) clearInterval(devTimer);
+            };
         }
 
         let ws: WebSocket | null = null;
@@ -108,6 +175,7 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
                         setLastUpdated(now.toLocaleTimeString());
                         setLastUpdateDate(now);
                         setIsDataStale(false);
+                        saveLeaderboardToStorage(activeRoom, msg.data);
                     }
                 } catch (e) {
                     console.error(`[LeaderboardView] ❌ Failed to parse message:`, e);
@@ -181,8 +249,8 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
     const notCompletedStudentsCount = totalStudents - completedStudentsCount;
 
     return (
-        <div className="leaderboard-natural w-full flex flex-col rounded-lg border border-border bg-card overflow-hidden" style={{ flex: 1, minHeight: 0 }}>
-            <div className="p-4 border-b border-border flex justify-between items-center bg-muted/20">
+        <div className="leaderboard-natural w-full flex flex-col rounded-lg border border-border bg-card overflow-hidden h-full max-h-full" style={{ flex: 1, minHeight: 0, height: '100%', maxHeight: '100%' }}>
+            <div className="p-4 border-b border-border flex justify-between items-center bg-muted/20 flex-shrink-0">
                 <div className="flex items-center gap-3">
                     <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 m-0">
                         Leaderboard - {room || 'No Room'}
@@ -226,7 +294,26 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
                 </div>
             </div>
 
-            <div className="p-4 overflow-y-auto flex-1" style={{ minHeight: 0 }}>
+            {hasData && (
+                <div className="px-4 pt-3 pb-3 border-b border-border bg-muted/10 shrink-0">
+                    <div className="grid grid-cols-3 gap-3">
+                        <div className="bg-muted/30 p-2.5 rounded-lg border border-border text-center">
+                            <div className="text-xs text-muted-foreground font-medium">Total Peserta</div>
+                            <div className="text-xl font-bold mt-0.5 text-foreground">{totalStudents}</div>
+                        </div>
+                        <div className="bg-muted/30 p-2.5 rounded-lg border border-border text-center">
+                            <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Selesai</div>
+                            <div className="text-xl font-bold mt-0.5 text-emerald-600 dark:text-emerald-400">{completedStudentsCount}</div>
+                        </div>
+                        <div className="bg-muted/30 p-2.5 rounded-lg border border-border text-center">
+                            <div className="text-xs text-amber-600 dark:text-amber-400 font-medium">Sedang Mengerjakan</div>
+                            <div className="text-xl font-bold mt-0.5 text-amber-600 dark:text-amber-400">{notCompletedStudentsCount}</div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div className="p-4 overflow-y-auto flex-1 min-h-0" style={{ minHeight: 0 }}>
                 {!hasData ? (
                     <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
                         <LuFileText className="size-12 mb-3 opacity-40" />
@@ -236,26 +323,10 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
                         </p>
                     </div>
                 ) : (
-                    <>
-                        <div className="grid grid-cols-3 gap-3 mb-4">
-                            <div className="bg-muted/30 p-3 rounded-lg border border-border text-center">
-                                <div className="text-xs text-muted-foreground font-medium">Total Peserta</div>
-                                <div className="text-xl font-bold mt-1 text-foreground">{totalStudents}</div>
-                            </div>
-                            <div className="bg-muted/30 p-3 rounded-lg border border-border text-center">
-                                <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Selesai</div>
-                                <div className="text-xl font-bold mt-1 text-emerald-600 dark:text-emerald-400">{completedStudentsCount}</div>
-                            </div>
-                            <div className="bg-muted/30 p-3 rounded-lg border border-border text-center">
-                                <div className="text-xs text-amber-600 dark:text-amber-400 font-medium">Sedang Mengerjakan</div>
-                                <div className="text-xl font-bold mt-1 text-amber-600 dark:text-amber-400">{notCompletedStudentsCount}</div>
-                            </div>
-                        </div>
-
-                        <div className="rounded-md border border-border overflow-hidden">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <div className="rounded-md border border-border overflow-hidden">
+                        <Table>
+                            <TableHeader className="sticky top-0 bg-muted/95 backdrop-blur-xs z-10">
+                                <TableRow className="bg-muted/40 hover:bg-muted/40">
                                         <TableHead className="w-16 text-center text-xs font-medium text-muted-foreground">Rank</TableHead>
                                         <TableHead className="text-xs font-medium text-muted-foreground">Nama Peserta</TableHead>
                                         <TableHead className="w-36 text-xs font-medium text-muted-foreground">Status</TableHead>
@@ -314,7 +385,6 @@ export default function LeaderboardView({ room, students }: LeaderboardViewProps
                                 </TableBody>
                             </Table>
                         </div>
-                    </>
                 )}
             </div>
         </div>

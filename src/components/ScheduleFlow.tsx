@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useEffect, useRef } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
     ReactFlow,
     Background,
@@ -22,8 +22,9 @@ import type { TimeBlock, ScheduleState, TimerState } from "./types";
 import TimeBlockNode from "./TimeBlockNode";
 import { getDefaultScheduleTemplates } from "./utils";
 import { BLOCK_COLOR_SEQUENCE } from "./scheduleConfig";
-import { LuPlus, LuLayoutTemplate, LuChevronUp, LuPlay, LuPause } from "react-icons/lu";
+import { LuPlus, LuLayoutTemplate, LuPlay, LuPause } from "react-icons/lu";
 import { Button } from "./ui/button";
+import { Popover, PopoverTrigger, PopoverContent } from "./ui/popover";
 
 
 // Templates sesi praktikum — waktu disesuaikan dengan sesi aktif hari ini
@@ -104,20 +105,6 @@ export default function ScheduleFlow({
     onStop,
 }: ScheduleFlowProps) {
     const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
-    const [showTemplateMenu, setShowTemplateMenu] = useState(false);
-    const templateMenuRef = useRef<HTMLDivElement>(null);
-
-    // Menutup menu template jika klik di luar
-    useEffect(() => {
-        if (!showTemplateMenu) return;
-        const handleClickOutside = (e: MouseEvent) => {
-            if (templateMenuRef.current && !templateMenuRef.current.contains(e.target as globalThis.Node)) {
-                setShowTemplateMenu(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [showTemplateMenu]);
 
     // Handlers untuk interaksi node
     const onLabelChange = useCallback((id: string, val: string) => {
@@ -279,8 +266,16 @@ export default function ScheduleFlow({
     }, [setSchedule, setTimer]);
 
     const hasBlocks = schedule.blocks.length > 0;
+    const [mainTemplateMenuOpen, setMainTemplateMenuOpen] = useState(false);
+    const [emptyTemplateMenuOpen, setEmptyTemplateMenuOpen] = useState(false);
 
     const activeBlock = schedule.blocks.find((b) => b.id === schedule.activeBlockId);
+
+    const handleTemplateSelect = useCallback((template: Template) => {
+        applyTemplate(template);
+        setMainTemplateMenuOpen(false);
+        setEmptyTemplateMenuOpen(false);
+    }, [applyTemplate]);
 
     return (
         <div className="schedule-flow-wrapper">
@@ -305,6 +300,7 @@ export default function ScheduleFlow({
                     edgesFocusable
                     deleteKeyCode="Backspace"
                 >
+                    {/* Blueprint background helps operators align blocks while dragging and keep lane spacing clear. */}
                     <Background
                         variant={BackgroundVariant.Lines}
                         gap={24}
@@ -358,45 +354,37 @@ export default function ScheduleFlow({
 
                     {/* Tombol Pilihan Template di pojok kiri bawah canvas */}
                     <Panel position="bottom-left">
-                        <div className="schedule-template-dropdown-wrapper" ref={templateMenuRef}>
-                            {showTemplateMenu && (
-                                <div className="schedule-template-menu bg-popover text-popover-foreground border border-border rounded-lg p-1.5 min-w-[180px] flex flex-col gap-1 z-50">
-                                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2.5 py-1">Pilih Template</div>
+                        <Popover open={mainTemplateMenuOpen} onOpenChange={setMainTemplateMenuOpen}>
+                            <PopoverTrigger
+                                render={
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        size="sm"
+                                        className="gap-1.5 border border-border"
+                                    >
+                                        <LuLayoutTemplate className="size-4" /> Template
+                                    </Button>
+                                }
+                            />
+                            <PopoverContent side="top" align="start" sideOffset={6}>
+                                <div className="text-xs font-semibold text-muted-foreground tracking-wider px-2.5 py-1">Pilih Template</div>
+                                <div className="flex flex-col gap-0.5">
                                     {getDefaultScheduleTemplates().map((t) => (
                                         <Button
                                             key={t.id}
                                             type="button"
                                             variant="ghost"
                                             size="sm"
-                                            className="w-full justify-start text-xs font-medium h-8 px-2.5 text-foreground hover:bg-accent hover:text-accent-foreground cursor-pointer"
-                                            onClick={() => {
-                                                applyTemplate(t);
-                                                setShowTemplateMenu(false);
-                                            }}
+                                            className="w-full justify-start text-xs font-medium h-8 px-2.5"
+                                            onClick={() => handleTemplateSelect(t)}
                                         >
                                             {t.label}
                                         </Button>
                                     ))}
                                 </div>
-                            )}
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                size="sm"
-                                onClick={() => setShowTemplateMenu((v) => !v)}
-                                aria-expanded={showTemplateMenu}
-                                aria-haspopup="true"
-                                className="gap-1.5 border border-border"
-                            >
-                                <LuLayoutTemplate className="size-4" /> Template
-                                <LuChevronUp
-                                    className="size-3.5 opacity-70 transition-transform duration-150"
-                                    style={{
-                                        transform: showTemplateMenu ? "rotate(180deg)" : "none",
-                                    }}
-                                />
-                            </Button>
-                        </div>
+                            </PopoverContent>
+                        </Popover>
                     </Panel>
 
                     {/* Tampilan saat kanvas kosong */}
@@ -418,14 +406,32 @@ export default function ScheduleFlow({
                                     <Button variant="outline" size="sm" className="gap-1.5" onClick={addBlock}>
                                         <LuPlus className="size-4" /> Tambah Blok
                                     </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="gap-1.5"
-                                        onClick={() => setShowTemplateMenu((v) => !v)}
-                                    >
-                                        <LuLayoutTemplate className="size-4" /> Pilih Template
-                                    </Button>
+                                    <Popover open={emptyTemplateMenuOpen} onOpenChange={setEmptyTemplateMenuOpen}>
+                                        <PopoverTrigger
+                                            render={
+                                                <Button variant="outline" size="sm" className="gap-1.5">
+                                                    <LuLayoutTemplate className="size-4" /> Pilih Template
+                                                </Button>
+                                            }
+                                        />
+                                        <PopoverContent side="top" align="start" sideOffset={6}>
+                                            <div className="text-xs font-semibold text-muted-foreground tracking-wider px-2.5 py-1">Pilih Template</div>
+                                            <div className="flex flex-col gap-0.5">
+                                                {getDefaultScheduleTemplates().map((t) => (
+                                                    <Button
+                                                        key={t.id}
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="w-full justify-start text-xs font-medium h-8 px-2.5"
+                                                        onClick={() => handleTemplateSelect(t)}
+                                                    >
+                                                        {t.label}
+                                                    </Button>
+                                                ))}
+                                            </div>
+                                        </PopoverContent>
+                                    </Popover>
                                 </div>
                             </div>
                         </Panel>

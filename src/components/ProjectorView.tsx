@@ -34,7 +34,7 @@ export default function ProjectorView() {
   const [timer, setTimer] = useState<TimerState>({ startTime: "08:00", endTime: "10:00", isRunning: false, startedAt: null });
   const [now, setNow] = useState(new Date());
   const [racers, setRacers] = useState<Racer[]>(getStoredRacers);
-  const [notes, setNotes] = useState<string>("");
+  const [notes, setNotes] = useState<string>('<p><span style="font-size: 22px"><strong>Password: </strong></span></p>');
   const [projectorConfig, setProjectorConfig] = useState<ProjectorConfig>({
     showSeats: true,
     showNotes: true,
@@ -45,7 +45,8 @@ export default function ProjectorView() {
   const [activeBlockLabel, setActiveBlockLabel] = useState<string>("");
   const [activeBlockColor, setActiveBlockColor] = useState<string>("");
   const [schedule, setSchedule] = useState<ScheduleState | undefined>(undefined);
-  const [activeTab, setActiveTab] = useState<'generator' | 'info'>('generator');
+  type ProjectorTab = 'generator' | 'info' | 'notes';
+  const [activeTab, setActiveTab] = useState<ProjectorTab>('generator');
   const [notesWidth, setNotesWidth] = useState(500);
 
   useEffect(() => {
@@ -161,16 +162,23 @@ export default function ProjectorView() {
     }
   }
 
-  const showInfoTab = kelas || projectorConfig.showCountdown;
+  const showSeatsTab = projectorConfig.showSeats;
+  const showInfoTab = Boolean(kelas || projectorConfig.showCountdown || projectorConfig.showNotes);
+  const showNotesTab = projectorConfig.showNotes;
+
+  const activeTabsCount = [showSeatsTab, showInfoTab, showNotesTab].filter(Boolean).length;
+  const hasTabs = activeTabsCount > 1;
 
   // Auto-switch tab if the current one gets disabled via config
   useEffect(() => {
-    if (!projectorConfig.showSeats && activeTab === 'generator' && showInfoTab) {
-      setActiveTab('info');
-    } else if (!showInfoTab && activeTab === 'info' && projectorConfig.showSeats) {
-      setActiveTab('generator');
+    if (activeTab === 'generator' && !showSeatsTab) {
+      setActiveTab(showInfoTab ? 'info' : (showNotesTab ? 'notes' : 'generator'));
+    } else if (activeTab === 'info' && !showInfoTab) {
+      setActiveTab(showSeatsTab ? 'generator' : (showNotesTab ? 'notes' : 'info'));
+    } else if (activeTab === 'notes' && !showNotesTab) {
+      setActiveTab(showSeatsTab ? 'generator' : (showInfoTab ? 'info' : 'notes'));
     }
-  }, [projectorConfig.showSeats, showInfoTab, activeTab]);
+  }, [showSeatsTab, showInfoTab, showNotesTab, activeTab]);
 
   const renderGenerator = () => (
     <div className="seats-natural" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -207,24 +215,29 @@ export default function ProjectorView() {
     </div>
   );
 
+  const hasRightColumn = Boolean(projectorConfig.showNotes || projectorConfig.showCountdown);
+
   const renderInfo = () => (
     <div style={{ display: 'flex', gap: '16px', flex: 1, overflow: 'hidden' }}>
       {kelas && (
         <div
-          className="notes-natural"
+          className="leaderboard-natural"
           style={{
-            width: projectorConfig.showCountdown ? `${notesWidth}px` : '100%',
-            flex: projectorConfig.showCountdown ? '0 0 auto' : '1',
-            display: 'flex', flexDirection: 'column', overflow: 'hidden'
+            width: hasRightColumn ? `${notesWidth}px` : '100%',
+            flex: hasRightColumn ? '0 0 auto' : '1',
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            maxHeight: '100%',
+            minHeight: 0,
+            overflow: 'hidden'
           }}
         >
-          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-            <LeaderboardView room={kelas} students={eligibleStudents} />
-          </div>
+          <LeaderboardView room={kelas} students={eligibleStudents} />
         </div>
       )}
 
-      {kelas && projectorConfig.showCountdown && (
+      {kelas && hasRightColumn && (
         <div
           onMouseDown={startDrag}
           style={{
@@ -243,7 +256,7 @@ export default function ProjectorView() {
         </div>
       )}
 
-      {projectorConfig.showCountdown && (
+      {hasRightColumn && (
         <div style={{
           flex: '1 1 0',
           minWidth: 0,
@@ -253,37 +266,45 @@ export default function ProjectorView() {
           overflowY: 'auto',
           gap: '16px',
         }}>
-
           {projectorConfig.showNotes && (
             <div
-              className="leaderboard-natural"
+              className="notes-natural"
               style={{
                 overflow: 'hidden',
                 display: 'flex',
-                flexDirection: 'column'
+                flexDirection: 'column',
+                flex: projectorConfig.showCountdown ? '0 0 auto' : '1 1 0',
+                minHeight: '180px'
               }}
             >
               <NotesTab notes={notes} readOnly={true} />
             </div>
           )}
 
-          <CountdownTab
-            timer={timer}
-            racers={racers}
-            readOnly={true}
-            kelas={kelas}
-            eligibleStudents={eligibleStudents}
-            activeBlockLabel={activeBlockLabel}
-            activeBlockColor={activeBlockColor}
-            schedule={schedule}
-          />
-
+          {projectorConfig.showCountdown && (
+            <CountdownTab
+              timer={timer}
+              racers={racers}
+              readOnly={true}
+              kelas={kelas}
+              eligibleStudents={eligibleStudents}
+              activeBlockLabel={activeBlockLabel}
+              activeBlockColor={activeBlockColor}
+              schedule={schedule}
+            />
+          )}
         </div>
       )}
     </div>
   );
 
-  if (!projectorConfig.showSeats && !kelas && !projectorConfig.showCountdown) {
+  const renderNotes = () => (
+    <div className="notes-natural" style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, overflow: 'hidden' }}>
+      <NotesTab notes={notes} readOnly={true} />
+    </div>
+  );
+
+  if (!showSeatsTab && !showInfoTab && !showNotesTab) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg-page)', color: 'var(--text-muted)' }}>
         <div style={{ textAlign: 'center' }}>
@@ -297,11 +318,11 @@ export default function ProjectorView() {
 
   const currentBlockLabel = activeBlockLabel || activeBlock?.label;
   const showMiniTimer = timer.isRunning && (!projectorConfig.showCountdown || activeTab !== 'info');
-  const hasTopBar = (projectorConfig.showSeats && showInfoTab) || showMiniTimer;
+  const hasTopBar = hasTabs || showMiniTimer;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '16px 16px', boxSizing: 'border-box', background: 'var(--bg-page)', position: 'relative' }}>
-      {/* Top bar untuk Tabs switcher dan Mini Timer — mencegah overlap pada kolom kursi */}
+      {/* Top bar untuk Tabs switcher dan Mini Timer */}
       {hasTopBar && (
         <div style={{
           position: 'relative',
@@ -312,11 +333,12 @@ export default function ProjectorView() {
           marginBottom: '12px',
           flexShrink: 0
         }}>
-          {projectorConfig.showSeats && showInfoTab && (
-            <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'generator' | 'info')}>
+          {hasTabs && (
+            <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as ProjectorTab)}>
               <TabsList className="bg-card/90 border border-border/70 shadow-xs backdrop-blur-md">
-                <TabsTrigger value="generator">Posisi Duduk</TabsTrigger>
-                <TabsTrigger value="info">Informasi Tambahan</TabsTrigger>
+                {showSeatsTab && <TabsTrigger value="generator">Posisi Duduk</TabsTrigger>}
+                {showInfoTab && <TabsTrigger value="info">Umum</TabsTrigger>}
+                {showNotesTab && <TabsTrigger value="notes">Catatan</TabsTrigger>}
               </TabsList>
             </Tabs>
           )}
@@ -337,9 +359,9 @@ export default function ProjectorView() {
                 userSelect: 'none',
               }}
               className={showInfoTab && projectorConfig.showCountdown ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}
-              title={showInfoTab && projectorConfig.showCountdown ? "Klik untuk melihat waktu penuh di Informasi Tambahan" : undefined}
+              title={showInfoTab && projectorConfig.showCountdown ? "Klik untuk melihat waktu penuh di tab Umum" : undefined}
             >
-              <div className="mini-timer-label text-[10px] font-semibold text-muted-foreground uppercase tracking-widest leading-none mb-1">
+              <div className="mini-timer-label text-[10px] font-semibold text-muted-foreground tracking-widest leading-none mb-1">
                 {currentBlockLabel || "Waktu Tersisa"}
               </div>
               <div
@@ -370,9 +392,47 @@ export default function ProjectorView() {
         </div>
       )}
 
-      <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
-        {projectorConfig.showSeats && (!showInfoTab || activeTab === 'generator') && renderGenerator()}
-        {showInfoTab && (!projectorConfig.showSeats || activeTab === 'info') && renderInfo()}
+      {/* Kontainer tab: ketiganya tetap di-mount untuk menjaga koneksi WebSocket dan state */}
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden' }}>
+        {showSeatsTab && (
+          <div
+            style={{
+              flex: 1,
+              minHeight: 0,
+              display: activeTab === 'generator' ? 'flex' : 'none',
+              flexDirection: 'column',
+              overflow: 'hidden'
+            }}
+          >
+            {renderGenerator()}
+          </div>
+        )}
+        {showInfoTab && (
+          <div
+            style={{
+              flex: 1,
+              minHeight: 0,
+              display: activeTab === 'info' ? 'flex' : 'none',
+              flexDirection: 'column',
+              overflow: 'hidden'
+            }}
+          >
+            {renderInfo()}
+          </div>
+        )}
+        {showNotesTab && (
+          <div
+            style={{
+              flex: 1,
+              minHeight: 0,
+              display: activeTab === 'notes' ? 'flex' : 'none',
+              flexDirection: 'column',
+              overflow: 'hidden'
+            }}
+          >
+            {renderNotes()}
+          </div>
+        )}
       </div>
     </div>
   );

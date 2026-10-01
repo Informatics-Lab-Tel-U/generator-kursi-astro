@@ -133,7 +133,7 @@ function TimeBlockNode({ id, data }: NodeProps) {
             tabIndex={0}
             aria-label={`Sesi ${displayLabel || "tanpa nama"}, sesi aktif: ${d.isActive ? "ya" : "tidak"}`}
             className={`time-block-node ${d.isActive ? "active" : ""}`}
-            style={{ "--node-color": d.color } as React.CSSProperties}
+            style={{ "--node-color": "var(--primary)" } as React.CSSProperties}
             onClick={() => d.onActivate(id)}
             onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
@@ -146,10 +146,6 @@ function TimeBlockNode({ id, data }: NodeProps) {
 
             {/* Header dengan nama blok */}
             <div className="time-block-node__header">
-                <div
-                    className="time-block-node__color-dot"
-                    style={{ background: d.color }}
-                />
                 <input
                     ref={labelRef}
                     defaultValue={d.label}
