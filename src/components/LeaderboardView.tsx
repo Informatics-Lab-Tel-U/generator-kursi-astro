@@ -66,6 +66,7 @@ function saveLeaderboardToStorage(roomName: string, data: any[]): void {
     if (typeof window === "undefined" || !roomName || roomName === "-") return;
     try {
         localStorage.setItem(`asprak_leaderboard_${roomName.trim().toUpperCase()}`, JSON.stringify(data));
+        window.dispatchEvent(new CustomEvent("asprak_leaderboard_updated", { detail: { room: roomName, data } }));
     } catch {}
 }
 
@@ -117,7 +118,6 @@ export default function LeaderboardView({ room, students, showBorder = true }: L
         
         const isDev = import.meta.env.DEV;
         if (isDev) {
-            console.log("[LeaderboardView] Dev mode: polling HTTP /api/leaderboard...");
             let devTimer: ReturnType<typeof setInterval> | null = null;
             const pollDev = async () => {
                 try {
@@ -136,7 +136,7 @@ export default function LeaderboardView({ room, students, showBorder = true }: L
                 } catch {}
             };
             pollDev();
-            devTimer = setInterval(pollDev, 4000);
+            devTimer = setInterval(pollDev, 8000);
             return () => {
                 if (devTimer) clearInterval(devTimer);
             };
@@ -145,22 +145,21 @@ export default function LeaderboardView({ room, students, showBorder = true }: L
         let ws: WebSocket | null = null;
         let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
         let unmounted = false;
+        let retryCount = 0;
 
         const connect = () => {
             if (unmounted) return;
 
             const protocol = location.protocol === "https:" ? "wss:" : "ws:";
             const wsUrl = `${protocol}//${location.host}/api/leaderboard?room=${encodeURIComponent(activeRoom)}`;
-            console.log(`[LeaderboardView] 🔌 Connecting WebSocket to: ${wsUrl}`);
             
             ws = new WebSocket(wsUrl);
 
             ws.onopen = () => {
-                console.log(`[LeaderboardView] ✅ WebSocket connected successfully to room: ${activeRoom}`);
+                retryCount = 0;
                 setIsConnected(true);
                 try {
                     ws?.send(JSON.stringify({ type: "GET" }));
-                    console.log(`[LeaderboardView] 📤 Sent initial GET request for leaderboard data`);
                 } catch (e) {
                     console.error(`[LeaderboardView] ❌ Failed to send initial GET:`, e);
                 }
@@ -170,7 +169,6 @@ export default function LeaderboardView({ room, students, showBorder = true }: L
                 try {
                     const msg = JSON.parse(event.data as string) as { type: string; data: any[] };
                     if ((msg.type === "INIT" || msg.type === "UPDATE") && Array.isArray(msg.data)) {
-                        console.log(`[LeaderboardView] 📥 Received ${msg.type} with ${msg.data.length} entries`);
                         setRealtimeData(msg.data);
                         const now = new Date();
                         setLastUpdated(now.toLocaleTimeString());
@@ -184,11 +182,11 @@ export default function LeaderboardView({ room, students, showBorder = true }: L
             };
 
             ws.onclose = () => {
-                console.log(`[LeaderboardView] 🔌 WebSocket disconnected from room: ${activeRoom}`);
                 setIsConnected(false);
                 if (!unmounted) {
-                    console.log(`[LeaderboardView] 🔄 Attempting to reconnect in 3 seconds...`);
-                    reconnectTimer = setTimeout(connect, 3000);
+                    const delay = Math.min(3000 * Math.pow(1.5, retryCount), 30000);
+                    retryCount++;
+                    reconnectTimer = setTimeout(connect, delay);
                 }
             };
 

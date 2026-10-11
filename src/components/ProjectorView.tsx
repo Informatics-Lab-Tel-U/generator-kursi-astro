@@ -7,10 +7,12 @@ import SeatsTab from './SeatsTab';
 import NotesTab from './NotesTab';
 import CountdownTab from './CountdownTab';
 import LeaderboardView from './LeaderboardView';
+import { Switch } from './ui/switch';
 import { LuLayoutGrid, LuMonitor, LuTimer } from 'react-icons/lu';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 import { useCountdownTimer, useBlinkEffect } from '../hooks/useCountdown';
 import { getStoredRacers } from '../hooks/useRacersGlobal';
+import { useMoodleLeaderboard } from '../hooks/useMoodleLeaderboard';
 
 import './KursiGenerator.css';
 
@@ -48,6 +50,8 @@ export default function ProjectorView() {
   type ProjectorTab = 'generator' | 'info' | 'notes';
   const [activeTab, setActiveTab] = useState<ProjectorTab>('generator');
   const [notesWidth, setNotesWidth] = useState(500);
+  const [showMoodleOverlay, setShowMoodleOverlay] = useState(false);
+  const { realtimeData: moodleData } = useMoodleLeaderboard(kelas, showMoodleOverlay);
 
   useEffect(() => {
     if (!timer.isRunning) return;
@@ -207,6 +211,8 @@ export default function ProjectorView() {
             handleDragLeave={() => { }}
             handleDrop={() => { }}
             handleDragEnd={() => { }}
+            moodleData={moodleData}
+            showMoodleOverlay={showMoodleOverlay}
           />
         )}
       </div>
@@ -321,7 +327,7 @@ export default function ProjectorView() {
 
   const currentBlockLabel = activeBlockLabel || activeBlock?.label;
   const showMiniTimer = timer.isRunning && (!projectorConfig.showCountdown || activeTab !== 'info');
-  const hasTopBar = hasTabs || showMiniTimer;
+  const hasTopBar = hasTabs || showMiniTimer || showSeatsTab;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '16px 16px', boxSizing: 'border-box', background: 'var(--bg-page)', position: 'relative' }}>
@@ -335,6 +341,87 @@ export default function ProjectorView() {
           marginBottom: '12px',
           flexShrink: 0
         }}>
+          {/* Sisi Kiri: Switch Moodle Status tepat di sisi kiri bar tab */}
+          {showSeatsTab && activeTab === 'generator' && (
+            <div
+              style={{
+                position: 'absolute',
+                left: '4px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                zIndex: 20,
+              }}
+            >
+              <Switch
+                checked={showMoodleOverlay}
+                onCheckedChange={setShowMoodleOverlay}
+                disabled={!kelas}
+                aria-label="Tampilkan status Moodle di kursi"
+              />
+              <span
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: 'var(--text-secondary)',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Status Moodle
+              </span>
+              {showMoodleOverlay && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '2px' }}>
+                  <span
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '11px',
+                      color: 'var(--text-muted)',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        width: '7px',
+                        height: '7px',
+                        borderRadius: '50%',
+                        background: 'oklch(0.6 0.17 142)',
+                        flexShrink: 0,
+                      }}
+                    />
+                    Selesai
+                  </span>
+                  <span
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '11px',
+                      color: 'var(--text-muted)',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        width: '7px',
+                        height: '7px',
+                        borderRadius: '50%',
+                        background: 'oklch(0.78 0.15 70)',
+                        flexShrink: 0,
+                      }}
+                    />
+                    Mengerjakan
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
           {hasTabs && (
             <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as ProjectorTab)}>
               <TabsList className="bg-card/90 border border-border/70 shadow-xs backdrop-blur-md">

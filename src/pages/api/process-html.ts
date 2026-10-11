@@ -4,7 +4,6 @@ import { lastHtmlStore, leaderboardStore } from "../../lib/store";
 import { normalizeRoomId } from "../../lib/leaderboardStorage";
 import { env } from "cloudflare:workers";
 
-
 export const prerender = false;
 
 export const OPTIONS: APIRoute = async () => {
@@ -19,27 +18,11 @@ export const OPTIONS: APIRoute = async () => {
     });
 };
 
-export const ALL: APIRoute = async ({ request }) => {
-    if (request.method === "OPTIONS") {
-        return new Response(null, {
-            status: 204,
-            headers: {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
-                "Access-Control-Allow-Headers": "Content-Type, Authorization, ngrok-skip-browser-warning, *",
-                "Access-Control-Max-Age": "86400",
-            }
-        });
-    }
-    return new Response(null, { status: 405 });
-};
-
 export const POST: APIRoute = async ({ request, url }) => {
     try {
         const rawRoom = url.searchParams.get("room") || "default";
         const room = normalizeRoomId(rawRoom);
-        
-        
+
         const MAX_PAYLOAD_BYTES = 3 * 1024 * 1024;
         let body: any;
         try {
@@ -57,37 +40,30 @@ export const POST: APIRoute = async ({ request, url }) => {
         const html = body.html;
 
         if (!html) {
-            return new Response(JSON.stringify({ error: "No HTML provided" }), { 
+            return new Response(JSON.stringify({ error: "No HTML provided" }), {
                 status: 400,
                 headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
             });
         }
 
-        
         if (lastHtmlStore.get(room) === html) {
             const cachedData = leaderboardStore.get(room) || [];
             return new Response(JSON.stringify({ success: true, count: cachedData.length, unchanged: true }), {
                 status: 200,
-                headers: {
-                    "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": "*"
-                }
+                headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
             });
         }
         lastHtmlStore.set(room, html);
 
         const root = parse(html);
-        
-        
         root.querySelectorAll('.accesshide, .reviewlink, .commands').forEach(el => el.remove());
 
         const rows = root.querySelectorAll("tbody tr");
         const headers = root.querySelectorAll("thead th").map(th => th.textContent.trim().replace(/\s+/g, ' '));
-        
+
         const data = [];
 
         for (const row of rows) {
-            
             if (row.classList.contains("emptyrow") || row.querySelector(".tabledivider")) continue;
 
             const cells = row.querySelectorAll("td");
@@ -98,27 +74,26 @@ export const POST: APIRoute = async ({ request, url }) => {
 
             cells.forEach((cell, index) => {
                 const header = headers[index] || `Column ${index}`;
-                
-                let text = cell.textContent.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
-                
+                const text = cell.textContent.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
                 rowData[header] = text;
                 if (text && text !== '-' && text !== 'Not yet graded') {
                     isRelevant = true;
                 }
             });
 
-            
+            // Header lookup: exact match first, then startsWith to handle
+            // Moodle's sort link text appended to TH (e.g. "StatusSort by Status Ascending")
             const getValue = (...keys: string[]) => {
                 for (const k of keys) {
-                    const foundKey = Object.keys(rowData).find(
-                        (rk) => rk.trim().toLowerCase() === k.toLowerCase()
-                    );
-                    if (foundKey && rowData[foundKey]) return rowData[foundKey];
+                    const kLower = k.toLowerCase();
+                    const exact = Object.keys(rowData).find(rk => rk.trim().toLowerCase() === kLower);
+                    if (exact && rowData[exact]) return rowData[exact];
+                    const starts = Object.keys(rowData).find(rk => rk.trim().toLowerCase().startsWith(kLower));
+                    if (starts && rowData[starts]) return rowData[starts];
                 }
                 return "";
             };
 
-            
             const firstName = getValue("First name", "Nama depan");
             const surname = getValue("Surname", "Last name", "Nama akhir", "Nama belakang");
             if (firstName || surname) {
@@ -140,12 +115,8 @@ export const POST: APIRoute = async ({ request, url }) => {
                 if (combinedName) rowData["NAME"] = combinedName;
             }
 
-            
-            if (!rowData["NAME"] || /overall average|rata-rata/i.test(rowData["NAME"])) {
-                continue;
-            }
+            if (!rowData["NAME"] || /overall average|rata-rata/i.test(rowData["NAME"])) continue;
 
-            
             const rawState = getValue("Status", "State", "Keadaan");
             if (rawState) {
                 const lower = rawState.toLowerCase();
@@ -158,32 +129,16 @@ export const POST: APIRoute = async ({ request, url }) => {
                 }
             }
 
-            
             const rawDuration = getValue("Duration", "Time taken", "Durasi", "Waktu yang diperlukan");
-            if (rawDuration) {
-                rowData["TIME TAKEN"] = rawDuration;
-            }
+            if (rawDuration) rowData["TIME TAKEN"] = rawDuration;
 
-            
             const rawNim = getValue("ID number", "Nomor ID", "NIM");
-            if (rawNim) {
-                rowData["NIM"] = rawNim;
-                rowData["ID NUMBER"] = rawNim;
-            }
+            if (rawNim) rowData["NIM"] = rawNim;
 
-            
             const gradeKey = Object.keys(rowData).find(k => /^(grade|nilai)/i.test(k));
-            if (gradeKey && rowData[gradeKey]) {
-                rowData["GRADE"] = rowData[gradeKey];
-            }
+            if (gradeKey && rowData[gradeKey]) rowData["GRADE"] = rowData[gradeKey];
 
-            if (isRelevant && rowData["NAME"]) {
-                const lowerName = rowData["NAME"].toLowerCase();
-                const isAggregate = (lowerName.includes("overall") && lowerName.includes("average")) || lowerName.includes("rata-rata");
-                if (!isAggregate) {
-                    data.push(rowData);
-                }
-            }
+            if (isRelevant) data.push(rowData);
         }
 
         let doPushed = false;
@@ -203,24 +158,14 @@ export const POST: APIRoute = async ({ request, url }) => {
             }
         }
 
-        return new Response(JSON.stringify({
-            success: true,
-            count: data.length,
-            doPushed,
-        }), {
+        return new Response(JSON.stringify({ success: true, count: data.length, doPushed }), {
             status: 200,
-            headers: {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*"
-            }
+            headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
         });
     } catch (e) {
         return new Response(JSON.stringify({ error: "Server Error", details: String(e) }), {
             status: 500,
-            headers: {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*"
-            }
+            headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
         });
     }
 }

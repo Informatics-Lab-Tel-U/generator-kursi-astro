@@ -186,14 +186,14 @@ function KursiGeneratorInner() {
                     />
                 )}
 
-                <div style={{ display: activeTab === "leaderboard" ? "block" : "none" }}>
+                {activeTab === "leaderboard" && (
                     <LeaderboardTab
                         kelas={kelas}
                         eligibleStudents={eligibleStudents}
                         racers={racers}
                         setRacers={setRacers}
                     />
-                </div>
+                )}
 
                 {activeTab === "others" && (
                     <OthersTab

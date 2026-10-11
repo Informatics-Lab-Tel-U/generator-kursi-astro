@@ -2,6 +2,7 @@ import React from 'react';
 import type { SeatData } from './types';
 import { Skeleton } from './ui/skeleton';
 import { Badge } from './ui/badge';
+import { matchStudentToMoodle } from '../hooks/useMoodleLeaderboard';
 
 interface SeatsTabProps {
   columns: SeatData[][];
@@ -14,8 +15,10 @@ interface SeatsTabProps {
   handleDragLeave: () => void;
   handleDrop: (seatNo: number) => void;
   handleDragEnd: () => void;
+  // Moodle overlay props (optional, only used in projector)
+  moodleData?: any[];
+  showMoodleOverlay?: boolean;
 }
-
 
 const COLOR_VARIANTS = [
   'blue',
@@ -48,6 +51,20 @@ function formatName(name: string): { defaultName: string; smallName: string } {
   return { defaultName: name, smallName: name };
 }
 
+function getMoodleRowBg(status: "finished" | "in-progress" | "none"): React.CSSProperties {
+  if (status === "finished") {
+    return {
+      background: "linear-gradient(90deg, oklch(0.6 0.17 142 / 18%) 0%, oklch(0.6 0.17 142 / 6%) 100%)",
+    };
+  }
+  if (status === "in-progress") {
+    return {
+      background: "linear-gradient(90deg, oklch(0.78 0.15 70 / 18%) 0%, oklch(0.78 0.15 70 / 6%) 100%)",
+    };
+  }
+  return {};
+}
+
 export default function SeatsTab({
   columns,
   disabledSeats,
@@ -59,6 +76,8 @@ export default function SeatsTab({
   handleDragLeave,
   handleDrop,
   handleDragEnd,
+  moodleData,
+  showMoodleOverlay = false,
 }: SeatsTabProps) {
   const activeColumns = columns.filter((col) => col && col.length > 0);
 
@@ -77,6 +96,20 @@ export default function SeatsTab({
               const isDragSource = dragSourceSeat === seat.seatNo;
               const isDragOver = dragOverSeat === seat.seatNo;
               const hasStudent = seat.student !== null;
+
+              // Moodle matching
+              let moodleStatus: "finished" | "in-progress" | "none" = "none";
+              let moodleEntry: any = undefined;
+              if (showMoodleOverlay && moodleData && hasStudent && seat.student && !isDisabled) {
+                const result = matchStudentToMoodle(seat.student.name, moodleData);
+                moodleStatus = result.status;
+                moodleEntry = result.moodleEntry;
+              }
+
+              const moodleBg = showMoodleOverlay && hasStudent && !isDisabled
+                ? getMoodleRowBg(moodleStatus)
+                : {};
+
               return (
                 <div
                   key={seat.seatNo}
@@ -90,6 +123,7 @@ export default function SeatsTab({
                   ]
                     .filter(Boolean)
                     .join(" ")}
+                  style={moodleBg}
                   draggable={hasStudent && !isDisabled && !isLoading}
                   onDragStart={() => handleDragStart(seat.seatNo)}
                   onDragOver={(e) =>
