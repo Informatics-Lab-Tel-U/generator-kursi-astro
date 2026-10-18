@@ -65,4 +65,5 @@ export interface SeatVersion {
   seats: SeatData[];
   matkul: string;
   kelas: string;
+  disabledSeats?: number[];
 }

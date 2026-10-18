@@ -33,8 +33,6 @@ interface SidebarProps {
   totalSeats: number;
   projectorConfig: ProjectorConfig;
   setProjectorConfig: React.Dispatch<React.SetStateAction<ProjectorConfig>>;
-  versions?: SeatVersion[];
-  restoreVersion?: (v: SeatVersion) => void;
 }
 
 export default function Sidebar({

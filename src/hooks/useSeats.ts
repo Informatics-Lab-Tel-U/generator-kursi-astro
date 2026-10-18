@@ -29,6 +29,7 @@ export function useSeats(
     const [dragSourceSeat, setDragSourceSeat] = useState<number | null>(null);
     const [dragOverSeat, setDragOverSeat] = useState<number | null>(null);
     const [versions, setVersions] = useState<SeatVersion[]>([]);
+    const skipNextShuffleRef = useRef<boolean>(false);
 
     
     const seatsRef = useRef<SeatData[]>(seats);
@@ -41,7 +42,8 @@ export function useSeats(
             if (saved) {
                 const parsed: SeatVersion[] = JSON.parse(saved);
                 const now = Date.now();
-                const valid = parsed.filter((v) => now - v.timestamp < 2 * 60 * 60 * 1000);
+                // Simpan riwayat hingga 24 jam terakhir (1 hari kerja praktikum)
+                const valid = parsed.filter((v) => now - v.timestamp < 24 * 60 * 60 * 1000);
                 setVersions(valid);
                 if (valid.length !== parsed.length) {
                     localStorage.setItem("kursi_versions", JSON.stringify(valid));
@@ -60,6 +62,13 @@ export function useSeats(
             });
             return;
         }
+
+        // Jangan timpa kursi jika baru saja dilakukan pemulihan versi
+        if (skipNextShuffleRef.current) {
+            skipNextShuffleRef.current = false;
+            return;
+        }
+
         const shuffled = fisherYatesShuffle(eligibleStudents);
         const reqSeats = getRequiredTotalSeats(eligibleStudents.length, disabledSeats);
         const newSeats = makeEmptySeats(reqSeats);
@@ -70,6 +79,25 @@ export function useSeats(
             }
         }
         setSeats(newSeats);
+
+        // Catat versi awal pertama kali saat kelas dimuat jika belum ada riwayat untuk kelas ini
+        const newVersion: SeatVersion = {
+            id: Math.random().toString(36).substring(2, 11),
+            timestamp: Date.now(),
+            seats: newSeats,
+            matkul,
+            kelas,
+            disabledSeats: Array.from(disabledSeats),
+        };
+        setVersions((prev) => {
+            const hasExisting = prev.some((v) => v.matkul === matkul && v.kelas === kelas);
+            if (hasExisting) return prev;
+            const next = [newVersion, ...prev].slice(0, 20);
+            try {
+                localStorage.setItem("kursi_versions", JSON.stringify(next));
+            } catch (_) {}
+            return next;
+        });
     }, [eligibleStudents, matkul, kelas]); 
 
     const handleGenerate = useCallback(() => {
@@ -92,17 +120,31 @@ export function useSeats(
                 seats: newSeats,
                 matkul,
                 kelas,
+                disabledSeats: Array.from(disabledSeats),
             };
             setVersions((prev) => {
                 const next = [newVersion, ...prev].slice(0, 20);
-                localStorage.setItem("kursi_versions", JSON.stringify(next));
+                try {
+                    localStorage.setItem("kursi_versions", JSON.stringify(next));
+                } catch (_) {}
                 return next;
             });
         }, 500);
     }, [eligibleStudents, disabledSeats, matkul, kelas]);
 
     const restoreVersion = useCallback((version: SeatVersion) => {
+        skipNextShuffleRef.current = true;
         setSeats(version.seats);
+        if (version.disabledSeats && Array.isArray(version.disabledSeats)) {
+            setDisabledSeats(new Set(version.disabledSeats));
+        }
+    }, []);
+
+    const clearVersions = useCallback(() => {
+        setVersions([]);
+        try {
+            localStorage.removeItem("kursi_versions");
+        } catch (_) {}
     }, []);
 
     const handleReset = useCallback(
@@ -189,6 +231,7 @@ export function useSeats(
         handleGenerate,
         handleReset,
         restoreVersion,
+        clearVersions,
         toggleDisabledSeat,
         handleDragStart,
         handleDragOver,

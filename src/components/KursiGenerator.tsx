@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { toPng } from "html-to-image";
 import "./KursiGenerator.css";
 
-import type { TabId, ProjectorConfig, TimerState, ScheduleState } from "./types";
+import type { TabId, ProjectorConfig, TimerState, ScheduleState, SeatVersion } from "./types";
 import type { Racer } from "./types";
-import { getDefaultTimerSession } from "./utils";
+import { getDefaultTimerSession, generateSeatPhotoFilename } from "./utils";
+import { Badge } from "./ui/badge";
 
 import { useTheme } from "../hooks/useTheme";
 import { useMonitoring } from "../hooks/useMonitoring";
@@ -73,14 +75,91 @@ function KursiGeneratorInner() {
     const {
         columns, disabledSeats, dragSourceSeat, dragOverSeat,
         versions, assignedCount, activeSeatCount,
-        handleGenerate, handleReset, restoreVersion, toggleDisabledSeat,
+        handleGenerate, handleReset, restoreVersion, clearVersions, toggleDisabledSeat,
         handleDragStart, handleDragOver, handleDragLeave, handleDrop, handleDragEnd,
         seats,
     } = useSeats(eligibleStudents, matkul, kelas, isLoading);
 
+    const handleRestoreVersion = useCallback(
+        (v: SeatVersion) => {
+            if (v.matkul && v.matkul !== matkul) {
+                setMatkul(v.matkul);
+            }
+            if (v.kelas && v.kelas !== kelas) {
+                setKelas(v.kelas);
+            }
+            restoreVersion(v);
+            setActiveTab("seats");
+        },
+        [matkul, kelas, restoreVersion, setActiveTab]
+    );
+
     const activeBlock = countdownMode === "advanced"
         ? schedule.blocks.find((b) => b.id === schedule.activeBlockId)
         : null;
+
+    const seatLayoutRef = useRef<HTMLDivElement>(null);
+    const [isSavingImage, setIsSavingImage] = useState(false);
+
+    const handleSaveImage = async () => {
+        if (!matkul || !kelas || assignedCount === 0) return;
+        if (activeTab !== "seats") {
+            setActiveTab("seats");
+            await new Promise((resolve) => setTimeout(resolve, 150));
+        }
+
+        try {
+            setIsSavingImage(true);
+            // Berikan jeda agar header ter-render di DOM dan browser menyelesaikan reflow
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            const node = seatLayoutRef.current;
+            if (!node) return;
+
+            // Ukur dimensi riil konten termasuk elemen yang scrollable/overflow
+            const seatGridEl = node.querySelector(".seat-grid") as HTMLElement | null;
+
+            const gridScrollWidth = seatGridEl ? seatGridEl.scrollWidth : 0;
+            const nodeScrollWidth = node.scrollWidth;
+            const contentWidth = Math.max(gridScrollWidth, nodeScrollWidth, node.offsetWidth);
+
+            const gridScrollHeight = seatGridEl ? seatGridEl.scrollHeight : 0;
+            const nodeScrollHeight = node.scrollHeight;
+            const contentHeight = Math.max(nodeScrollHeight, gridScrollHeight, node.offsetHeight);
+
+            const PADDING = 24;
+            const totalWidth = Math.ceil(contentWidth + PADDING * 2);
+            const totalHeight = Math.ceil(contentHeight + PADDING * 2);
+
+            const filename = generateSeatPhotoFilename(matkul, kelas);
+            const dataUrl = await toPng(node, {
+                cacheBust: true,
+                pixelRatio: 2,
+                width: totalWidth,
+                height: totalHeight,
+                backgroundColor: theme === "dark" ? "#141517" : "#ffffff",
+                style: {
+                    width: `${totalWidth}px`,
+                    height: `${totalHeight}px`,
+                    maxWidth: "none",
+                    maxHeight: "none",
+                    padding: `${PADDING}px`,
+                    margin: "0",
+                    boxSizing: "border-box",
+                    overflow: "visible",
+                },
+            });
+
+            const link = document.createElement("a");
+            link.download = filename;
+            link.href = dataUrl;
+            link.click();
+        } catch (err) {
+            console.error("Gagal menyimpan foto generator kursi:", err);
+        } finally {
+            setIsSavingImage(false);
+        }
+    };
 
     useProjectorSync({
         seats,
@@ -139,6 +218,8 @@ function KursiGeneratorInner() {
                     setCountdownMode={setCountdownMode}
                     timer={timer}
                     activeBlockLabel={activeBlock?.label}
+                    onSaveImage={handleSaveImage}
+                    isSavingImage={isSavingImage}
                 />
 
                 {activeTab === "seats" && (
@@ -152,18 +233,39 @@ function KursiGeneratorInner() {
                             <span>Silakan pilih Mata Kuliah dan Kelas terlebih dahulu</span>
                         </div>
                     ) : (
-                        <SeatsTab
-                            columns={columns}
-                            disabledSeats={disabledSeats}
-                            dragSourceSeat={dragSourceSeat}
-                            dragOverSeat={dragOverSeat}
-                            isLoading={isLoading}
-                            handleDragStart={handleDragStart}
-                            handleDragOver={handleDragOver}
-                            handleDragLeave={handleDragLeave}
-                            handleDrop={handleDrop}
-                            handleDragEnd={handleDragEnd}
-                        />
+                        <div ref={seatLayoutRef}>
+                            {isSavingImage && (
+                                <div className="pb-3 mb-3 border-b border-border/80 flex items-center justify-between flex-wrap gap-2">
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-base font-semibold text-foreground tracking-tight">{matkul}</span>
+                                            <span className="text-muted-foreground">•</span>
+                                            <span className="text-sm font-medium text-foreground/90">Kelas {kelas}</span>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground mt-0.5">
+                                            {new Date().toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Badge variant="secondary" className="font-medium text-xs">
+                                            {assignedCount}/{activeSeatCount} Kursi Terisi
+                                        </Badge>
+                                    </div>
+                                </div>
+                            )}
+                            <SeatsTab
+                                columns={columns}
+                                disabledSeats={disabledSeats}
+                                dragSourceSeat={dragSourceSeat}
+                                dragOverSeat={dragOverSeat}
+                                isLoading={isLoading}
+                                handleDragStart={handleDragStart}
+                                handleDragOver={handleDragOver}
+                                handleDragLeave={handleDragLeave}
+                                handleDrop={handleDrop}
+                                handleDragEnd={handleDragEnd}
+                            />
+                        </div>
                     )
                 )}
 
@@ -198,8 +300,12 @@ function KursiGeneratorInner() {
                 {activeTab === "others" && (
                     <OthersTab
                         versions={versions}
-                        restoreVersion={restoreVersion}
+                        restoreVersion={handleRestoreVersion}
+                        clearVersions={clearVersions}
                         setActiveTab={setActiveTab}
+                        currentMatkul={matkul}
+                        currentKelas={kelas}
+                        currentSeats={seats}
                     />
                 )}
             </main>

@@ -12,6 +12,8 @@ import {
     LuMoon,
     LuPanelLeftOpen,
     LuPanelLeftClose,
+    LuCamera,
+    LuLoader,
 } from "react-icons/lu";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -36,6 +38,8 @@ interface KursiGeneratorHeaderProps {
     setCountdownMode: (mode: "simple" | "advanced") => void;
     timer?: TimerState;
     activeBlockLabel?: string;
+    onSaveImage?: () => void;
+    isSavingImage?: boolean;
 }
 
 const TAB_CONFIG: { id: TabId; label: string; icon: React.ReactNode }[] = [
@@ -63,6 +67,8 @@ export default function KursiGeneratorHeader({
     setCountdownMode,
     timer,
     activeBlockLabel,
+    onSaveImage,
+    isSavingImage,
 }: KursiGeneratorHeaderProps) {
 
 
@@ -147,6 +153,36 @@ export default function KursiGeneratorHeader({
                             </div>
                         ))}
                     </div>
+                    {onSaveImage && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="default"
+                            className="gap-1.5"
+                            onClick={onSaveImage}
+                            disabled={isSavingImage || !matkul || !kelas || assignedCount === 0}
+                            aria-label="Simpan susunan kursi"
+                            title={
+                                !matkul || !kelas
+                                    ? "Pilih mata kuliah dan kelas terlebih dahulu"
+                                    : assignedCount === 0
+                                    ? "Generate kursi terlebih dahulu sebelum menyimpan foto"
+                                    : `Simpan susunan kursi (${matkul} - ${kelas})`
+                            }
+                        >
+                            {isSavingImage ? (
+                                <>
+                                    <LuLoader className="size-4 animate-spin" />
+                                    <span>Menyimpan...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <LuCamera className="size-4" />
+                                    <span>Simpan Kursi</span>
+                                </>
+                            )}
+                        </Button>
+                    )}
                     <Button
                         variant="default"
                         size="default"

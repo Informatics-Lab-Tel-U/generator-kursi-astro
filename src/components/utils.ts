@@ -125,3 +125,24 @@ export function getDefaultScheduleTemplates() {
     },
   ];
 }
+
+export function generateSeatPhotoFilename(
+  praktikum: string,
+  kelas: string,
+  date: Date = new Date()
+): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const tanggal = `${year}-${month}-${day}`;
+
+  const cleanPraktikum = (praktikum || "Praktikum")
+    .trim()
+    .replace(/[/\\?%*:|"<>]/g, "_");
+
+  const cleanKelas = (kelas || "Kelas")
+    .trim()
+    .replace(/[/\\?%*:|"<>]/g, "_");
+
+  return `${cleanPraktikum}_${cleanKelas}_${tanggal}.png`;
+}
