@@ -70,7 +70,11 @@ function KursiGeneratorInner() {
     const {
         matkulOptions, kelasOptions, eligibleStudents,
         isLoading, isOptionsLoading, isKelasLoading,
+        isCaslab, caslabAllocation, caslabSeatingMode, saveCaslabRoomSeats,
     } = useStudentData(matkul, kelas);
+
+    const displayMatkul = isCaslab ? "Caslab" : matkul;
+    const displayKelas = isCaslab && caslabAllocation ? caslabAllocation.room.name : kelas;
 
     const {
         columns, disabledSeats, dragSourceSeat, dragOverSeat,
@@ -78,7 +82,12 @@ function KursiGeneratorInner() {
         handleGenerate, handleReset, restoreVersion, clearVersions, toggleDisabledSeat,
         handleDragStart, handleDragOver, handleDragLeave, handleDrop, handleDragEnd,
         seats,
-    } = useSeats(eligibleStudents, matkul, kelas, isLoading);
+    } = useSeats(eligibleStudents, matkul, kelas, isLoading, {
+        isCaslab,
+        allocation: caslabAllocation,
+        seatingMode: caslabSeatingMode,
+        onSaveRoomSeats: saveCaslabRoomSeats,
+    });
 
     const handleRestoreVersion = useCallback(
         (v: SeatVersion) => {
@@ -131,7 +140,7 @@ function KursiGeneratorInner() {
             const totalWidth = Math.ceil(contentWidth + PADDING * 2);
             const totalHeight = Math.ceil(contentHeight + PADDING * 2);
 
-            const filename = generateSeatPhotoFilename(matkul, kelas);
+            const filename = generateSeatPhotoFilename(displayMatkul, displayKelas);
             const dataUrl = await toPng(node, {
                 cacheBust: true,
                 pixelRatio: 2,
@@ -168,7 +177,7 @@ function KursiGeneratorInner() {
         notes,
         racers,
         projectorConfig,
-        kelas,
+        kelas: displayKelas,
         eligibleStudents,
         activeBlockLabel: activeBlock ? activeBlock.label : undefined,
         activeBlockColor: activeBlock ? activeBlock.color : undefined,
@@ -202,8 +211,8 @@ function KursiGeneratorInner() {
 
             <main className="main-content">
                 <KursiGeneratorHeader
-                    matkul={matkul}
-                    kelas={kelas}
+                    matkul={displayMatkul}
+                    kelas={displayKelas}
                     assignedCount={assignedCount}
                     activeSeatCount={activeSeatCount}
                     activeTab={activeTab}
@@ -238,9 +247,9 @@ function KursiGeneratorInner() {
                                 <div className="pb-3 mb-3 border-b border-border/80 flex items-center justify-between flex-wrap gap-2">
                                     <div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-base font-semibold text-foreground tracking-tight">{matkul}</span>
+                                            <span className="text-base font-semibold text-foreground tracking-tight">{displayMatkul}</span>
                                             <span className="text-muted-foreground">•</span>
-                                            <span className="text-sm font-medium text-foreground/90">Kelas {kelas}</span>
+                                            <span className="text-sm font-medium text-foreground/90">{isCaslab ? displayKelas : `Kelas ${displayKelas}`}</span>
                                         </div>
                                         <p className="text-xs text-muted-foreground mt-0.5">
                                             {new Date().toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
