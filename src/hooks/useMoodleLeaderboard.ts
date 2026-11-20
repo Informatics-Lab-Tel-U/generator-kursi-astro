@@ -105,6 +105,18 @@ export function useMoodleLeaderboard(room: string, enabled: boolean = true) {
   const activeRoom = room || "default";
   const [realtimeData, setRealtimeData] = useState<any[]>(() => getSavedLeaderboard(activeRoom));
   const [isConnected, setIsConnected] = useState(false);
+  const [debouncedEnabled, setDebouncedEnabled] = useState(enabled);
+
+  // Debounce rapid toggle spam so WebSocket/fetch connections aren't thrashed
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedEnabled(enabled), 150);
+    return () => clearTimeout(timer);
+  }, [enabled]);
+
+  // Reset/load cached data only when activeRoom changes (never on toggle)
+  useEffect(() => {
+    setRealtimeData(getSavedLeaderboard(activeRoom));
+  }, [activeRoom]);
 
   // Sync across browser tabs
   useEffect(() => {
@@ -137,20 +149,27 @@ export function useMoodleLeaderboard(room: string, enabled: boolean = true) {
 
   // WebSocket (prod) or HTTP polling (dev)
   useEffect(() => {
-    const cached = getSavedLeaderboard(activeRoom);
-    if (cached.length > 0) setRealtimeData(cached);
     setIsConnected(false);
 
-    if (!enabled || !room || room === "-") return;
+    if (!debouncedEnabled || !room || room === "-") return;
 
     if (import.meta.env.DEV) {
+      let unmounted = false;
+      let controller: AbortController | null = null;
+
       const poll = async () => {
+        if (unmounted) return;
+        controller?.abort();
+        controller = new AbortController();
         try {
-          const res = await fetch(`/api/leaderboard?room=${encodeURIComponent(activeRoom)}`);
-          if (!res.ok) return;
+          const res = await fetch(`/api/leaderboard?room=${encodeURIComponent(activeRoom)}`, {
+            signal: controller.signal,
+          });
+          if (!res.ok || unmounted) return;
           const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
+          if (!unmounted && Array.isArray(data) && data.length > 0) {
             setRealtimeData(data);
+            setIsConnected(true);
             try {
               localStorage.setItem(`asprak_leaderboard_${activeRoom.trim().toUpperCase()}`, JSON.stringify(data));
             } catch {}
@@ -159,7 +178,11 @@ export function useMoodleLeaderboard(room: string, enabled: boolean = true) {
       };
       poll();
       const timer = setInterval(poll, 8000);
-      return () => clearInterval(timer);
+      return () => {
+        unmounted = true;
+        controller?.abort();
+        clearInterval(timer);
+      };
     }
 
     let ws: WebSocket | null = null;
@@ -170,15 +193,18 @@ export function useMoodleLeaderboard(room: string, enabled: boolean = true) {
     const connect = () => {
       if (unmounted) return;
       const protocol = location.protocol === "https:" ? "wss:" : "ws:";
-      ws = new WebSocket(`${protocol}//${location.host}/api/leaderboard?room=${encodeURIComponent(activeRoom)}`);
+      const socket = new WebSocket(`${protocol}//${location.host}/api/leaderboard?room=${encodeURIComponent(activeRoom)}`);
+      ws = socket;
 
-      ws.onopen = () => {
+      socket.onopen = () => {
+        if (unmounted || ws !== socket) return;
         retryCount = 0;
         setIsConnected(true);
-        try { ws?.send(JSON.stringify({ type: "GET" })); } catch {}
+        try { socket.send(JSON.stringify({ type: "GET" })); } catch {}
       };
 
-      ws.onmessage = (event) => {
+      socket.onmessage = (event) => {
+        if (unmounted || ws !== socket) return;
         try {
           const msg = JSON.parse(event.data as string) as { type: string; data: any[] };
           if ((msg.type === "INIT" || msg.type === "UPDATE") && Array.isArray(msg.data)) {
@@ -190,16 +216,21 @@ export function useMoodleLeaderboard(room: string, enabled: boolean = true) {
         } catch {}
       };
 
-      ws.onclose = () => {
+      socket.onclose = () => {
+        if (unmounted || ws !== socket) return;
         setIsConnected(false);
-        if (!unmounted) {
-          const delay = Math.min(3000 * Math.pow(1.5, retryCount), 30000);
-          retryCount++;
-          reconnectTimer = setTimeout(connect, delay);
-        }
+        const delay = Math.min(3000 * Math.pow(1.5, retryCount), 30000);
+        retryCount++;
+        reconnectTimer = setTimeout(connect, delay);
       };
 
-      ws.onerror = () => { setIsConnected(false); ws?.close(); };
+      socket.onerror = () => {
+        if (unmounted || ws !== socket) return;
+        setIsConnected(false);
+        if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+          socket.close();
+        }
+      };
     };
 
     connect();
@@ -207,9 +238,18 @@ export function useMoodleLeaderboard(room: string, enabled: boolean = true) {
     return () => {
       unmounted = true;
       if (reconnectTimer) clearTimeout(reconnectTimer);
-      if (ws) ws.close();
+      if (ws) {
+        ws.onopen = null;
+        ws.onmessage = null;
+        ws.onerror = null;
+        ws.onclose = null;
+        if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+          ws.close();
+        }
+        ws = null;
+      }
     };
-  }, [activeRoom, enabled]);
+  }, [activeRoom, room, debouncedEnabled]);
 
   return { realtimeData, isConnected };
 }
