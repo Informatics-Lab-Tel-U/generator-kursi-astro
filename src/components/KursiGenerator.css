@@ -1192,6 +1192,7 @@ body.time-finished .seats-natural {
     --text-primary: var(--foreground) !important;
     --text-secondary: var(--muted-foreground) !important;
     --text-muted: var(--muted-foreground) !important;
+    color: var(--foreground) !important;
     --border: oklch(1 0 0 / 12%) !important;
     --border-light: oklch(1 0 0 / 6%) !important;
 }

@@ -7,6 +7,7 @@ interface ProjectorState {
     disabledSeats: Set<number> | number[];
     timer: TimerState;
     notes: string;
+    miniLabel?: string;
     racers: Racer[];
     projectorConfig: ProjectorConfig;
     kelas: string;
@@ -54,6 +55,7 @@ export function useProjectorSync(state: ProjectorState) {
         state.disabledSeats,
         state.timer,
         state.notes,
+        state.miniLabel,
         state.racers,
         state.projectorConfig,
         state.kelas,

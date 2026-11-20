@@ -44,6 +44,14 @@ function KursiGeneratorInner() {
     const [showSidebar, setShowSidebar] = useState(true);
     const [countdownMode, setCountdownMode] = useState<"simple" | "advanced">("simple");
     const [notes, setNotes] = useState('<p><span style="font-size: 22px"><strong>Password: </strong></span></p>');
+    const [miniLabel, setMiniLabelState] = useState<string>(() => {
+        if (typeof window === "undefined") return "";
+        try { return localStorage.getItem("asprak_mini_label") || ""; } catch { return ""; }
+    });
+    const setMiniLabel = (val: string) => {
+        setMiniLabelState(val);
+        try { localStorage.setItem("asprak_mini_label", val); } catch {}
+    };
     const { racers, setRacers } = useRacersGlobal();
     const [timer, setTimer] = useState<TimerState>(() => {
         const defaultSession = getDefaultTimerSession();
@@ -175,6 +183,7 @@ function KursiGeneratorInner() {
         disabledSeats,
         timer,
         notes,
+        miniLabel,
         racers,
         projectorConfig,
         kelas: displayKelas,
@@ -279,7 +288,7 @@ function KursiGeneratorInner() {
                 )}
 
                 {activeTab === "notes" && (
-                    <NotesTab notes={notes} setNotes={setNotes} />
+                    <NotesTab notes={notes} setNotes={setNotes} miniLabel={miniLabel} setMiniLabel={setMiniLabel} />
                 )}
 
                 {activeTab === "countdown" && (

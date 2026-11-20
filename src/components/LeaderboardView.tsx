@@ -249,7 +249,7 @@ export default function LeaderboardView({ room, students, showBorder = true }: L
 
     return (
         <div
-            className="leaderboard-natural w-full flex flex-col rounded-lg bg-card overflow-hidden h-full max-h-full m-0 p-0"
+            className="leaderboard-natural w-full flex flex-col rounded-lg bg-card text-foreground overflow-hidden h-full max-h-full m-0 p-0"
             style={{
                 flex: 1,
                 minHeight: 0,
@@ -262,43 +262,51 @@ export default function LeaderboardView({ room, students, showBorder = true }: L
                 boxSizing: 'border-box'
             }}
         >
-            <div className="px-2 py-2 border-b border-border flex justify-between items-center bg-muted/20 flex-shrink-0">
-                <div className="flex items-center gap-3">
-                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 m-0">
-                        Leaderboard - {room || 'No Room'}
-                        {isDataStale && <LuBan className="text-destructive size-4" title="Data is stale (no updates for >60s)" />}
+            <div className="px-3 py-2 border-b border-border flex flex-wrap justify-between items-center gap-2 bg-muted/20 flex-shrink-0">
+                <div className="flex items-center gap-2 min-w-0">
+                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5 m-0 whitespace-nowrap truncate">
+                        <span>Leaderboard</span>
+                        {room && room !== '-' && (
+                            <span className="text-muted-foreground font-medium">· {room}</span>
+                        )}
+                        {isDataStale && <LuBan className="text-destructive size-3.5 shrink-0" title="Data is stale (no updates for >60s)" />}
                     </h3>
-                    <Badge variant={isConnected ? "secondary" : "destructive"} className="gap-1.5 font-normal text-xs">
-                        <span className={`size-2 rounded-full ${isConnected ? "bg-emerald-500" : "bg-destructive"}`} />
-                        <span>{isConnected ? 'Connected' : 'Disconnected'}</span>
+                    <Badge
+                        variant={isConnected ? "secondary" : "destructive"}
+                        className="gap-1 px-1.5 py-0.5 font-medium text-[11px] leading-none shrink-0 whitespace-nowrap"
+                        title={isConnected ? 'Connected' : 'Disconnected'}
+                    >
+                        <span className={`size-1.5 rounded-full ${isConnected ? "bg-emerald-500" : "bg-destructive"}`} />
+                        <span>{isConnected ? 'Live' : 'Offline'}</span>
                     </Badge>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 shrink-0">
                     <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setSortMode(prev => prev === 'finished' ? 'in-progress' : 'finished')}
-                        className="gap-1.5"
+                        className="h-7 px-2 text-xs gap-1 whitespace-nowrap"
+                        title={sortMode === 'in-progress' ? 'Urutkan: In Progress (klik untuk ubah)' : 'Urutkan: Normal (klik untuk ubah)'}
                     >
-                        <LuSettings className="size-3.5" />
-                        <span>{sortMode === 'in-progress' ? 'Urutkan: In Progress' : 'Urutkan: Normal'}</span>
+                        <LuSettings className="size-3.5 shrink-0" />
+                        <span>{sortMode === 'in-progress' ? 'In Progress' : 'Normal'}</span>
                     </Button>
                     <Button
                         variant="outline"
                         size="sm"
                         onClick={copyScript}
-                        className="gap-1.5"
+                        className="h-7 px-2 text-xs gap-1 whitespace-nowrap"
                         title="Salin script Moodle"
                         aria-label="Salin script Moodle"
                     >
                         {isCopied ? (
                             <>
-                                <LuCheck className="size-3.5 text-primary" />
+                                <LuCheck className="size-3.5 text-primary shrink-0" />
                                 <span>Copied</span>
                             </>
                         ) : (
                             <>
-                                <LuCopy className="size-3.5" />
+                                <LuCopy className="size-3.5 shrink-0" />
                                 <span>Copy</span>
                             </>
                         )}

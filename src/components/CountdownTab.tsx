@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import type { TimerState, Racer, RacerJitter, Student, ScheduleState } from "./types";
 import { formatTimeWithMs, formatClockTime } from "./utils";
 import { LuPlay, LuPause } from "react-icons/lu";
-import { useBlinkEffect, useCountdownTimer, useRacers } from "../hooks/useCountdown";
+import { useBlinkEffect, useCountdownTimer, useRacers, buildFairRaceJitter } from "../hooks/useCountdown";
 import ScheduleFlow from "./ScheduleFlow";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -132,7 +132,10 @@ export default function CountdownTab({
     const handleStartRace = () => {
         const { jitter, startTimer } = startRace(setTimer);
         jitterMapRef.current = jitter;
-        try { localStorage.setItem("asprak_race_jitter", JSON.stringify(jitter)); } catch { }
+        try {
+            localStorage.setItem("asprak_race_jitter", JSON.stringify(jitter));
+            window.dispatchEvent(new CustomEvent("asprak_race_jitter_updated", { detail: jitter }));
+        } catch { }
         startTimer();
     };
 
@@ -148,40 +151,67 @@ export default function CountdownTab({
     const isProjectorWithRace = Boolean(readOnly && racers && racers.length > 0);
 
     useEffect(() => {
-        racers.forEach((r, idx) => {
-            if (!jitterMapRef.current[r.id]) {
-                const n = Math.max(1, racers.length);
-                const normalizedIdx = n > 1 ? idx / (n - 1) : 0.5;
-                const baseRatio = 0.52 - (normalizedIdx * 0.18);
-                jitterMapRef.current[r.id] = {
-                    currentOffset: 0,
-                    targetOffset: Math.random() * 16 - 8,
-                    speed: 0.03 + Math.random() * 0.04,
-                    finalOffset: idx === 0 ? 0 : -(idx * 3) - 2,
-                    finalRank: idx,
-                    baseOffsetRatio: Math.max(0.30, Math.min(0.58, baseRatio)),
-                    waveFreq1: 0.18 + ((idx * 0.05) % 0.12),
-                    wavePhase1: (idx * 1.7) % (Math.PI * 2),
-                    waveAmp1: 35 + ((idx % 3) * 10),
-                    waveFreq2: 0.45 + ((idx * 0.09) % 0.25),
-                    wavePhase2: (idx * 2.3) % (Math.PI * 2),
-                    waveAmp2: 12 + ((idx % 2) * 5),
-                };
+        if (racers.length === 0) return;
+
+        let loadedFromStorage = false;
+        try {
+            const raw = localStorage.getItem("asprak_race_jitter");
+            if (raw) {
+                const stored: Record<string, any> = JSON.parse(raw);
+                if (racers.every((r) => stored[r.id])) {
+                    jitterMapRef.current = { ...stored };
+                    loadedFromStorage = true;
+                }
             }
-        });
+        } catch { }
+
+        if (!loadedFromStorage) {
+            const missingAny = racers.some((r) => !jitterMapRef.current[r.id]);
+            if (missingAny) {
+                const fairJitter = buildFairRaceJitter(racers);
+                jitterMapRef.current = fairJitter;
+                try {
+                    localStorage.setItem("asprak_race_jitter", JSON.stringify(fairJitter));
+                    window.dispatchEvent(new CustomEvent("asprak_race_jitter_updated", { detail: fairJitter }));
+                } catch { }
+            }
+        }
     }, [racers]);
 
     useEffect(() => {
-        if (!timer.startedAt || !timer.isRunning) return;
-        try {
-            const raw = localStorage.getItem("asprak_race_jitter");
-            if (!raw) return;
-            const stored: Record<string, any> = JSON.parse(raw);
-            const hasAllRacers = racers.every((r) => stored[r.id]);
-            if (hasAllRacers) {
-                jitterMapRef.current = { ...stored };
+        const syncJitterFromStorage = () => {
+            try {
+                const raw = localStorage.getItem("asprak_race_jitter");
+                if (!raw) return;
+                const stored: Record<string, any> = JSON.parse(raw);
+                if (racers.every((r) => stored[r.id])) {
+                    jitterMapRef.current = { ...stored };
+                }
+            } catch { }
+        };
+
+        if (timer.startedAt) {
+            syncJitterFromStorage();
+        }
+
+        const handleStorage = (e: StorageEvent) => {
+            if (e.key === "asprak_race_jitter") {
+                syncJitterFromStorage();
             }
-        } catch { }
+        };
+        const handleCustom = (e: Event) => {
+            const detail = (e as CustomEvent<Record<string, any>>).detail;
+            if (detail && racers.every((r) => detail[r.id])) {
+                jitterMapRef.current = { ...detail };
+            }
+        };
+
+        window.addEventListener("storage", handleStorage);
+        window.addEventListener("asprak_race_jitter_updated", handleCustom);
+        return () => {
+            window.removeEventListener("storage", handleStorage);
+            window.removeEventListener("asprak_race_jitter_updated", handleCustom);
+        };
     }, [timer.startedAt, timer.isRunning, racers]);
 
 

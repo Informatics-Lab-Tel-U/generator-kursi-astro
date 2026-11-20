@@ -90,35 +90,62 @@ export function useRacers(
 
     const startRace = useCallback(
         (setTimer?: React.Dispatch<React.SetStateAction<TimerState>>) => {
-            const shuffled = [...racers].sort(() => Math.random() - 0.5);
-            const jitter: Record<string, any> = {};
-            const n = Math.max(1, racers.length);
-
-            shuffled.forEach((r, rankIdx) => {
-                const normalizedRank = n > 1 ? rankIdx / (n - 1) : 0.5;
-                const baseRatio = 0.52 - (normalizedRank * 0.18) + ((Math.random() - 0.5) * 0.04);
-
-                jitter[r.id] = {
-                    currentOffset: 0,
-                    targetOffset: Math.random() * 16 - 8,
-                    speed: 0.03 + Math.random() * 0.04,
-                    finalOffset: rankIdx === 0 ? 0 : -(rankIdx * 3) - Math.random() * 2,
-                    finalRank: rankIdx,
-                    baseOffsetRatio: Math.max(0.30, Math.min(0.58, baseRatio)),
-                    waveFreq1: 0.18 + Math.random() * 0.14,
-                    wavePhase1: (rankIdx * 1.7 + Math.random() * 1.5) % (Math.PI * 2),
-                    waveAmp1: 35 + Math.random() * 25,
-                    waveFreq2: 0.45 + Math.random() * 0.35,
-                    wavePhase2: (rankIdx * 2.3 + Math.random() * 2.0) % (Math.PI * 2),
-                    waveAmp2: 12 + Math.random() * 12,
-                };
-            });
+            const jitter = buildFairRaceJitter(racers);
             return { jitter, startTimer: () => setTimer?.((p) => ({ ...p, isRunning: true, startedAt: Date.now() })) };
         },
         [racers]
     );
 
     return { newRacerName, setNewRacerName, addRacer, removeRacer, startRace, handleRacerImageUpload };
+}
+
+/**
+ * Unbiased Fisher-Yates shuffle using crypto.getRandomValues when available.
+ */
+export function fisherYatesShuffle<T>(items: T[]): T[] {
+    const arr = [...items];
+    for (let i = arr.length - 1; i > 0; i--) {
+        let rand = Math.random();
+        if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+            const buf = new Uint32Array(1);
+            crypto.getRandomValues(buf);
+            rand = buf[0] / 0x100000000;
+        }
+        const j = Math.floor(rand * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+/**
+ * Build randomized, unbiased race jitter and final ranks (0 = 1st, 1 = 2nd, 2 = 3rd, ...).
+ */
+export function buildFairRaceJitter(racers: Racer[]): Record<string, any> {
+    const shuffled = fisherYatesShuffle(racers);
+    const jitter: Record<string, any> = {};
+    const n = Math.max(1, racers.length);
+
+    shuffled.forEach((r, rankIdx) => {
+        const normalizedRank = n > 1 ? rankIdx / (n - 1) : 0.5;
+        const baseRatio = 0.52 - (normalizedRank * 0.18) + ((Math.random() - 0.5) * 0.04);
+
+        jitter[r.id] = {
+            currentOffset: 0,
+            targetOffset: Math.random() * 16 - 8,
+            speed: 0.03 + Math.random() * 0.04,
+            finalOffset: rankIdx === 0 ? 0 : -(rankIdx * 3) - Math.random() * 2,
+            finalRank: rankIdx,
+            baseOffsetRatio: Math.max(0.30, Math.min(0.58, baseRatio)),
+            waveFreq1: 0.18 + Math.random() * 0.14,
+            wavePhase1: (rankIdx * 1.7 + Math.random() * 1.5) % (Math.PI * 2),
+            waveAmp1: 35 + Math.random() * 25,
+            waveFreq2: 0.45 + Math.random() * 0.35,
+            wavePhase2: (rankIdx * 2.3 + Math.random() * 2.0) % (Math.PI * 2),
+            waveAmp2: 12 + Math.random() * 12,
+        };
+    });
+
+    return jitter;
 }
 
 export function useMoodleScript(kelas: string) {

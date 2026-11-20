@@ -30,9 +30,10 @@ interface Props {
   content: string;
   onUpdate?: (html: string) => void;
   readOnly?: boolean;
+  compact?: boolean;
 }
 
-export default function TiptapEditor({ content, onUpdate, readOnly = false }: Props) {
+export default function TiptapEditor({ content, onUpdate, readOnly = false, compact = false }: Props) {
   const editor = useEditor({
     extensions: [StarterKit, TextStyle, Color, FontSize],
     content,
@@ -89,8 +90,12 @@ export default function TiptapEditor({ content, onUpdate, readOnly = false }: Pr
     setFontSizeInput('15');
   };
 
+  const wrapperClass = compact && readOnly
+    ? 'tiptap-wrapper tiptap-compact tiptap-minimal-readonly readonly'
+    : `tiptap-wrapper rounded-lg border border-border h-full bg-card ${compact ? 'tiptap-compact' : ''} ${readOnly ? 'readonly overflow-y-auto min-h-0 flex flex-col' : ''}`;
+
   return (
-    <div className={`tiptap-wrapper rounded-lg border border-border h-full bg-card ${readOnly ? 'readonly overflow-y-auto min-h-0 flex flex-col' : ''}`}>
+    <div className={wrapperClass}>
       {!readOnly && (
         <div className="tiptap-toolbar flex items-center flex-wrap gap-1 p-1.5 border-b border-border bg-muted/30">
           <Toggle

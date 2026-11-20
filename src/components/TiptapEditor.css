@@ -73,6 +73,28 @@
 }
 
 
+.tiptap-wrapper.tiptap-compact .tiptap {
+  min-height: 52px;
+  padding: 10px 14px;
+}
+
+.tiptap-wrapper.tiptap-minimal-readonly {
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.tiptap-wrapper.tiptap-minimal-readonly .tiptap {
+  padding: 0 !important;
+  min-height: 0 !important;
+  line-height: 1.35;
+}
+
+.tiptap-wrapper.tiptap-minimal-readonly .tiptap p {
+  margin: 0;
+}
+
 .tiptap {
   padding: 20px 24px;
   min-height: 340px;

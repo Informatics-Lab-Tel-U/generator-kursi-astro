@@ -5,6 +5,7 @@ import { makeEmptySeats, formatTimeWithMs } from './utils';
 
 import SeatsTab from './SeatsTab';
 import NotesTab from './NotesTab';
+import TiptapEditor from './TiptapEditor';
 import CountdownTab from './CountdownTab';
 import LeaderboardView from './LeaderboardView';
 import { Switch } from './ui/switch';
@@ -37,6 +38,10 @@ export default function ProjectorView() {
   const [now, setNow] = useState(new Date());
   const [racers, setRacers] = useState<Racer[]>(getStoredRacers);
   const [notes, setNotes] = useState<string>('<p><span style="font-size: 22px"><strong>Password: </strong></span></p>');
+  const [miniLabel, setMiniLabel] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    try { return localStorage.getItem("asprak_mini_label") || ""; } catch { return ""; }
+  });
   const [projectorConfig, setProjectorConfig] = useState<ProjectorConfig>({
     showSeats: true,
     showNotes: true,
@@ -143,6 +148,7 @@ export default function ProjectorView() {
       if (data.timer) setTimer(data.timer);
       if (data.racers) setRacers(data.racers);
       if (data.notes) setNotes(data.notes);
+      if (data.miniLabel !== undefined) setMiniLabel(data.miniLabel);
       if (data.projectorConfig) setProjectorConfig(data.projectorConfig);
       if (data.kelas !== undefined) setKelas(data.kelas);
       if (data.eligibleStudents) setEligibleStudents(data.eligibleStudents);
@@ -327,157 +333,171 @@ export default function ProjectorView() {
 
   const currentBlockLabel = activeBlockLabel || activeBlock?.label;
   const showMiniTimer = timer.isRunning && (!projectorConfig.showCountdown || activeTab !== 'info');
-  const hasTopBar = hasTabs || showMiniTimer || showSeatsTab;
+  const hasMiniLabel = miniLabel.replace(/<[^>]*>/g, '').trim() !== '';
+  const hasTopBar = hasTabs || showMiniTimer || showSeatsTab || hasMiniLabel;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '16px 16px', boxSizing: 'border-box', background: 'var(--bg-page)', position: 'relative' }}>
       {hasTopBar && (
         <div style={{
           position: 'relative',
-          display: 'flex',
+          display: 'grid',
+          gridTemplateColumns: '1fr auto 1fr',
           alignItems: 'center',
-          justifyContent: 'center',
+          gap: '12px',
           minHeight: '40px',
           marginBottom: '12px',
           flexShrink: 0
         }}>
-          {/* Sisi Kiri: Switch Moodle Status tepat di sisi kiri bar tab */}
-          {showSeatsTab && activeTab === 'generator' && (
-            <div
-              style={{
-                position: 'absolute',
-                left: '4px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                zIndex: 20,
-              }}
-            >
-              <Switch
-                checked={showMoodleOverlay}
-                onCheckedChange={setShowMoodleOverlay}
-                disabled={!kelas}
-                aria-label="Tampilkan status Moodle di kursi"
-              />
-              <span
+          <div style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
+            {hasMiniLabel && (
+              <TiptapEditor content={miniLabel} readOnly={true} compact={true} />
+            )}
+          </div>
+
+          <div>
+            {hasTabs && (
+              <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as ProjectorTab)}>
+                <TabsList className="bg-card/90 border border-border/70 shadow-xs backdrop-blur-md">
+                  {showSeatsTab && <TabsTrigger value="generator">Posisi Duduk</TabsTrigger>}
+                  {showInfoTab && <TabsTrigger value="info">Umum</TabsTrigger>}
+                  {showNotesTab && <TabsTrigger value="notes">Catatan</TabsTrigger>}
+                </TabsList>
+              </Tabs>
+            )}
+          </div>
+
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '16px',
+            paddingLeft: '4px',
+            paddingRight: '4px',
+            minWidth: 0
+          }}>
+            {showSeatsTab && activeTab === 'generator' ? (
+              <div
                 style={{
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  color: 'var(--text-secondary)',
-                  whiteSpace: 'nowrap',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  zIndex: 20,
                 }}
               >
-                Status Moodle
-              </span>
-              {showMoodleOverlay && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '2px' }}>
-                  <span
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      fontSize: '11px',
-                      color: 'var(--text-muted)',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
+                <Switch
+                  checked={showMoodleOverlay}
+                  onCheckedChange={setShowMoodleOverlay}
+                  disabled={!kelas}
+                  aria-label="Tampilkan status Moodle di kursi"
+                />
+                <span
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: 'var(--text-secondary)',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  Status Moodle
+                </span>
+                {showMoodleOverlay && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '2px' }}>
                     <span
                       style={{
-                        display: 'inline-block',
-                        width: '7px',
-                        height: '7px',
-                        borderRadius: '50%',
-                        background: 'oklch(0.6 0.17 142)',
-                        flexShrink: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        fontSize: '11px',
+                        color: 'var(--text-muted)',
+                        whiteSpace: 'nowrap',
                       }}
-                    />
-                    Selesai
-                  </span>
-                  <span
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      fontSize: '11px',
-                      color: 'var(--text-muted)',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
+                    >
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          width: '7px',
+                          height: '7px',
+                          borderRadius: '50%',
+                          background: 'oklch(0.6 0.17 142)',
+                          flexShrink: 0,
+                        }}
+                      />
+                      Selesai
+                    </span>
                     <span
                       style={{
-                        display: 'inline-block',
-                        width: '7px',
-                        height: '7px',
-                        borderRadius: '50%',
-                        background: 'oklch(0.78 0.15 70)',
-                        flexShrink: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        fontSize: '11px',
+                        color: 'var(--text-muted)',
+                        whiteSpace: 'nowrap',
                       }}
-                    />
-                    Mengerjakan
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {hasTabs && (
-            <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as ProjectorTab)}>
-              <TabsList className="bg-card/90 border border-border/70 shadow-xs backdrop-blur-md">
-                {showSeatsTab && <TabsTrigger value="generator">Posisi Duduk</TabsTrigger>}
-                {showInfoTab && <TabsTrigger value="info">Umum</TabsTrigger>}
-                {showNotesTab && <TabsTrigger value="notes">Catatan</TabsTrigger>}
-              </TabsList>
-            </Tabs>
-          )}
-
-          {showMiniTimer && (
-            <div
-              onClick={() => {
-                if (showInfoTab && projectorConfig.showCountdown) {
-                  setActiveTab('info');
-                }
-              }}
-              style={{
-                position: 'absolute',
-                right: '4px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                textAlign: 'right',
-                userSelect: 'none',
-              }}
-              className={showInfoTab && projectorConfig.showCountdown ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}
-              title={showInfoTab && projectorConfig.showCountdown ? "Klik untuk melihat waktu penuh di tab Umum" : undefined}
-            >
-              <div className="mini-timer-label text-[10px] font-semibold text-muted-foreground tracking-widest leading-none mb-1">
-                {currentBlockLabel || "Waktu Tersisa"}
+                    >
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          width: '7px',
+                          height: '7px',
+                          borderRadius: '50%',
+                          background: 'oklch(0.78 0.15 70)',
+                          flexShrink: 0,
+                        }}
+                      />
+                      Mengerjakan
+                    </span>
+                  </div>
+                )}
               </div>
+            ) : (
+              <div />
+            )}
+
+            {showMiniTimer && (
               <div
-                className={`mini-timer-time leading-none ${actuallyFinished
-                  ? "finished"
-                  : isDanger
-                    ? "danger"
-                    : isWarning
-                      ? "warning"
-                      : ""
-                  }`}
-                style={{ fontSize: "28px", fontWeight: 700 }}
+                onClick={() => {
+                  if (showInfoTab && projectorConfig.showCountdown) {
+                    setActiveTab('info');
+                  }
+                }}
+                style={{
+                  textAlign: 'right',
+                  userSelect: 'none',
+                  flexShrink: 0,
+                }}
+                className={showInfoTab && projectorConfig.showCountdown ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}
+                title={showInfoTab && projectorConfig.showCountdown ? "Klik untuk melihat waktu penuh di tab Umum" : undefined}
               >
-                {isFinished ? (
-                  <span>00:00</span>
-                ) : (() => {
-                  const { main, centi } = formatTimeWithMs(remainMs);
-                  return (
-                    <>
-                      <span>{main}</span>
-                      <span style={{ fontSize: "0.65em", opacity: 0.5 }}>.{centi}</span>
-                    </>
-                  );
-                })()}
+                <div className="mini-timer-label text-[10px] font-semibold text-muted-foreground tracking-widest leading-none mb-1">
+                  {currentBlockLabel || "Waktu Tersisa"}
+                </div>
+                <div
+                  className={`mini-timer-time leading-none ${actuallyFinished
+                    ? "finished"
+                    : isDanger
+                      ? "danger"
+                      : isWarning
+                        ? "warning"
+                        : ""
+                    }`}
+                  style={{ fontSize: "28px", fontWeight: 700 }}
+                >
+                  {isFinished ? (
+                    <span>00:00</span>
+                  ) : (() => {
+                    const { main, centi } = formatTimeWithMs(remainMs);
+                    return (
+                      <>
+                        <span>{main}</span>
+                        <span style={{ fontSize: "0.65em", opacity: 0.5 }}>.{centi}</span>
+                      </>
+                    );
+                  })()}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 
