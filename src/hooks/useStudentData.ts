@@ -23,6 +23,7 @@ export interface CaslabCandidateRecord {
     kode: string;
     codeRule?: string;
     codeSource?: string;
+    disabled?: boolean;
 }
 
 export interface CaslabRoomConfig {
@@ -77,8 +78,8 @@ export function useStudentData(matkul: string, kelas: string) {
             } catch (_) {}
             return null;
         },
-        staleTime: 1000 * 60 * 5,
-        refetchOnWindowFocus: false,
+        staleTime: 0,
+        refetchOnWindowFocus: true,
         refetchInterval: false,
     });
 
@@ -86,7 +87,7 @@ export function useStudentData(matkul: string, kelas: string) {
         if (isCaslab) {
             void refetchCaslab();
         }
-    }, [isCaslab, refetchCaslab]);
+    }, [isCaslab, kelas, refetchCaslab]);
 
     const { data: praktikanMatkulOptions = EMPTY_OPTIONS, isLoading: isOptionsLoading } = useQuery({
         queryKey: ["matkulOptions"],
@@ -172,9 +173,12 @@ export function useStudentData(matkul: string, kelas: string) {
     const caslabStudents = useMemo<Student[]>(() => {
         if (!isCaslab || !caslabAllocation) return EMPTY_STUDENTS;
         const fromSeats = caslabAllocation.seats
-            .filter((s) => s.candidate !== null)
+            .filter((s) => s.candidate !== null && !s.candidate.disabled)
             .map((s) => s.candidate!);
-        const list = fromSeats.length > 0 ? fromSeats : caslabAllocation.assignedCandidates || [];
+        const list =
+            fromSeats.length > 0
+                ? fromSeats
+                : (caslabAllocation.assignedCandidates || []).filter((c) => !c.disabled);
         return list.map((c) => ({
             id: c.id,
             name: c.nama_lengkap,
@@ -258,5 +262,6 @@ export function useStudentData(matkul: string, kelas: string) {
         caslabAllocation,
         caslabSeatingMode: caslabState?.seatingMode ?? "spaced",
         saveCaslabRoomSeats,
+        refetchCaslab,
     };
 }

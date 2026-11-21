@@ -9,6 +9,7 @@ interface CaslabSeatsOptions {
     allocation: CaslabRoomAllocation | null;
     seatingMode: "spaced" | "dense";
     onSaveRoomSeats?: (roomId: string, seats: SeatData[], disabledSeats: Set<number>) => void;
+    onRefreshCaslab?: () => void;
 }
 
 function getCaslabTotalSeats(allocation: CaslabRoomAllocation | null): number {
@@ -43,6 +44,7 @@ export function useSeats(
     const caslabAllocation = caslabOptions?.allocation ?? null;
     const caslabSeatingMode = caslabOptions?.seatingMode ?? "spaced";
     const onSaveRoomSeats = caslabOptions?.onSaveRoomSeats;
+    const onRefreshCaslab = caslabOptions?.onRefreshCaslab;
 
     const [seats, setSeats] = useState<SeatData[]>(makeEmptySeats(50));
     const [disabledSeats, setDisabledSeats] = useState<Set<number>>(new Set([1, 2]));
@@ -84,7 +86,7 @@ export function useSeats(
             const nextSeats = makeEmptySeats(totalSeats);
             for (const s of caslabAllocation.seats) {
                 if (s.isDisabled) nextDisabled.add(s.seatNumber);
-                if (s.seatNumber >= 1 && s.seatNumber <= totalSeats && s.candidate) {
+                if (s.seatNumber >= 1 && s.seatNumber <= totalSeats && s.candidate && !s.candidate.disabled) {
                     nextSeats[s.seatNumber - 1] = {
                         seatNo: s.seatNumber,
                         student: {
@@ -148,40 +150,24 @@ export function useSeats(
     }, [eligibleStudents, matkul, kelas, isCaslab, caslabAllocation]); 
 
     const handleGenerate = useCallback(() => {
+        if (isCaslab) {
+            onRefreshCaslab?.();
+            return;
+        }
         setSeats([]);
         setTimeout(() => {
             const shuffled = fisherYatesShuffle(eligibleStudents);
-            const reqSeats = isCaslab && caslabAllocation
-                ? getCaslabTotalSeats(caslabAllocation)
-                : getRequiredTotalSeats(eligibleStudents.length, disabledSeats);
+            const reqSeats = getRequiredTotalSeats(eligibleStudents.length, disabledSeats);
             const newSeats = makeEmptySeats(reqSeats);
 
-            if (isCaslab && caslabSeatingMode === "spaced") {
-                let idx = 0;
-                for (let i = 0; i < reqSeats; i++) {
-                    if (i % 2 === 0 && !disabledSeats.has(i + 1) && idx < shuffled.length) {
-                        newSeats[i].student = shuffled[idx++];
-                    }
-                }
-                for (let i = 0; i < reqSeats && idx < shuffled.length; i++) {
-                    if (!disabledSeats.has(i + 1) && newSeats[i].student === null) {
-                        newSeats[i].student = shuffled[idx++];
-                    }
-                }
-            } else {
-                let idx = 0;
-                for (let i = 0; i < reqSeats; i++) {
-                    if (!disabledSeats.has(i + 1) && idx < shuffled.length) {
-                        newSeats[i].student = shuffled[idx++];
-                    }
+            let idx = 0;
+            for (let i = 0; i < reqSeats; i++) {
+                if (!disabledSeats.has(i + 1) && idx < shuffled.length) {
+                    newSeats[i].student = shuffled[idx++];
                 }
             }
 
             setSeats(newSeats);
-
-            if (isCaslab && caslabAllocation && onSaveRoomSeats) {
-                onSaveRoomSeats(caslabAllocation.room.id, newSeats, disabledSeats);
-            }
 
             const newVersion: SeatVersion = {
                 id: Math.random().toString(36).substring(2, 11),
@@ -199,7 +185,7 @@ export function useSeats(
                 return next;
             });
         }, 500);
-    }, [eligibleStudents, disabledSeats, matkul, kelas, isCaslab, caslabAllocation, caslabSeatingMode, onSaveRoomSeats]);
+    }, [eligibleStudents, disabledSeats, matkul, kelas, isCaslab, onRefreshCaslab]);
 
     const restoreVersion = useCallback((version: SeatVersion) => {
         skipNextShuffleRef.current = true;
@@ -216,25 +202,21 @@ export function useSeats(
         } catch (_) {}
     }, []);
 
-    const handleReset = useCallback(
-        () => setSeats(makeEmptySeats(getRequiredTotalSeats(eligibleStudents.length, disabledSeats))),
-        [eligibleStudents.length, disabledSeats]
-    );
+    const handleReset = useCallback(() => {
+        if (isCaslab) {
+            onRefreshCaslab?.();
+            return;
+        }
+        setSeats(makeEmptySeats(getRequiredTotalSeats(eligibleStudents.length, disabledSeats)));
+    }, [isCaslab, onRefreshCaslab, eligibleStudents.length, disabledSeats]);
 
     const toggleDisabledSeat = useCallback((seatNo: number) => {
+        if (isCaslab) return;
         const nextDisabled = new Set(disabledSeats);
         const willBeDisabled = !nextDisabled.has(seatNo);
         willBeDisabled ? nextDisabled.add(seatNo) : nextDisabled.delete(seatNo);
         setDisabledSeats(nextDisabled);
-
-        if (isCaslab && caslabAllocation && onSaveRoomSeats) {
-            const nextSeats = seatsRef.current.map((s) =>
-                s.seatNo === seatNo && willBeDisabled ? { ...s, student: null } : s
-            );
-            setSeats(nextSeats);
-            onSaveRoomSeats(caslabAllocation.room.id, nextSeats, nextDisabled);
-        }
-    }, [disabledSeats, isCaslab, caslabAllocation, onSaveRoomSeats]);
+    }, [disabledSeats, isCaslab]);
 
     
     useEffect(() => {
@@ -250,15 +232,19 @@ export function useSeats(
     }, [disabledSeats, eligibleStudents.length, isLoading, handleGenerate, isCaslab]);
 
     
-    const handleDragStart = useCallback((seatNo: number) => setDragSourceSeat(seatNo), []);
+    const handleDragStart = useCallback((seatNo: number) => {
+        if (isCaslab) return;
+        setDragSourceSeat(seatNo);
+    }, [isCaslab]);
     const handleDragOver = useCallback((e: React.DragEvent, seatNo: number) => {
+        if (isCaslab) return;
         e.preventDefault();
         setDragOverSeat(seatNo);
-    }, []);
+    }, [isCaslab]);
     const handleDragLeave = useCallback(() => setDragOverSeat(null), []);
     const handleDrop = useCallback(
         (targetSeatNo: number) => {
-            if (dragSourceSeat === null || dragSourceSeat === targetSeatNo) {
+            if (isCaslab || dragSourceSeat === null || dragSourceSeat === targetSeatNo) {
                 setDragSourceSeat(null);
                 setDragOverSeat(null);
                 return;
@@ -271,14 +257,11 @@ export function useSeats(
                 next[srcIdx] = { ...next[srcIdx], student: next[tgtIdx].student };
                 next[tgtIdx] = { ...next[tgtIdx], student: temp };
                 setSeats(next);
-                if (isCaslab && caslabAllocation && onSaveRoomSeats) {
-                    onSaveRoomSeats(caslabAllocation.room.id, next, disabledSeats);
-                }
             }
             setDragSourceSeat(null);
             setDragOverSeat(null);
         },
-        [dragSourceSeat, isCaslab, caslabAllocation, onSaveRoomSeats, disabledSeats]
+        [dragSourceSeat, isCaslab]
     );
     const handleDragEnd = useCallback(() => {
         setDragSourceSeat(null);

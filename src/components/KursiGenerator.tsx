@@ -78,7 +78,7 @@ function KursiGeneratorInner() {
     const {
         matkulOptions, kelasOptions, eligibleStudents,
         isLoading, isOptionsLoading, isKelasLoading,
-        isCaslab, caslabAllocation, caslabSeatingMode, saveCaslabRoomSeats,
+        isCaslab, caslabAllocation, caslabSeatingMode, saveCaslabRoomSeats, refetchCaslab,
     } = useStudentData(matkul, kelas);
 
     const displayMatkul = isCaslab ? "Caslab" : matkul;
@@ -95,6 +95,7 @@ function KursiGeneratorInner() {
         allocation: caslabAllocation,
         seatingMode: caslabSeatingMode,
         onSaveRoomSeats: saveCaslabRoomSeats,
+        onRefreshCaslab: () => { void refetchCaslab(); },
     });
 
     const handleRestoreVersion = useCallback(
