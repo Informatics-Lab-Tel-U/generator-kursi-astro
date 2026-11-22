@@ -1,3 +1,18 @@
+# Generator Kursi Praktikum
+
+### Institution & Lab Identity
+
+<div style="min-width: 100%;">
+
+|                                             University                                             |                               Laboratorium                               |
+| :------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------: |
+| <img src="./docs/assets/Logo_Telkom_University_potrait.png" alt="Telkom University" width="110" /> | <img src="./docs/assets/informatics-lab-logo.svg" alt="Informatics Lab" width="180" /> |
+|                                       **Telkom University**                                        |                        **Informatics Laboratory**                        |
+
+</div>
+
+---
+
 # Astro Starter Kit: Basics
 
 ```sh
