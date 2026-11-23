@@ -42,6 +42,15 @@ export default function ProjectorView() {
     if (typeof window === "undefined") return "";
     try { return localStorage.getItem("asprak_mini_label") || ""; } catch { return ""; }
   });
+  const [showMiniLabel, setShowMiniLabel] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const saved = localStorage.getItem("asprak_show_mini_label");
+      return saved === null ? false : saved === "true";
+    } catch {
+      return false;
+    }
+  });
   const [projectorConfig, setProjectorConfig] = useState<ProjectorConfig>({
     showSeats: true,
     showNotes: true,
@@ -149,6 +158,7 @@ export default function ProjectorView() {
       if (data.racers) setRacers(data.racers);
       if (data.notes) setNotes(data.notes);
       if (data.miniLabel !== undefined) setMiniLabel(data.miniLabel);
+      if (data.showMiniLabel !== undefined) setShowMiniLabel(data.showMiniLabel);
       if (data.projectorConfig) setProjectorConfig(data.projectorConfig);
       if (data.kelas !== undefined) setKelas(data.kelas);
       if (data.eligibleStudents) setEligibleStudents(data.eligibleStudents);
@@ -351,7 +361,28 @@ export default function ProjectorView() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
             {hasMiniLabel && (
-              <TiptapEditor content={miniLabel} readOnly={true} compact={true} />
+              showMiniLabel ? (
+                <TiptapEditor content={miniLabel} readOnly={true} compact={true} />
+              ) : (
+                <span
+                  aria-label="Label disembunyikan"
+                  title="Label disembunyikan"
+                  className="inline-flex items-center rounded-md border border-border/60 bg-card/80 px-2.5 py-1.5 text-muted-foreground"
+                >
+                  <svg
+                    width="28"
+                    height="8"
+                    viewBox="0 0 28 8"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <circle cx="3" cy="4" r="2.2" fill="currentColor" />
+                    <circle cx="10.3" cy="4" r="2.2" fill="currentColor" />
+                    <circle cx="17.7" cy="4" r="2.2" fill="currentColor" />
+                    <circle cx="25" cy="4" r="2.2" fill="currentColor" />
+                  </svg>
+                </span>
+              )
             )}
           </div>
 

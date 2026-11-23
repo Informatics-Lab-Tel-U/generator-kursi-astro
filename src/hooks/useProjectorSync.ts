@@ -8,6 +8,7 @@ interface ProjectorState {
     timer: TimerState;
     notes: string;
     miniLabel?: string;
+    showMiniLabel?: boolean;
     racers: Racer[];
     projectorConfig: ProjectorConfig;
     kelas: string;
@@ -56,6 +57,7 @@ export function useProjectorSync(state: ProjectorState) {
         state.timer,
         state.notes,
         state.miniLabel,
+        state.showMiniLabel,
         state.racers,
         state.projectorConfig,
         state.kelas,

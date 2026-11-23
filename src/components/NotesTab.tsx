@@ -1,19 +1,27 @@
 import React from 'react';
 import TiptapEditor from './TiptapEditor';
 import { Button } from './ui/button';
-import { LuX } from 'react-icons/lu';
+import { LuEye, LuEyeOff } from 'react-icons/lu';
 
 interface NotesTabProps {
   notes: string;
   setNotes?: (val: string) => void;
   miniLabel?: string;
   setMiniLabel?: (val: string) => void;
+  showMiniLabel?: boolean;
+  setShowMiniLabel?: (val: boolean) => void;
   readOnly?: boolean;
 }
 
-export default function NotesTab({ notes, setNotes, miniLabel = '', setMiniLabel, readOnly = false }: NotesTabProps) {
-  const hasMiniLabelText = miniLabel.replace(/<[^>]*>/g, '').trim() !== '';
-
+export default function NotesTab({
+  notes,
+  setNotes,
+  miniLabel = '',
+  setMiniLabel,
+  showMiniLabel = false,
+  setShowMiniLabel,
+  readOnly = false,
+}: NotesTabProps) {
   return (
     <div className={`notes-tab ${readOnly ? 'h-full min-h-0 flex flex-col' : 'flex flex-col gap-3'}`}>
       {!readOnly && setMiniLabel && (
@@ -22,16 +30,24 @@ export default function NotesTab({ notes, setNotes, miniLabel = '', setMiniLabel
             <span className="text-xs font-semibold text-foreground">
               Mini Label <span className="font-normal text-muted-foreground">(tampil di kiri atas proyektor)</span>
             </span>
-            {hasMiniLabelText && (
+            {setShowMiniLabel && (
               <Button
                 type="button"
-                variant="ghost"
-                size="xs"
-                onClick={() => setMiniLabel('')}
-                className="h-6 px-2 text-xs text-muted-foreground"
+                variant="outline"
+                aria-pressed={!showMiniLabel}
+                onClick={() => setShowMiniLabel(!showMiniLabel)}
               >
-                <LuX className="size-3 mr-1" />
-                Kosongkan
+                {showMiniLabel ? (
+                  <>
+                    <LuEyeOff className="size-4 mr-1.5" />
+                    Sembunyikan
+                  </>
+                ) : (
+                  <>
+                    <LuEye className="size-4 mr-1.5" />
+                    Tampilkan
+                  </>
+                )}
               </Button>
             )}
           </div>
