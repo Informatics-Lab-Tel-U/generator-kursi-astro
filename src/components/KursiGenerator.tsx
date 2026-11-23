@@ -52,19 +52,7 @@ function KursiGeneratorInner() {
         setMiniLabelState(val);
         try { localStorage.setItem("asprak_mini_label", val); } catch {}
     };
-    const [showMiniLabel, setShowMiniLabelState] = useState<boolean>(() => {
-        if (typeof window === "undefined") return false;
-        try {
-            const saved = localStorage.getItem("asprak_show_mini_label");
-            return saved === null ? false : saved === "true";
-        } catch {
-            return false;
-        }
-    });
-    const setShowMiniLabel = (val: boolean) => {
-        setShowMiniLabelState(val);
-        try { localStorage.setItem("asprak_show_mini_label", String(val)); } catch {}
-    };
+    const [showMiniLabel, setShowMiniLabel] = useState<boolean>(false);
     const { racers, setRacers } = useRacersGlobal();
     const [timer, setTimer] = useState<TimerState>(() => {
         const defaultSession = getDefaultTimerSession();

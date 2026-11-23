@@ -42,15 +42,7 @@ export default function ProjectorView() {
     if (typeof window === "undefined") return "";
     try { return localStorage.getItem("asprak_mini_label") || ""; } catch { return ""; }
   });
-  const [showMiniLabel, setShowMiniLabel] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    try {
-      const saved = localStorage.getItem("asprak_show_mini_label");
-      return saved === null ? false : saved === "true";
-    } catch {
-      return false;
-    }
-  });
+  const [showMiniLabel, setShowMiniLabel] = useState<boolean>(false);
   const [projectorConfig, setProjectorConfig] = useState<ProjectorConfig>({
     showSeats: true,
     showNotes: true,
