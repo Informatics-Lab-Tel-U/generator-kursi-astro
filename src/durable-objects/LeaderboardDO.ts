@@ -68,7 +68,12 @@ export class LeaderboardDO extends DurableObject<Env> {
           });
         }
 
-        const data = Array.isArray(body.data) ? body.data : [];
+        const rawList = Array.isArray(body.data) ? body.data : [];
+        const data = rawList.map((row: Record<string, any>) => ({
+          NAME: typeof row?.NAME === "string" ? row.NAME : "Unknown",
+          STATE: typeof row?.STATE === "string" ? row.STATE : "-",
+          "TIME TAKEN": typeof row?.["TIME TAKEN"] === "string" ? row["TIME TAKEN"] : "-",
+        }));
         console.log(`[LeaderboardDO] 📥 Received POST with ${data.length} entries, broadcasting to ${this.ctx.getWebSockets().length} clients`);
         this.saveLeaderboardData(data);
         this.broadcast(JSON.stringify({ type: "UPDATE", data }));

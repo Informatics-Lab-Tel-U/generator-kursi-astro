@@ -132,13 +132,13 @@ export const POST: APIRoute = async ({ request, url }) => {
             const rawDuration = getValue("Duration", "Time taken", "Durasi", "Waktu yang diperlukan");
             if (rawDuration) rowData["TIME TAKEN"] = rawDuration;
 
-            const rawNim = getValue("ID number", "Nomor ID", "NIM");
-            if (rawNim) rowData["NIM"] = rawNim;
-
-            const gradeKey = Object.keys(rowData).find(k => /^(grade|nilai)/i.test(k));
-            if (gradeKey && rowData[gradeKey]) rowData["GRADE"] = rowData[gradeKey];
-
-            if (isRelevant) data.push(rowData);
+            if (isRelevant) {
+                data.push({
+                    NAME: rowData["NAME"],
+                    STATE: rowData["STATE"] || "-",
+                    "TIME TAKEN": rowData["TIME TAKEN"] || "-",
+                });
+            }
         }
 
         let doPushed = false;
