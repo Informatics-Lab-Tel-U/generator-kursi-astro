@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import Image from '@tiptap/extension-image';
+import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table';
 import { TextStyle, Color, FontSize } from '@tiptap/extension-text-style';
 import './TiptapEditor.css';
 import { Toggle } from './ui/toggle';
@@ -22,9 +24,61 @@ import {
   LuQuote,
   LuCode,
   LuMinus,
+  LuImagePlus,
+  LuTable,
+  LuTrash2,
   LuUndo,
   LuRedo,
+  LuX,
 } from 'react-icons/lu';
+
+const ALLOWED_IMAGE_MIME_TYPES = new Set([
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'image/gif',
+]);
+const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
+const IMAGE_WIDTH_PRESETS = [25, 50, 75, 100] as const;
+
+const ResizableImage = Image.extend({
+  addNodeView() {
+    const parentFactory = this.parent?.();
+    if (!parentFactory) return null;
+    return (props) => {
+      const nodeView = parentFactory(props);
+      if (!nodeView || !(nodeView.dom instanceof HTMLElement)) {
+        return nodeView;
+      }
+      const img = nodeView.dom.querySelector('img');
+      const origUpdate = nodeView.update?.bind(nodeView);
+      nodeView.update = (updatedNode, decorations, innerDecorations) => {
+        if (updatedNode.type.name !== this.name) return false;
+        const kept = origUpdate ? origUpdate(updatedNode, decorations, innerDecorations) : true;
+        if (kept && img) {
+          const w = updatedNode.attrs.width;
+          const h = updatedNode.attrs.height;
+          img.style.width = w ? `${w}px` : '';
+          img.style.height = h ? `${h}px` : '';
+        }
+        return kept;
+      };
+      return nodeView;
+    };
+  },
+});
+
+function extractImageFiles(transfer: DataTransfer | null | undefined): File[] {
+  if (!transfer) return [];
+  const directFiles = Array.from(transfer.files ?? []).filter((f) =>
+    f.type.startsWith('image/'),
+  );
+  if (directFiles.length > 0) return directFiles;
+  return Array.from(transfer.items ?? [])
+    .filter((item) => item.kind === 'file' && item.type.startsWith('image/'))
+    .map((item) => item.getAsFile())
+    .filter((f): f is File => f !== null);
+}
 
 interface Props {
   content: string;
@@ -34,14 +88,96 @@ interface Props {
 }
 
 export default function TiptapEditor({ content, onUpdate, readOnly = false, compact = false }: Props) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const editorRef = useRef<ReturnType<typeof useEditor>>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [imageWidthInput, setImageWidthInput] = useState<string>('');
+
+  const insertImageFile = (file: File) => {
+    if (!ALLOWED_IMAGE_MIME_TYPES.has(file.type)) {
+      setImageError('Format gambar harus PNG, JPG, WEBP, atau GIF.');
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      setImageError('Ukuran gambar maksimal 4 MB.');
+      return;
+    }
+
+    setImageError(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result !== 'string' || !result.startsWith('data:image/')) {
+        setImageError('Gagal membaca berkas gambar.');
+        return;
+      }
+      editorRef.current
+        ?.chain()
+        .focus()
+        .setImage({ src: result, alt: file.name || 'Gambar catatan' })
+        .run();
+    };
+    reader.onerror = () => setImageError('Gagal membaca berkas gambar.');
+    reader.readAsDataURL(file);
+  };
+
   const editor = useEditor({
-    extensions: [StarterKit, TextStyle, Color, FontSize],
+    extensions: [
+      StarterKit,
+      TextStyle,
+      Color,
+      FontSize,
+      ResizableImage.configure({
+        allowBase64: true,
+        HTMLAttributes: {
+          class: 'tiptap-image',
+        },
+        resize: readOnly
+          ? false
+          : {
+              enabled: true,
+              directions: ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'left', 'right'],
+              minWidth: 50,
+              minHeight: 50,
+              alwaysPreserveAspectRatio: true,
+            },
+      }),
+      Table.configure({
+        resizable: !readOnly,
+        renderWrapper: true,
+        cellMinWidth: 60,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
+    ],
     content,
     editable: !readOnly,
+    shouldRerenderOnTransaction: !readOnly,
+    editorProps: {
+      handlePaste: (_view, event) => {
+        if (readOnly) return false;
+        const imageFiles = extractImageFiles(event.clipboardData);
+        if (imageFiles.length === 0) return false;
+        event.preventDefault();
+        imageFiles.forEach(insertImageFile);
+        return true;
+      },
+      handleDrop: (_view, event, _slice, moved) => {
+        if (readOnly || moved) return false;
+        const imageFiles = extractImageFiles(event.dataTransfer);
+        if (imageFiles.length === 0) return false;
+        event.preventDefault();
+        imageFiles.forEach(insertImageFile);
+        return true;
+      },
+    },
     onUpdate: ({ editor }) => {
       if (onUpdate) onUpdate(editor.getHTML());
     },
   });
+
+  editorRef.current = editor;
 
   useEffect(() => {
     if (editor && editor.getHTML() !== content) {
@@ -53,6 +189,9 @@ export default function TiptapEditor({ content, onUpdate, readOnly = false, comp
 
   const activeColor = (editor.getAttributes('textStyle').color as string) || '';
   const rawFontSize = editor.getAttributes('textStyle').fontSize as string | null | undefined;
+  const isImageSelected = editor.isActive('image');
+  const isTableActive = editor.isActive('table');
+  const rawImageWidth = isImageSelected ? (editor.getAttributes('image').width as number | string | null | undefined) : null;
 
   const [fontSizeInput, setFontSizeInput] = useState<string>('15');
 
@@ -64,6 +203,38 @@ export default function TiptapEditor({ content, onUpdate, readOnly = false, comp
       setFontSizeInput('15');
     }
   }, [rawFontSize]);
+
+  useEffect(() => {
+    if (!isImageSelected) {
+      setImageWidthInput('');
+      return;
+    }
+    if (rawImageWidth !== null && rawImageWidth !== undefined && rawImageWidth !== '') {
+      const num = Math.round(Number(rawImageWidth));
+      setImageWidthInput(Number.isFinite(num) && num > 0 ? String(num) : '');
+    } else {
+      setImageWidthInput('');
+    }
+  }, [isImageSelected, rawImageWidth]);
+
+  const applyImageWidth = (px: number | null) => {
+    if (px === null) {
+      editor.chain().focus().updateAttributes('image', { width: null, height: null }).run();
+      setImageWidthInput('');
+      return;
+    }
+    const clamped = Math.max(50, Math.min(2000, Math.round(px)));
+    setImageWidthInput(String(clamped));
+    editor.chain().focus().updateAttributes('image', { width: clamped, height: null }).run();
+  };
+
+  const applyImagePercent = (percent: number) => {
+    const editorEl = editor.view.dom as HTMLElement;
+    const style = getComputedStyle(editorEl);
+    const padX = parseFloat(style.paddingLeft || '0') + parseFloat(style.paddingRight || '0');
+    const available = Math.max(200, Math.floor(editorEl.clientWidth - padX));
+    applyImageWidth(Math.round((available * percent) / 100));
+  };
 
   const applyFontSize = (val: number | string) => {
     const num = typeof val === 'number' ? val : parseInt(val, 10);
@@ -304,6 +475,154 @@ export default function TiptapEditor({ content, onUpdate, readOnly = false, comp
           >
             <LuMinus className="size-3.5" />
           </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="h-7 w-7"
+            onClick={() => fileInputRef.current?.click()}
+            title="Sisipkan Gambar (atau paste / drag-drop)"
+            aria-label="Sisipkan Gambar"
+          >
+            <LuImagePlus className="size-3.5" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="h-7 w-7"
+            onClick={() =>
+              editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+            }
+            title="Sisipkan Tabel (3×3)"
+            aria-label="Sisipkan Tabel"
+          >
+            <LuTable className="size-3.5" />
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) insertImageFile(file);
+              e.target.value = '';
+            }}
+          />
+
+          {isTableActive && (
+            <div className="tiptap-table-box flex items-center gap-0.5 border border-border rounded-md bg-card/60 px-1 h-7 text-xs shrink-0">
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().addColumnAfter().run()}
+                className="tiptap-imgsize-btn hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                title="Tambah Kolom Sesudah"
+              >
+                + Kolom
+              </button>
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().deleteColumn().run()}
+                disabled={!editor.can().deleteColumn()}
+                className="tiptap-imgsize-btn hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-40 transition-colors cursor-pointer"
+                title="Hapus Kolom Aktif"
+              >
+                - Kolom
+              </button>
+              <span className="h-3.5 w-px bg-border mx-0.5" aria-hidden="true" />
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().addRowAfter().run()}
+                className="tiptap-imgsize-btn hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                title="Tambah Baris Sesudah"
+              >
+                + Baris
+              </button>
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().deleteRow().run()}
+                disabled={!editor.can().deleteRow()}
+                className="tiptap-imgsize-btn hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-40 transition-colors cursor-pointer"
+                title="Hapus Baris Aktif"
+              >
+                - Baris
+              </button>
+              <span className="h-3.5 w-px bg-border mx-0.5" aria-hidden="true" />
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().deleteTable().run()}
+                className="tiptap-imgsize-icon-btn hover:bg-destructive/15 text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+                title="Hapus Tabel"
+                aria-label="Hapus Tabel"
+              >
+                <LuTrash2 className="size-3" />
+              </button>
+            </div>
+          )}
+
+          {isImageSelected && (
+            <div className="tiptap-imgsize-box flex items-center gap-0.5 border border-border rounded-md bg-card/60 px-1 h-7 text-xs shrink-0">
+              {IMAGE_WIDTH_PRESETS.map((pct) => (
+                <button
+                  key={pct}
+                  type="button"
+                  onClick={() => applyImagePercent(pct)}
+                  className="tiptap-imgsize-btn hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  title={`Set lebar gambar ${pct}% lebar editor`}
+                >
+                  {pct}%
+                </button>
+              ))}
+              <span className="h-3.5 w-px bg-border mx-0.5" aria-hidden="true" />
+              <div className="flex items-center">
+                <input
+                  type="number"
+                  min={50}
+                  max={2000}
+                  placeholder="auto"
+                  value={imageWidthInput}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setImageWidthInput(val);
+                    const num = parseInt(val, 10);
+                    if (!isNaN(num) && num >= 50 && num <= 2000) {
+                      editor.chain().updateAttributes('image', { width: num, height: null }).run();
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const num = parseInt(imageWidthInput, 10);
+                      if (!isNaN(num)) applyImageWidth(num);
+                    }
+                  }}
+                  onBlur={() => {
+                    if (!imageWidthInput.trim()) return;
+                    const num = parseInt(imageWidthInput, 10);
+                    if (!isNaN(num)) applyImageWidth(num);
+                  }}
+                  className="tiptap-fontsize-input w-10 text-right bg-transparent border-0 focus:outline-none font-semibold text-xs text-foreground [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  title="Lebar gambar dalam pixel (50-2000 px)"
+                  aria-label="Lebar gambar (px)"
+                />
+                <span className="text-[11px] text-muted-foreground select-none pl-0.5 pr-1">
+                  px
+                </span>
+              </div>
+              {rawImageWidth ? (
+                <button
+                  type="button"
+                  onClick={() => applyImageWidth(null)}
+                  className="tiptap-imgsize-icon-btn hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  title="Reset ukuran asli gambar"
+                  aria-label="Reset ukuran gambar"
+                >
+                  <LuRemoveFormatting className="size-3 text-muted-foreground" />
+                </button>
+              ) : null}
+            </div>
+          )}
 
           <Separator orientation="vertical" className="h-5 mx-1" />
 
@@ -331,6 +650,22 @@ export default function TiptapEditor({ content, onUpdate, readOnly = false, comp
           >
             <LuRedo className="size-3.5" />
           </Button>
+        </div>
+      )}
+      {!readOnly && imageError && (
+        <div
+          role="alert"
+          className="flex items-center justify-between gap-2 px-3 py-1.5 text-xs border-b border-destructive/30 bg-destructive/10 text-destructive"
+        >
+          <span>{imageError}</span>
+          <button
+            type="button"
+            aria-label="Tutup pesan gambar"
+            onClick={() => setImageError(null)}
+            className="p-0.5 rounded hover:bg-destructive/15 cursor-pointer"
+          >
+            <LuX className="size-3.5" />
+          </button>
         </div>
       )}
       <EditorContent editor={editor} className="h-full" />

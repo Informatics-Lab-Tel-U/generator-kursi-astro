@@ -40,7 +40,7 @@
 .tiptap-toolbar button.active {
   background: var(--accent-light);
   border-color: var(--border);
-  color: var(--accent);
+  color: var(--primary);
 }
 
 .toolbar-divider {
@@ -51,14 +51,29 @@
   display: inline-block;
 }
 
-.tiptap-toolbar .tiptap-fontsize-btn {
+.tiptap-toolbar .tiptap-fontsize-btn,
+.tiptap-toolbar .tiptap-imgsize-icon-btn {
   padding: 0;
   width: 20px;
   height: 20px;
+  border: 0;
   border-radius: 4px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  line-height: 1;
+}
+
+.tiptap-toolbar .tiptap-imgsize-btn {
+  padding: 0 6px;
+  height: 20px;
+  border: 0;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 500;
   line-height: 1;
 }
 
@@ -142,11 +157,35 @@
 .tiptap ul,
 .tiptap ol {
   margin: 4px 0 12px 0;
-  padding-left: 22px;
+  padding-left: 24px;
+}
+
+.tiptap ul {
+  list-style-type: disc;
+}
+
+.tiptap ul ul {
+  list-style-type: circle;
+}
+
+.tiptap ul ul ul {
+  list-style-type: square;
+}
+
+.tiptap ol {
+  list-style-type: decimal;
+}
+
+.tiptap ol ol {
+  list-style-type: lower-alpha;
 }
 
 .tiptap li {
   margin-bottom: 4px;
+}
+
+.tiptap li::marker {
+  color: var(--text-primary);
 }
 
 .tiptap li p {
@@ -184,13 +223,14 @@
 }
 
 .tiptap hr {
-  border: none;
-  border-top: 1px solid var(--border);
+  height: 0;
+  border: 0;
+  border-top: 2px solid color-mix(in oklab, var(--foreground) 25%, transparent);
   margin: 20px 0;
 }
 
 .tiptap blockquote {
-  border-left: 3px solid var(--accent);
+  border-left: 3px solid var(--primary);
   padding-left: 14px;
   margin: 8px 0;
   color: var(--text-secondary);
@@ -198,6 +238,154 @@
 
 .tiptap strong {
   font-weight: 600;
+}
+
+.tiptap img.tiptap-image,
+.tiptap img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 10px 0;
+  border-radius: var(--radius-sm);
+  object-fit: contain;
+}
+
+.tiptap [data-resize-container] {
+  max-width: 100%;
+  margin: 10px 0;
+}
+
+.tiptap [data-resize-wrapper] {
+  width: fit-content;
+  max-width: 100%;
+  line-height: 0;
+}
+
+.tiptap [data-resize-wrapper] img.tiptap-image,
+.tiptap [data-resize-wrapper] img {
+  margin: 0;
+}
+
+.tiptap [data-resize-handle] {
+  opacity: 0;
+  transition: opacity 150ms ease;
+  z-index: 10;
+}
+
+.tiptap [data-resize-wrapper]:hover [data-resize-handle],
+.tiptap .ProseMirror-selectednode [data-resize-handle],
+.tiptap [data-resize-state="true"] [data-resize-handle] {
+  opacity: 1;
+}
+
+.tiptap [data-resize-handle="top-left"],
+.tiptap [data-resize-handle="top-right"],
+.tiptap [data-resize-handle="bottom-left"],
+.tiptap [data-resize-handle="bottom-right"] {
+  width: 11px;
+  height: 11px;
+  border-radius: 9999px;
+  background: var(--primary);
+  border: 2px solid var(--card);
+  box-shadow: 0 1px 3px oklch(0 0 0 / 35%);
+}
+
+.tiptap [data-resize-handle="top-left"] {
+  transform: translate(-50%, -50%);
+  cursor: nwse-resize;
+}
+
+.tiptap [data-resize-handle="top-right"] {
+  transform: translate(50%, -50%);
+  cursor: nesw-resize;
+}
+
+.tiptap [data-resize-handle="bottom-left"] {
+  transform: translate(-50%, 50%);
+  cursor: nesw-resize;
+}
+
+.tiptap [data-resize-handle="bottom-right"] {
+  transform: translate(50%, 50%);
+  cursor: nwse-resize;
+}
+
+.tiptap [data-resize-handle="left"],
+.tiptap [data-resize-handle="right"] {
+  width: 8px;
+  cursor: ew-resize;
+}
+
+.tiptap [data-resize-handle="left"] {
+  transform: translateX(-50%);
+}
+
+.tiptap [data-resize-handle="right"] {
+  transform: translateX(50%);
+}
+
+.tiptap .ProseMirror-selectednode img.tiptap-image,
+.tiptap .ProseMirror-selectednode > img {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.tiptap .tableWrapper {
+  overflow-x: auto;
+  margin: 12px 0;
+}
+
+.tiptap table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+.tiptap td,
+.tiptap th {
+  min-width: 60px;
+  border: 1px solid color-mix(in oklab, var(--foreground) 18%, transparent);
+  padding: 6px 10px;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.tiptap th {
+  font-weight: 600;
+  text-align: left;
+  background: var(--muted);
+}
+
+.tiptap td p,
+.tiptap th p {
+  margin: 0;
+}
+
+.tiptap .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--accent-light);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.tiptap .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background: var(--primary);
+  pointer-events: none;
+  z-index: 20;
+}
+
+.tiptap.resize-cursor {
+  cursor: col-resize;
 }
 
 
