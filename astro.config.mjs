@@ -56,6 +56,17 @@ export default defineConfig({
     ssr: {
       noExternal: [],
       external: ['@astrojs/cloudflare'],
+      optimizeDeps: {
+        include: ['picomatch'],
+        exclude: [
+          '@astrojs/cloudflare/entrypoints/server.js',
+          'astro/app/entrypoint',
+          'astro/app/manifest',
+          'astro/compiler-runtime',
+          'astro:content',
+          'astro:transitions/client',
+        ],
+      },
     },
   },
 });
