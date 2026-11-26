@@ -190,14 +190,14 @@ export default function Sidebar({
         </Button>
       </div>
 
-      <div className="mt-auto pt-2.5 border-t border-border/50 flex justify-start select-none">
+      <div className="mt-auto pt-2 flex justify-start select-none">
         <img
           src="/brand/iflab-platform-dark.svg"
           alt="Informatics Platform"
           loading="lazy"
           decoding="async"
           draggable={false}
-          className="h-7 w-auto dark:hidden"
+          className="h-8 w-auto dark:hidden"
         />
         <img
           src="/brand/iflab-platform-light.svg"
@@ -205,7 +205,7 @@ export default function Sidebar({
           loading="lazy"
           decoding="async"
           draggable={false}
-          className="hidden h-7 w-auto dark:block"
+          className="hidden h-8 w-auto dark:block"
         />
       </div>
     </aside>
