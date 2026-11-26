@@ -190,7 +190,7 @@ export default function Sidebar({
         </Button>
       </div>
 
-      <div className="mt-auto pt-2 flex justify-start select-none">
+      <div className="mt-auto pt-2 flex justify-start opacity-90 select-none">
         <img
           src="/brand/iflab-platform-dark.svg"
           alt="Informatics Platform"
