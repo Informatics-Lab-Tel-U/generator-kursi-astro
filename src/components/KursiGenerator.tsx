@@ -18,7 +18,7 @@ import { useRacersGlobal } from "../hooks/useRacersGlobal";
 
 import Sidebar from "./Sidebar";
 import SeatsTab from "./SeatsTab";
-import NotesTab from "./NotesTab";
+import NotesTab, { DEFAULT_NOTES, getInitialMiniLabel } from "./NotesTab";
 import CountdownTab from "./CountdownTab";
 import LeaderboardTab from "./LeaderboardTab";
 import OthersTab from "./OthersTab";
@@ -43,11 +43,8 @@ function KursiGeneratorInner() {
     const [activeTab, setActiveTab] = useState<TabId>("seats");
     const [showSidebar, setShowSidebar] = useState(true);
     const [countdownMode, setCountdownMode] = useState<"simple" | "advanced">("simple");
-    const [notes, setNotes] = useState('<p><span style="font-size: 22px"><strong>Password: </strong></span></p>');
-    const [miniLabel, setMiniLabelState] = useState<string>(() => {
-        if (typeof window === "undefined") return "";
-        try { return localStorage.getItem("asprak_mini_label") || ""; } catch { return ""; }
-    });
+    const [notes, setNotes] = useState(DEFAULT_NOTES);
+    const [miniLabel, setMiniLabelState] = useState<string>(getInitialMiniLabel);
     const setMiniLabel = (val: string) => {
         setMiniLabelState(val);
         try { localStorage.setItem("asprak_mini_label", val); } catch {}

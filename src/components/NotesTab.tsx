@@ -3,6 +3,19 @@ import TiptapEditor from './TiptapEditor';
 import { Button } from './ui/button';
 import { LuEye, LuEyeOff } from 'react-icons/lu';
 
+export const DEFAULT_MINI_LABEL = '<p><span style="font-size: 22px"><strong>PW: </strong></span></p>';
+export const DEFAULT_NOTES = '<p><span style="font-size: 22px"><strong>Catatan: </strong></span></p>';
+
+/** Returns persisted Mini Label HTML or the default "PW: " template when unset. */
+export function getInitialMiniLabel(): string {
+  if (typeof window === 'undefined') return DEFAULT_MINI_LABEL;
+  try {
+    return localStorage.getItem('asprak_mini_label') || DEFAULT_MINI_LABEL;
+  } catch {
+    return DEFAULT_MINI_LABEL;
+  }
+}
+
 interface NotesTabProps {
   notes: string;
   setNotes?: (val: string) => void;

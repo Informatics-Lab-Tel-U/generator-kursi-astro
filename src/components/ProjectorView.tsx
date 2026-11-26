@@ -4,7 +4,7 @@ import { PROJECTOR_CHANNEL_NAME } from './scheduleConfig';
 import { makeEmptySeats, formatTimeWithMs } from './utils';
 
 import SeatsTab from './SeatsTab';
-import NotesTab from './NotesTab';
+import NotesTab, { DEFAULT_NOTES, getInitialMiniLabel } from './NotesTab';
 import TiptapEditor from './TiptapEditor';
 import CountdownTab from './CountdownTab';
 import LeaderboardView from './LeaderboardView';
@@ -37,11 +37,8 @@ export default function ProjectorView() {
   const [timer, setTimer] = useState<TimerState>({ startTime: "08:00", endTime: "10:00", isRunning: false, startedAt: null });
   const [now, setNow] = useState(new Date());
   const [racers, setRacers] = useState<Racer[]>(getStoredRacers);
-  const [notes, setNotes] = useState<string>('<p><span style="font-size: 22px"><strong>Password: </strong></span></p>');
-  const [miniLabel, setMiniLabel] = useState<string>(() => {
-    if (typeof window === "undefined") return "";
-    try { return localStorage.getItem("asprak_mini_label") || ""; } catch { return ""; }
-  });
+  const [notes, setNotes] = useState<string>(DEFAULT_NOTES);
+  const [miniLabel, setMiniLabel] = useState<string>(getInitialMiniLabel);
   const [showMiniLabel, setShowMiniLabel] = useState<boolean>(false);
   const [projectorConfig, setProjectorConfig] = useState<ProjectorConfig>({
     showSeats: true,
