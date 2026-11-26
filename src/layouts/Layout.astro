@@ -1,5 +1,15 @@
 ---
 import '../styles/globals.css';
+
+interface Props {
+	title?: string;
+	description?: string;
+}
+
+const {
+	title = 'Generator Kursi | Manajemen Asisten Praktikum',
+	description = 'Aplikasi pengacakan kursi, timer praktikum, dan leaderboard laboratorium — Manajemen Asisten Praktikum (IFLab).',
+} = Astro.props;
 ---
 <!doctype html>
 <html lang="id" data-theme="dark">
@@ -7,13 +17,22 @@ import '../styles/globals.css';
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
+		<link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png" />
+		<link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png" />
+		<link rel="icon" href="/favicon/favicon.ico" />
+		<link rel="apple-touch-icon" href="/favicon/apple-touch-icon.png" />
+		<link rel="manifest" href="/favicon/site.webmanifest" />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 		<meta name="generator" content="Astro" />
-		<meta name="description" content="Generator Kursi Praktikum: Sistem pengaturan tempat duduk laboratorium" />
-		<title>Generator Kursi Praktikum</title>
+		<meta name="description" content={description} />
+		<meta name="application-name" content="Generator Kursi" />
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="Manajemen Asisten Praktikum" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<title>{title}</title>
 		<script is:inline>
 			(function() {
 				const saved = localStorage.getItem('kursi-theme');
