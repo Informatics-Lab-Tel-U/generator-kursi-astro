@@ -54,7 +54,7 @@ export default function Sidebar({
   totalSeats,
 }: SidebarProps) {
   return (
-    <aside className={`sidebar ${showSidebar ? "open" : "closed"}`}>
+    <aside className={`sidebar flex flex-col ${showSidebar ? "open" : "closed"}`}>
       <div className="sidebar-header min-h-8 pb-2 mb-3 flex items-center justify-between">
         <span className="font-semibold text-sm text-foreground">Generator Kursi</span>
       </div>
@@ -188,6 +188,25 @@ export default function Sidebar({
           <LuRotateCcw className="size-4" />
           <span>Reset</span>
         </Button>
+      </div>
+
+      <div className="mt-auto pt-4 border-t border-border/50 flex justify-center opacity-80 transition-opacity hover:opacity-100 select-none">
+        <img
+          src="/brand/iflab-platform-dark.svg"
+          alt="Informatics Platform"
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          className="h-4 w-auto dark:hidden"
+        />
+        <img
+          src="/brand/iflab-platform-light.svg"
+          alt="Informatics Platform"
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          className="hidden h-4 w-auto dark:block"
+        />
       </div>
     </aside>
   );
